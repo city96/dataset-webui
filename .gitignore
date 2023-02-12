@@ -1,0 +1,11 @@
+0 - raw/
+1 - cropped/
+2 - sorted/
+3 - tagged/
+4 - fixed/
+5 - out/
+datasets/
+dataset.ini
+other/tags-*.txt
+guide.md
+broken/
