@@ -1,5 +1,5 @@
 This project aims to help with the creation and management of LoRa training datasets.
-The I recommend reading the [**accompanying rentry guide**](https://rentry.co/dataset-scripts)
+I recommend reading the [**accompanying rentry guide**](https://rentry.co/dataset-scripts)
 
 **These scripts are WIP and are nowhere near beginner friendly**
 
