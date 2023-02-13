@@ -21,9 +21,14 @@ class Image:
 	category = None
 	img_path = None
 	tag_path = None
-	new_tag_path = None
-	new_img_path = None
 	tags = []
+	def get_new_img_path(self):
+		new_img_path = os.path.join(c["Tags"]["OutputFolder"],os.path.join(self.category,self.filename))
+		return new_img_path 
+	def get_new_tag_path(self):
+		name, ext = os.path.splitext(self.filename)
+		new_tag_path = os.path.join(c["Tags"]["OutputFolder"],os.path.join(self.category,name+".txt"))
+		return new_tag_path
 	def __int__(self):
 		return len(self.tags)
 	def __str__(self):
@@ -120,8 +125,6 @@ def image_loader(folder, output):
 					i.category = cat
 					i.img_path = os.path.join(folder,os.path.join(cat,k))
 					i.tag_path = os.path.join(folder,os.path.join(cat,name+".txt"))
-					i.new_img_path = os.path.join(output,os.path.join(cat,k))
-					i.new_tag_path = os.path.join(output,os.path.join(cat,name+".txt"))
 					if os.path.isfile(i.tag_path):
 						i.tags = file_to_taglist(i.tag_path)
 						images.append(i)
@@ -433,6 +436,20 @@ def raise_tags(images, to_raise):
 		print(f"Raised {len(to_raise)} tag(s) {raised} times")
 	return images
 
+# change output category based on tags
+def recategorize_images(images,sort_tags):
+	if not sort_tags:
+		return images
+	categorized = 0
+	for i in images:
+		for t in sort_tags:
+			if t.name in [x.name for x in i.tags]:
+				i.category = f"1_{t.name}"
+				categorized += 1
+	if categorized:
+		print(f"Sorted ~{categorized} images into {len(sort_tags)} new categories")
+	return images
+
 # remove duplicates, final pass
 def dedupe_tags(images):
 	duplicates = []
@@ -455,7 +472,7 @@ def write_tags(images, folder):
 		cat = os.path.join(c["Tags"]["OutputFolder"],i.category)
 		if not os.path.isdir(cat):
 			os.mkdir(cat)
-		with open(i.new_tag_path,"w") as f:
+		with open(i.get_new_tag_path(),"w") as f:
 			f.write(str(i))
 
 # copy images to the output folder
@@ -463,15 +480,15 @@ def copy_images(images):
 	print(" Copying images to output folder...")
 	import shutil
 	for i in images:
-		if i.img_path == i.new_img_path: # don't copy to itself
+		if i.img_path == i.get_new_img_path(): # don't copy to itself
 			continue
-		elif os.path.isfile(i.new_img_path) and os.path.getsize(i.img_path) == os.path.getsize(i.new_img_path): # probably the same
+		elif os.path.isfile(i.get_new_img_path()) and os.path.getsize(i.img_path) == os.path.getsize(i.get_new_img_path()): # probably the same
 			continue
-		elif os.path.isfile(i.new_img_path):
-			print(f" image exists but is different from source: {i.new_img_path}")
+		elif os.path.isfile(i.get_new_img_path()):
+			print(f" image exists but is different from source: {i.get_new_img_path()}")
 			continue
 		else:
-			shutil.copyfile(i.img_path, i.new_img_path)
+			shutil.copyfile(i.img_path, i.get_new_img_path())
 	print(" done!")
 
 # read only status of tag count
@@ -523,6 +540,7 @@ def cli_ui():
 	images = add_triggerword(images,str_to_taglist(c["Tags"]["Triggerword"]))
 	images = raise_tags(images,str_to_taglist(c["Tags"]["RaisedTags"]))
 	images = blacklist(images,str_to_taglist(c["Tags"]["Blacklist"]))
+	images = recategorize_images(images,str_to_taglist(c["Tags"]["ImageCategories"]))
 	images = dedupe_tags(images)
 
 	print("\nFinal:")
@@ -530,7 +548,7 @@ def cli_ui():
 	if debug or input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y":
 		exit(0)
 	write_tags(images,c["Tags"]["OutputFolder"])
-	if not all([os.path.isfile(x.new_img_path) for x in images]):
+	if not all([os.path.isfile(x.get_new_img_path()) for x in images]):
 		if input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
 			copy_images(images)
 
