@@ -73,6 +73,40 @@ def underscore_fix(images):
 		print(f"warning: tags with underscores found. Fixed {fixed} tags.")
 	return images
 
+# filter images by tags
+def image_filter(images, tag_rules):
+	blacklists = {}
+	filters = {}
+	for k in tag_rules.keys():
+		if k.startswith("ImageBlacklistTags") and tag_rules[k]:
+			blacklists[k] = str_to_taglist(tag_rules[k])
+		if k.startswith("ImageBlacklistFilter") and tag_rules[k]:
+			filters[k] = str_to_taglist(tag_rules[k])
+	if not blacklist and not filters:
+		return images
+	print("\nFiltering input images.")
+	removed = []
+	filtered = []
+	for i in images:
+		for b in blacklists.values():
+			if any([t in [x.name for x in i.tags] for t in [x.name for x in b]]):
+				removed.append(i.filename)
+				images.remove(i)
+				break
+	for i in images:
+		for f in filters.values():
+			if all([t in [x.name for x in i.tags] for t in [x.name for x in f]]):
+				filtered.append(i.filename)
+				images.remove(i)
+				break
+
+	print(f" removed {len(removed)} images from input [by tags]")
+	if debug: print("REM:",removed)
+	print(f" removed {len(filtered)} images from input [by filter]")
+	if debug: print("REM:",filtered)
+	print(f" Images: {len(images)}")
+	return images
+
 # load all images in folder
 def image_loader(folder, output):
 	images = []
@@ -460,6 +494,9 @@ def cli_ui():
 	if c["Misc"]["FixUnderscores"]:
 		images = underscore_fix(images)
 
+	# filter input images
+	images = image_filter(images,c["Tags"])
+
 	# tag source for popular-only filter
 	if c["Tags"]["GeneralTagsOnly"]:
 		tag_file = os.path.join("other",f'tags-{c["Tags"]["TagSource"]}-general.txt')
@@ -490,7 +527,7 @@ def cli_ui():
 
 	print("\nFinal:")
 	img_status(images,True)
-	if input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y":
+	if debug or input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y":
 		exit(0)
 	write_tags(images,c["Tags"]["OutputFolder"])
 	if not all([os.path.isfile(x.new_img_path) for x in images]):
