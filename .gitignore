@@ -4,8 +4,9 @@
 3 - tagged/
 4 - fixed/
 5 - out/
+.cache
 datasets/
 dataset.ini
-other/tags-*.txt
+other/*-tags.json
 guide.md
 broken/
