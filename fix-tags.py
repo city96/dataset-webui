@@ -13,7 +13,7 @@ else:
 	exit(1)
 
 # show removed tags at each step
-debug = c["Misc"]["Debug"] == "True"
+debug = c["Tags"]["Debug"] == "True"
 
 # image definition. do NOT edit __str__ and __repr__!
 class Image:
@@ -78,16 +78,32 @@ def underscore_fix(images):
 		print(f"warning: tags with underscores found. Fixed {fixed} tags.")
 	return images
 
+# get filter by name, return filter name and filtered tags as array
+def get_filter_info(filter_type, tag_rules):
+	rules = {}
+	for k in tag_rules.keys():
+		if '.' in k:
+			name, fname = k.split('.',1)
+		else:
+			name = k
+			fname = "Unnamed"
+			# edge case
+			i = 2
+			while fname in rules.keys():
+				fname = f"Default-{i}"
+				i += 1;
+		if name.lower() == filter_type.lower():
+			tags = str_to_taglist(tag_rules[k])
+			if tags:
+				rules[fname] = tags
+	return rules
+			
+
 # filter images by tags
 def image_filter(images, tag_rules):
-	blacklists = {}
-	filters = {}
-	for k in tag_rules.keys():
-		if k.startswith("ImageBlacklistTags") and tag_rules[k]:
-			blacklists[k] = str_to_taglist(tag_rules[k])
-		if k.startswith("ImageBlacklistFilter") and tag_rules[k]:
-			filters[k] = str_to_taglist(tag_rules[k])
-	if not blacklist and not filters:
+	blacklists = get_filter_info("ImageBlacklistTags", tag_rules)
+	filters = get_filter_info("ImageBlacklistFilter", tag_rules)
+	if not blacklists and not filters:
 		return images
 	print("\nFiltering input images.")
 	removed = []
@@ -270,13 +286,8 @@ def normalize_hair_style(images,target_style):
 
 # add tags based on folder names. requires entire config file for parsing
 def folder_rules(images, tag_rules):
-	add_rules = {}
-	remove_rules = {}
-	for k in tag_rules.keys():
-		if k.startswith("AddFolder") and tag_rules[k]:
-			add_rules[k] = str_to_taglist(tag_rules[k])
-		elif k.startswith("RemoveFolder") and tag_rules[k]:
-			remove_rules[k] = str_to_taglist(tag_rules[k])
+	add_rules = get_filter_info("AddFolder", tag_rules)
+	remove_rules = get_filter_info("RemoveFolder", tag_rules)
 	if not add_rules and not remove_rules:
 		return images
 	# add rules
@@ -287,7 +298,7 @@ def folder_rules(images, tag_rules):
 				i.tags += (r[1:])
 				added += 1
 		if added > 0:
-			print(f" {rname} [{r[0].name}] (+{added})")
+			print(f" AddFolder [{rname}] (+{added} to {r[0].name})")
 	
 	# remove rules
 	for rname, r in remove_rules.items():
@@ -299,16 +310,13 @@ def folder_rules(images, tag_rules):
 						removed.append(t)
 						i.tags.remove(t)
 		if len(removed) > 0:
-			print(f" {rname} [{r[0].name}] (-{len(removed)})")
+			print(f" RemoveFolder [{rname}] (-{len(removed)} from {r[0].name})")
 			if debug: print(" REM:",list(set(removed)))
 	return images
 
 # add tags based on existing tags.
 def transitive_rules(images, tag_rules):
-	rules = {}
-	for k in tag_rules.keys():
-		if k.startswith("AddRule") and tag_rules[k]:
-			rules[k] = str_to_taglist(tag_rules[k])
+	rules = get_filter_info("AddRule", tag_rules)
 	if not rules:
 		return images
 	for rname, r in rules.items():
@@ -318,15 +326,12 @@ def transitive_rules(images, tag_rules):
 				i.tags += (r[1:])
 				added += 1
 		if added > 0:
-			print(f" {rname} [{r[0].name}] (+{added})")
+			print(f" AddRule [{rname}] (+{added})")
 	return images
 
 # replace redundant tags
 def replace_rules(images, tag_rules):
-	rules = {}
-	for k in tag_rules.keys():
-		if k.startswith("ReplaceRule") and tag_rules[k]:
-			rules[k] = str_to_taglist(tag_rules[k])
+	rules = get_filter_info("ReplaceRule", tag_rules)
 	if not rules:
 		return images
 	for rname, r in rules.items():
@@ -343,19 +348,14 @@ def replace_rules(images, tag_rules):
 				i.tags.append(r[0])
 				added += 1
 		if added > 0 or len(removed) > 0:
-			print(f" {rname} [{r[0].name}] (+{added} | -{len(removed)})")
+			print(f" ReplaceRule [{rname}] (+{added} | -{len(removed)})")
 			if debug: print(" REM:",list(set(removed)))
 	return images
 
 # experimental spice rules
 def spice_rules(images, tag_rules):
-	add_rules = {}
-	remove_rules = {}
-	for k in tag_rules.keys():
-		if k.startswith("AddSpice") and tag_rules[k]:
-			add_rules[k] = str_to_taglist(tag_rules[k])
-		elif k.startswith("RemoveSpice") and tag_rules[k]:
-			remove_rules[k] = str_to_taglist(tag_rules[k])
+	add_rules = get_filter_info("AddSpice", tag_rules)
+	remove_rules = get_filter_info("RemoveSpice", tag_rules)
 	if not add_rules and not remove_rules:
 		return images
 	# add rules
@@ -372,11 +372,11 @@ def spice_rules(images, tag_rules):
 					added += 1
 		added_perc = added/total
 		if added > 0:
-			print(f" {rname} [{r[0].name}] (+{added}|{round(added_perc*100)}%)")
+			print(f" AddSpice [{rname}] (+{added}|{round(added_perc*100)}%)")
 	# remove rules
 	for rname, r in remove_rules.items():
 		perc = float(r[0].name)
-		total = 0
+		total = 1
 		removed = []
 		removed_perc = 0
 		for i in images:
@@ -388,7 +388,7 @@ def spice_rules(images, tag_rules):
 						i.tags.remove(t)
 			removed_perc = len(removed)/total
 		if len(removed) > 0:
-			print(f" {rname} [{r[0].name}] (-{len(removed)}|{round(removed_perc*100)}%)")
+			print(f" RemoveSpice [{rname}] (-{len(removed)}|{round(removed_perc*100)}%)")
 			if debug: print(" REM:",list(set(removed)))
 	return images
 
@@ -508,7 +508,7 @@ def cli_ui():
 	# stats
 	img_status(images,True)
 
-	if c["Misc"]["FixUnderscores"]:
+	if c["Tags"]["FixUnderscores"]:
 		images = underscore_fix(images)
 
 	# filter input images
