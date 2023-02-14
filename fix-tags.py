@@ -3,6 +3,7 @@
 import os
 import configparser
 import random
+import json
 
 if os.path.isfile("dataset.ini"):
 	c = configparser.ConfigParser()
@@ -13,7 +14,7 @@ else:
 	exit(1)
 
 # show removed tags at each step
-debug = c["Tags"]["Debug"] == "True"
+debug = c["Tags"]["Debug"].lower() == "true"
 
 # image definition. do NOT edit __str__ and __repr__!
 class Image:
@@ -151,18 +152,26 @@ def image_loader(folder, output):
 	return images
 
 # load a list of `limit` popular tags, remove tags that aren't in this list
-def popular_only(images, limit, tag_file):
+def popular_only(images, tag_file, limit, general_only):
 	if not limit or not os.path.isfile(tag_file):
 		return images
 	print("\nfiltering unpopular tags")
 	tags = []
 	removed = []
 
-	with open(tag_file,"r") as f:
-		for tag in f:
-			tags.append(tag.strip())
-			if len(tags) >= limit:
-				break
+	with open(tag_file, 'r') as f:
+		raw_tags = json.load(f)
+
+	if "danbooru" in tag_file:
+		general_filter = "category"
+	else:
+		general_filter = "type"
+
+	for t in raw_tags:
+		if general_only and t[general_filter] == 0:
+			tags.append(t["name"].replace("_"," "))
+		if len(tags) >= limit:
+			break
 
 	print(f" loaded {len(tags)} tags successfully from {tag_file}")
 	for i in images:
@@ -171,7 +180,7 @@ def popular_only(images, limit, tag_file):
 				removed.append(t.name)
 				i.tags.remove(t)
 
-	print(f" removed {len(removed)} instances of obscure tags")
+	print(f" removed {len(set(removed))} obscure tags")
 	if debug: print("REM:",removed)
 	img_status(images)
 	return images
@@ -514,16 +523,15 @@ def cli_ui():
 	# filter input images
 	images = image_filter(images,c["Tags"])
 
-	# tag source for popular-only filter
-	if c["Tags"]["GeneralTagsOnly"]:
-		tag_file = os.path.join("other",f'tags-{c["Tags"]["TagSource"]}-general.txt')
+	# popular-only filter
+	tag_file = os.path.join("other",f'{c["Tags"]["TagSource"]}-tags.json')
+	if os.path.isfile(tag_file):
+		general_only = c["Tags"]["GeneralTagsOnly"].lower() == "true"
+		images = popular_only(images,tag_file,int(c["Tags"]["PopularOnly"]),general_only)
 	else:
-		tag_file = os.path.join("other",f'tags-{c["Tags"]["TagSource"]}-all.txt')
-	if not os.path.isfile(tag_file):
 		print(f"Missing file {tag_file}\n PopularOnly filter disabled!")
 
 	# apply filters
-	images = popular_only(images,int(c["Tags"]["PopularOnly"]),tag_file)
 	images = frequent_only(images,int(c["Tags"]["FrequentOnly"]))
 	images = normalize_eye_color(images,str_to_taglist(c["Tags"]["EyeColor"]))
 	images = normalize_hair_color(images,str_to_taglist(c["Tags"]["HairColor"]))
