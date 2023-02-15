@@ -115,5 +115,6 @@ def cli_ui():
 		download_gelbooru_tags(premade["gelbooru"]["filename"])
 		download_danbooru_tags(premade["danbooru"]["filename"])
 
-cli_ui()
-input("\nPress any key to exit...")
+if __name__ == "__main__":
+	cli_ui()
+	input("\nPress any key to exit...")

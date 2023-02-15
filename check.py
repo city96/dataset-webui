@@ -1,25 +1,7 @@
 #!/usr/bin/python3
 # Script to track progress
 import os
-
-folder_list = [
-	"0 - raw",
-	"1 - cropped",
-	"2 - sorted",
-	"3 - tagged",
-	"4 - fixed",
-	"5 - out",
-]
-
-# comma separated string to list
-def str_to_taglist(string):
-	taglist = []
-	tags = string.replace('\n', ',').split(",")
-	tags = [a.strip() for a in tags]
-	for tag in tags:
-		if tag:
-			taglist.append(tag)
-	return taglist
+from fix_tags import str_to_taglist
 
 def get_step_info(folder):
 	print(f"\nStep {folder}")
@@ -71,6 +53,16 @@ def get_step_info(folder):
 			print(f"  Avg tag per image: {round(len(tags)/imgcount,2)}")
 		print(f"  Unique tags: {len(list(set(tags)))}")
 
-for f in folder_list:
-	get_step_info(f)
-input("\nPress any key to exit...")
+if __name__ == "__main__":
+	folder_list = [
+		"0 - raw",
+		"1 - cropped",
+		"2 - sorted",
+		"3 - tagged",
+		"4 - fixed",
+		"5 - out",
+	]
+
+	for f in folder_list:
+		get_step_info(f)
+	input("\nPress any key to exit...")

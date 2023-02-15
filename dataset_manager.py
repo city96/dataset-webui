@@ -178,5 +178,5 @@ def cli_ui():
 			break
 		load_dataset(dataset)
 
-#run
-cli_ui()
+if __name__ == "__main__":
+	cli_ui()

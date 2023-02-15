@@ -561,5 +561,6 @@ def cli_ui():
 		if input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
 			copy_images(images)
 
-cli_ui()
-input("\nPress any key to exit...")
+if __name__ == "__main__":
+	cli_ui()
+	input("\nPress any key to exit...")
