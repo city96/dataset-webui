@@ -63,7 +63,7 @@ def get_step_info(folder):
 		if data["img_count"] > 0:
 			data["tag_count"]["average"] = round(len(tags)/data["img_count"],2)
 			print(f'  Avg tag per image: {data["tag_count"]["average"]}')
-		data["tag_count"]["unique"] = len(list(set(tags)))
+		data["tag_count"]["unique"] = len(list(set([x.name for x in tags])))
 		print(f'  Unique tags: {data["tag_count"]["unique"]}')
 	return data
 

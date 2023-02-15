@@ -20,15 +20,25 @@
 	tr:nth-child(even) {
 	  background-color: #dddddd;
 	}
+	
+	td button {
+		width: 100%;
+	}
 	</style>
 </head>
 <body>
-	<h1>Dataset Scripts Webui</h1>
+	<h1>LoRA Dataset Scripts Webui</h1>
 	<h2>Datasets:</h2>
-	<div id="datasets"/>
+	<input disabled type="text" value="name"> </input>
+	<input disabled type="text" value="description"> </input>
+	<button disabled> New Dataset </button>
+	<br><br>
+	
+	<div id="datasets"></div>
 	<h2>Status check:</h2>
-	<div id="check"/>
+	<div id="check"></div>
 	<script src="check.js"></script>
+	<script src="dataset.js"></script>
 </body>
 </html>
 
