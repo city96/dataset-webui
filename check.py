@@ -1,16 +1,22 @@
 #!/usr/bin/python3
 # Script to track progress
 import os
+import json
 from fix_tags import str_to_taglist
 
 def get_step_info(folder):
+	data = {
+		"img_count" : 0,
+		"categories" : {},
+		"uncategorized" : None,
+	}
 	print(f"\nStep {folder}")
 	if not os.path.isdir(folder):
-		print (f" folder for step '{folder}' doesn't exist")
-		return
+		data["error"] = "folder for step '{folder}' doesn't exist"
+		print(data["error"])
+		return data
 
-	uncategorized = sum([os.path.isfile(os.path.join(folder,x)) for x in os.listdir(folder)])
-	categories = {}
+	data["uncategorized"] = sum([os.path.isfile(os.path.join(folder,x)) for x in os.listdir(folder)])
 	tags = []
 
 	for cat in os.listdir(folder):
@@ -19,10 +25,10 @@ def get_step_info(folder):
 				path = os.path.join(cat,k)
 				ext = os.path.splitext(k)[1]
 				if ext in [".png",".jpg"]: #img
-					if cat not in categories.keys():
-						categories[cat] = 1
+					if cat not in data["categories"].keys():
+						data["categories"][cat] = 1
 					else:
-						categories[cat] += 1
+						data["categories"][cat] += 1
 				elif ext in [".txt"]: #tag
 					if folder == "4 - fixed" or folder == "3 - tagged":
 						with open(os.path.join(folder,path)) as f:
@@ -32,26 +38,50 @@ def get_step_info(folder):
 							
 						continue
 				elif os.path.isdir(path): #dir
-					print(f" Warning! {dirpath} is a category inside a category! it will be ignored")
+					data["warn"].append(f" Warning! {dirpath} is a category inside a category! it will be ignored")
+					print(data["warn"][-1])
 				else:
-					print(f" Warning! Unknown extension '{ext}' for file {path}")
+					data["warn"].append(f" Warning! Unknown extension '{ext}' for file {path}")
+					print(data["warn"][-1])
 
-	imgcount = 0
-	if categories:
-		imgcount += sum(categories.values())
-		print(f" Total categorized images: {imgcount}")
-		for cat, count in categories.items():
+	if data["categories"]:
+		data["img_count"] += sum(data["categories"].values())
+		print(f' Total categorized images: {data["img_count"]}')
+		for cat, count in data["categories"].items():
 			print(f"  {cat} ({count})")
-	if uncategorized:
-		imgcount += uncategorized
-		print(f" Total uncategorized images: {imgcount}")
-	if not categories and not uncategorized:
-		print(" No images")
+	if data["uncategorized"]:
+		data["img_count"] += data["uncategorized"]
+		print(f' Total uncategorized images: {data["uncategorized"]}')
+	if not data["categories"] and not data["uncategorized"]:
+		data["error"] = f"folder for step '{folder}' doesn't have any images"
+		print(data["error"])
+		return data
 	if len(tags)>0:
-		print(f" Total tags: {len(tags)}")
-		if imgcount:
-			print(f"  Avg tag per image: {round(len(tags)/imgcount,2)}")
-		print(f"  Unique tags: {len(list(set(tags)))}")
+		data["tag_count"] = {}
+		data["tag_count"]["total"] = len(tags)
+		print(f' Total tags: {data["tag_count"]["total"]}')
+		if data["img_count"] > 0:
+			data["tag_count"]["average"] = round(len(tags)/data["img_count"],2)
+			print(f'  Avg tag per image: {data["tag_count"]["average"]}')
+		data["tag_count"]["unique"] = len(list(set(tags)))
+		print(f'  Unique tags: {data["tag_count"]["unique"]}')
+	return data
+
+def api_json_check():
+	folder_list = [
+		"0 - raw",
+		"1 - cropped",
+		"2 - sorted",
+		"3 - tagged",
+		"4 - fixed",
+		"5 - out",
+	]
+
+	data = {}
+	for f in folder_list:
+		data[f] = get_step_info(f)
+	# return json.dumps(data)
+	return data
 
 if __name__ == "__main__":
 	folder_list = [
