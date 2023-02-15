@@ -2,6 +2,7 @@
 # script to save/load dataset folders
 import os
 import configparser
+from common import verify_input
 
 # core settings
 dataset_folder = "datasets"
@@ -141,19 +142,6 @@ def get_dataset(path):
 		# print(f"Warning! '{d.name}' dataset is empty.")
 		# return
 	return d
-
-# bootleg input verification
-def verify_input(text,true,false,default=None):
-	while true:
-		i = input(text).lower()
-		if i == true.lower():
-			return True
-		elif i == false.lower():
-			return False
-		elif default != None:
-			return default
-		else:
-			print(f"Invalid input '{i}'\n")
 
 # default CLI ui with checks
 def cli_ui():

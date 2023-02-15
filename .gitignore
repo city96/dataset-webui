@@ -5,6 +5,7 @@
 4 - fixed/
 5 - out/
 .cache
+__pycache__/
 datasets/
 dataset.ini
 other/*-tags.json

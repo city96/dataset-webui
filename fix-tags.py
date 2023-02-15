@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # script to fix and filter tags using the rules in 'dataset.ini'
+# don't use common.py, this has to remain completely standalone!
 import os
 import configparser
 import random
