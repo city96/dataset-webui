@@ -3,6 +3,7 @@
 import os
 import configparser
 from common import verify_input
+from check import get_step_info
 
 # core settings
 dataset_folder = "datasets"
@@ -135,13 +136,36 @@ def get_dataset(path):
 		k = os.path.join(path,k)
 		l = len(os.listdir(k))
 		if l > 0:
-			d.size = l
+			d.size = get_step_info(k)["img_count"]
 			break
 
 	# if d.size == 0:
 		# print(f"Warning! '{d.name}' dataset is empty.")
 		# return
 	return d
+
+# callable version
+def api_json_dataset(command):
+	data = {}
+	if command == "get_all":
+		datasets = get_all_saved_datasets()
+		d = get_dataset("./")
+		data["active"] = {
+			"name": d.name,
+			"description": d.description,
+			"save_path": "./",
+			"img_count": d.size,
+			"active": True
+		}
+		for d in datasets:
+			data[d.save_path] = {
+				"name": d.name,
+				"description": d.description,
+				"save_path": d.save_path,
+				"img_count": d.size,
+				"active": False
+			}
+	return data
 
 # default CLI ui with checks
 def cli_ui():

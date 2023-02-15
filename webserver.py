@@ -5,7 +5,7 @@ from aiohttp import web
 import aiohttp
 import os
 from check import api_json_check
-
+from dataset_manager import api_json_dataset
 
 app = web.Application()
 
@@ -24,8 +24,13 @@ async def api_check(request):
 	data = api_json_check()
 	return web.json_response(data)
 
+async def api_dataset(request):
+	data = api_json_dataset("get_all")
+	return web.json_response(data)
+
 app.add_routes([web.get('/', index),
 				web.get('/api/check', api_check),
+				web.get('/api/dataset', api_dataset),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
