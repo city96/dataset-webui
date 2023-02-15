@@ -8,6 +8,7 @@ def get_step_info(folder):
 	data = {
 		"img_count" : 0,
 		"categories" : {},
+		"tag_count" : {},
 		"uncategorized" : None,
 	}
 	print(f"\nStep {folder}")
@@ -57,7 +58,6 @@ def get_step_info(folder):
 		print(data["error"])
 		return data
 	if len(tags)>0:
-		data["tag_count"] = {}
 		data["tag_count"]["total"] = len(tags)
 		print(f' Total tags: {data["tag_count"]["total"]}')
 		if data["img_count"] > 0:

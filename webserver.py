@@ -3,21 +3,30 @@
 import asyncio
 from aiohttp import web
 import aiohttp
+import os
 from check import api_json_check
 
 
 app = web.Application()
 
+async def index(request):
+	return web.FileResponse('web/index.html')
+
 async def handle(request):
-    return web.Response(text="api")
+	path = os.path.join("web", str(request.url.relative())[1:])
+	
+	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css",".js"]:
+		return web.FileResponse(path)
+	else:
+		return web.Response(status=404,text="404")
 
 async def api_check(request):
 	data = api_json_check()
 	return web.json_response(data)
 
-app.add_routes([web.get('/', handle),
-                web.get('/api/check', api_check),
-                web.get('/{name}', handle)])
+app.add_routes([web.get('/', index),
+				web.get('/api/check', api_check),
+				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
 	web.run_app(app)
