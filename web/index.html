@@ -1,44 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Dataset Scripts Webui</title>
+	<title>Dataset Scripts</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<style>
-	table {
-	  font-family: arial, sans-serif;
-	  border-collapse: collapse;
-	  width: 100%;
-	  max-width: 500px;
-	}
-
-	td, th {
-	  border: 1px solid #dddddd;
-	  text-align: left;
-	  padding: 8px;
-	}
-
-	tr:nth-child(even) {
-	  background-color: #dddddd;
-	}
-	
-	td button {
-		width: 100%;
-	}
-	</style>
+	<link rel="icon" type="image/png" href="favicon.ico">
+	<link rel="stylesheet" href="default.css">
 </head>
 <body>
-	<h1>LoRA Dataset Scripts Webui</h1>
-	<h2>Datasets:</h2>
-	<input disabled type="text" value="name"> </input>
-	<input disabled type="text" value="description"> </input>
-	<button disabled> New Dataset </button>
-	<br><br>
+	<h1>LoRA Dataset Script Webui</h1>
+	<!-- Dataset functions -->
+	<div id="dataset-div">
+		<h2>Datasets:</h2>
+		<input disabled type="text" value="name"> </input>
+		<input disabled type="text" value="description"> </input>
+		<button disabled> New Dataset </button>
+		<br><br>
+		<table>
+			<thead>
+				<tr>
+					<td> Name </td>
+					<td> Folder </td>
+					<td> Images </td>
+					<td> Move </td>
+				</tr>
+			</thead>
+			<tbody id="dataset-table">
+			</tbody>
+		</table>
+		<script src="dataset.js"></script>
+	</div>
 	
-	<div id="datasets"></div>
-	<h2>Status check:</h2>
-	<div id="check"></div>
-	<script src="check.js"></script>
-	<script src="dataset.js"></script>
+	<!-- Status functions -->
+	<div id="status-div">
+		<h2>Status check:</h2>
+		<table>
+			<thead>
+				<tr>
+					<td> Step </td>
+					<td> Images </td>
+					<td> Total Tags </td>
+					<td> Unique Tags </td>
+				</tr>
+			</thead>
+			<tbody id="status-table">
+			</tbody>
+		</table>
+		<script src="status.js"></script>
+	</div>
 </body>
 </html>
 

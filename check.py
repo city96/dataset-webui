@@ -67,7 +67,7 @@ def get_step_info(folder):
 		print(f'  Unique tags: {data["tag_count"]["unique"]}')
 	return data
 
-def api_json_check():
+def api_json_status():
 	folder_list = [
 		"0 - raw",
 		"1 - cropped",
