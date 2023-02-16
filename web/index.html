@@ -11,9 +11,15 @@
 	<!-- Dataset functions -->
 	<div id="dataset-div">
 		<h2>Datasets:</h2>
-		<input disabled type="text" value="name"> </input>
-		<input disabled type="text" value="description"> </input>
-		<button disabled> New Dataset </button>
+		<div class="input">
+			<label>New Dataset Name =</label>
+			<span><input type="text" placeholder="name"></input></span>
+		</div>
+		<div class="input">
+			<label>New Dataset Description =</label>
+			<span><textarea rows="1" placeholder="description"></textarea></span>
+		<button style="float:right" disabled> Create New Dataset </button>
+		</div>
 		<br><br>
 		<table>
 			<thead>
@@ -33,6 +39,10 @@
 	<!-- Status functions -->
 	<div id="status-div">
 		<h2>Status check:</h2>
+		<div class="status-info">
+			<p id="status-name">No dataset</p>
+			<p id="status-desc">No dataset</p>
+		</div>
 		<table>
 			<thead>
 				<tr>
@@ -46,6 +56,350 @@
 			</tbody>
 		</table>
 		<script src="status.js"></script>
+	</div>
+	
+	<!-- Tag filters -->
+	<div id="tag-div">
+<!-- START TAG SETTING LIST -->
+<h2>Tag filters:</h2>
+<a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
+<button onclick="save_json()"> Save changes </button>
+<button onclick="save_json()"> Discard changes </button>
+<button> Apply filters [test run] </button>
+<button> Apply filters [save output] </button>
+<br>
+<p> Script output will appear here: </p>
+<pre class="tip" id="t_output">
+idle
+</pre>
+
+<hr>
+<pre class="tip">
+Activate tagging rules by filling out the fields below, leave them empty to disable them.
+To list multiple tags, separate them with a comma like you would in the webui.
+Some of these options can be used multiple times, use the buttons to add/remove more rules.
+Don't use underscores, these will be converted to spaces when loading the taglist.
+</pre>
+<hr>
+
+<!-- output_folder -->
+<div class="input">
+	<label>Input folder =</label>
+	<select id="t_input_folder">
+		<option value="3 - tagged" default>3 - tagged</option>
+		<option value="2 - sorted">2 - sorted</option>
+		<option value="1 - cropped">1 - cropped</option>
+		<option value="0 -  raw">0 -  raw</option>
+	</select>
+</div>
+<pre class="tip">
+This is where your images and txt files containing tags should be.
+</pre>
+
+<!-- input_folder -->
+<div class="input">
+	<label>Output folder =</label>
+	<select id="t_output_folder">
+		<option value="4 - fixed" default>4 - fixed</option>
+		<option value="5 - out">5 - out</option>
+	</select>
+</div>
+<pre class="tip">
+This is where the script will save the modified txt files.
+You also have the option to copy your images here in the final step.
+</pre>
+<hr>
+
+<!-- triggerword -->
+<div class="input">
+	<label>Triggerword =</label>
+	<span><input type="text" id="t_triggerword" placeholder="htfam"> </input></span>
+</div>
+<pre class="tip">
+Your LoRa triggerword - this is what the model will respond to.
+It will be added to all images in position 1.
+Leave empty to not add a triggerword.
+</pre>
+
+<!-- secondary_triggerword -->
+<div class="input">
+	<label>Secondary triggerword(s) =</label>
+	<span><input type="text" id="t_triggerword_extra" placeholder="MikoStyle2019, office lady"> </input></span>
+</div>
+<pre class="tip">
+Move these tags to the front of the tag list.
+Useful for "shuffle_tokens" and "keep_tokens" training options.
+If you have an outfit tag or second triggerword you can add it
+here to make sure it doesn't get shuffled.
+Don't add your main Triggerword here, it is already the first tag by default.
+These don't get added automatically to any images, unless you add them with another rule.
+</pre>
+<hr>
+
+<!-- whitelist -->
+<div class="input">
+	<label>Whitelist =</label>
+	<span><input type="text" id="t_whitelist" placeholder="headband, big ears"> </input></span>
+</div>
+<pre class="tip">
+These tags will never be removed by any of the filters.
+</pre>
+
+<!-- blacklist -->
+<div class="input">
+	<label>Blacklist =</label>
+	<span><input type="text" id="t_blacklist" value="blurry, motion blur, chromatic aberration"> </input></span>
+</div>
+<pre class="tip">
+Always remove these tags from all images
+</pre>
+<hr>
+
+<!-- booru -->
+<div class="input">
+	<label>Tag source =</label>
+	<select id="t_booru_type">
+		<option value="danbooru" default>danbooru</option>
+		<option value="gelbooru">gelbooru</option>
+	</select>
+</div>
+<pre class="tip">
+Tag source. can be either gelbooru or danbooru
+gelbooru is similar and is easy to dump tags from
+</pre>
+
+<!-- booru_general_only -->
+<div class="input">
+	<label>General Tags Only </label>
+	<input type="checkbox" id="t_booru_general_only" checked>
+</div>
+<pre class="tip">
+Remove artist / character / copyright / meta tags - only keep general tags.
+This is recommended as the autotagger often adds invalid series/character names.
+If you don't use it, increase the limit for PopularOnly in the next menu.
+</pre>
+
+<!-- booru_popular_only -->
+<div class="input">
+	<label>Popular only =</label>
+	<input type="number" id="t_booru_popular_only" value="2500"> </input>
+</div>
+<pre class="tip">
+Only keep the most popular tags, removing the more obscure ones.
+Anything less popular (unless whitelisted) will be removed.
+Setting this to 500 would only keep the 500 most popular tags.
+Setting this to 10000 would keep a total of 10000 tags.
+Increase to ~10000 when using GeneralTagsOnly = False.
+</pre>
+<hr>
+
+<!-- frequent_only -->
+<div class="input">
+	<label>Frequent only =</label>
+	<input type="number" id="t_frequent_only" value="2"> </input>
+</div>
+<pre class="tip">
+Only keep tags that appear at least on N of the tagged images.
+If a tag appears less than the number specified here, it gets removed.
+This can be useful to filter out random junk from the autotagger.
+Settings this to 5 would cause the tag "jungle" that only appears 
+on 3 images to be removed from all 3 images.
+</pre>
+<hr>
+
+<!-- norm_eye_color -->
+<div class="input">
+	<label>Eye color =</label>
+	<span><input type="text" id="t_norm_eye_color" placeholder="heterochromia, green eyes, blue eyes,"> </input></span>
+</div>
+<pre class="tip">
+Normalize eye color.
+This replaces all existing eye color tags with your given tag(s).
+If at least one eye color tag is present, your list of tags will be added.
+This is usually safe to use. It only applies to color tags.
+</pre>
+
+
+<!-- norm_hair_color -->
+<div class="input">
+	<label>Hair color =</label>
+	<span><input type="text" id="t_norm_hair_color" placeholder="black hair"> </input></span>
+</div>
+<pre class="tip">
+Normalize hair color.
+This replaces all hair color tags with your given tag(s).
+This is usually safe to use, but might cause issues with
+'streaked hair' or 'multicolored hair' etc. unless also specified
+</pre>
+
+<!-- norm_hair_style -->
+<div class="input">
+	<label>Hair style =</label>
+	<span><input type="text" id="t_norm_hair_style" placeholder="long hair, single braid, hair ornament"> </input></span>
+</div>
+<pre class="tip">
+Normalize hair length/style.
+This replaces all other hair tags with your given tag(s).
+This can cause issues if your characters hairstyle appears to "change" based 
+on the viewing angle (eg. can't see single braid in portrait photo).
+</pre>
+<hr>
+
+<!-- folder_rules -->
+<p> Folder rules = </p>
+<table>
+	<thead>
+		<tr>
+			<td> Rule type </td>
+			<td> Folder </td>
+			<td> Tag Action </td>
+			<td> Target tags </td>
+		</tr>
+	</thead>
+	<tbody id="t_folder_rules">
+	</tbody>
+</table>
+
+<br>
+<button onclick="folder_rule_add()"> Add rule </button>
+<button onclick="folder_rule_del()"> Delete last rule </button>
+
+<pre class="tip">
+Folder tags
+Add or remove tags based on the folder name.
+This is useful if you have sorted your images by outfit
+The first value is your folder name, put your tag(s) after it
+If you're adding it to add more triggerwords, make sure to add 
+them to the RaisedTags function as well.
+</pre>
+<hr>
+
+<!-- custom_rules -->
+<p> Transitivity and Replacement rules = </p>
+<table>
+	<thead>
+		<tr>
+			<td> Rule type </td>
+			<td> Source tag(s) </td>
+			<td> Target tags </td>
+		</tr>
+	</thead>
+	<tbody id="t_custom_rules">
+	</tbody>
+</table>
+
+<br>
+<button onclick="custom_rule_add()"> Add rule </button>
+<button onclick="custom_rule_del()"> Delete last rule </button>
+
+<pre class="tip">
+Transitivity rule:
+Any image that has the [Source tag] will also get the [Target tags] added.
+If you have multiple [Source tags], then it looks for all of them
+(eg. add "red hakama" and "hakama skirt" to all images tagged with "miko")
+
+Replacement rule:
+Replace all tags in the [Target tags] list with the [Source tag]
+(eg. replace replace "bell" and "jingle bell" with "neck bell")
+</pre>
+<hr>
+
+<!-- spice_rules -->
+<p> Spice rules = </p>
+<table>
+	<thead>
+		<tr>
+			<td> Rule type </td>
+			<td> % of tags to affect </td>
+			<td> Target tags </td>
+		</tr>
+	</thead>
+	<tbody id="t_spice_rules">
+	</tbody>
+</table>
+
+<br>
+<button onclick="spice_rule_add()"> Add rule </button>
+<button onclick="spice_rule_del()"> Delete last rule </button>
+
+<pre class="tip">
+Add/Remove tags randomly
+This feature is experimental!
+The tags in the list will be randomly added to/removed from your images.
+It is only useful for huge datasets.
+You can use it to de-emphasize some frequent tags like solo or to mix
+some physical attributes like hair colors;
+</pre>
+<hr>
+
+<!-- image_filter -->
+<div class="input">
+	<label>Image Blacklist =</label>
+	<span><input type="text" id="t_image_blacklist" placeholder="head out of frame, close-up, multiple girls,"> </input></span>
+</div>
+<pre class="tip">
+Remove images by tag.
+If an image has ANY of the tags in this list, it won't be saved to the OutputFolder.
+This is a pre-filter, meaning all images with this tag are removed
+*before* any tags are updated/removed. It's also not affected by the whitelist.
+</pre>
+
+<p> Image filter rules = </p>
+<table>
+	<thead>
+		<tr>
+			<td> Rule type </td>
+			<td> Filter tags </td>
+		</tr>
+	</thead>
+	<tbody id="t_image_filter_rules">
+	</tbody>
+</table>
+
+<br>
+<button onclick="image_filter_rule_add()"> Add rule </button>
+<button onclick="image_filter_rule_del()"> Delete last rule </button>
+
+<pre class="tip">
+Remove images by tag combination.
+If an image has ALL of the tags in this list, it WON'T be saved to the OutputFolder.
+This is a pre-filter, meaning all images with this tag are removed
+*before* any tags are updated/removed. It's also not affected by the whitelist.
+</pre>
+<hr>
+
+<!-- image_category -->
+<table>
+	<thead>
+		<tr>
+			<td> Rule type </td>
+			<td> Category name </td>
+			<td> Source tags </td>
+		</tr>
+	</thead>
+	<tbody id="t_image_category_rules">
+	</tbody>
+</table>
+
+<br>
+<button onclick="image_category_rule_add()"> Add rule </button>
+<button onclick="image_category_rule_del()"> Delete last rule </button>
+<pre class="tip">
+Categorize images by tags. [supports multiple rules]
+This will create extra folders in your OutputFolder for each tag you list here.
+One image can only belong to one category, so the first match will be used.
+This is useful if you have multiple characters/concepts tagged but not sorted.
+You might be able to get away with sorting your characters by hair color.
+Anything not matches by this filter will still go in the same category as the input.
+"repeats" will be set to 1 for your new folder, change this as needed!
+
+note: If you do use this, make sure to remove all files in your output folder.
+To avoid data loss, this script will NEVER delete anything.
+You might end up with duplicate images/categories if you don't delete them.
+</pre>
+
+<!-- END TAG SETTING LIST -->
+	<script src="tags.js"></script>
 	</div>
 </body>
 </html>

@@ -3,6 +3,7 @@
 import asyncio
 from aiohttp import web
 import aiohttp
+import json
 import os
 from check import api_json_status
 from dataset_manager import api_json_dataset
@@ -27,6 +28,18 @@ async def api_status(request):
 	data = api_json_status()
 	return web.json_response(data)
 
+async def api_json_save(request):
+	if request.body_exists:
+		data = await request.read()
+		data = json.loads(data)
+		strdata = json.dumps(data, indent=2)
+		print(strdata)
+		# sanity check
+		if len(data["dataset_name"] > 0) and len("tags") > 0:
+			with open("dataset.json", "w") as f:
+				f.write(strdata)
+	return web.json_response({})
+
 async def api_dataset(request):
 	if "path" in request.rel_url.query.keys():
 		data = api_json_dataset(request.match_info['command'],request.rel_url.query['path'])
@@ -37,6 +50,7 @@ app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
 				web.get('/api/status', api_status),
 				web.get('/api/dataset/{command}', api_dataset),
+				web.post('/api/json/save', api_json_save),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
