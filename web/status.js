@@ -1,6 +1,10 @@
-function status(info){
+function status(data){
+	var info = data["steps"]
+	document.getElementById("d_name").value = data["meta"]["name"];
+	document.getElementById("d_description").value = data["meta"]["description"];
 	var table = document.getElementById("status-table")
 	table.innerHTML = "";
+	
 
 	for(const key in info) {
 		// Name

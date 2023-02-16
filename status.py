@@ -20,7 +20,6 @@ def get_step_info(folder):
 		"tag_count" : {},
 		"uncategorized" : None,
 	}
-	print(f"\nStep {folder}")
 	if not os.path.isdir(folder):
 		data["error"] = "folder for step '{folder}' doesn't exist"
 		print(data["error"])
@@ -56,24 +55,24 @@ def get_step_info(folder):
 
 	if data["categories"]:
 		data["img_count"] += sum(data["categories"].values())
-		print(f' Total categorized images: {data["img_count"]}')
-		for cat, count in data["categories"].items():
-			print(f"  {cat} ({count})")
+		# print(f' Total categorized images: {data["img_count"]}')
+		# for cat, count in data["categories"].items():
+			# print(f"  {cat} ({count})")
 	if data["uncategorized"]:
 		data["img_count"] += data["uncategorized"]
-		print(f' Total uncategorized images: {data["uncategorized"]}')
+		# print(f' Total uncategorized images: {data["uncategorized"]}')
 	if not data["categories"] and not data["uncategorized"]:
 		data["error"] = f"folder for step '{folder}' doesn't have any images"
 		print(data["error"])
 		return data
 	if len(tags)>0:
 		data["tag_count"]["total"] = len(tags)
-		print(f' Total tags: {data["tag_count"]["total"]}')
+		# print(f' Total tags: {data["tag_count"]["total"]}')
 		if data["img_count"] > 0:
 			data["tag_count"]["average"] = round(len(tags)/data["img_count"],2)
-			print(f'  Avg tag per image: {data["tag_count"]["average"]}')
+			# print(f'  Avg tag per image: {data["tag_count"]["average"]}')
 		data["tag_count"]["unique"] = len(list(set(tags)))
-		print(f'  Unique tags: {data["tag_count"]["unique"]}')
+		# print(f'  Unique tags: {data["tag_count"]["unique"]}')
 	return data
 
 def api_json_status():
@@ -86,9 +85,15 @@ def api_json_status():
 		"5 - out",
 	]
 
-	data = {}
+	if os.path.isfile("dataset.json"):
+		with open("dataset.json") as f:
+			data = json.load(f)
+	else:
+		data = {}
+
+	data["steps"] = {}
 	for f in folder_list:
-		data[f] = get_step_info(f)
+		data["steps"][f] = get_step_info(f)
 	# return json.dumps(data)
 	return data
 

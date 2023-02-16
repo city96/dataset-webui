@@ -11,16 +11,6 @@
 	<!-- Dataset functions -->
 	<div id="dataset-div">
 		<h2>Datasets:</h2>
-		<div class="input">
-			<label>New Dataset Name =</label>
-			<span><input type="text" placeholder="name"></input></span>
-		</div>
-		<div class="input">
-			<label>New Dataset Description =</label>
-			<span><textarea rows="1" placeholder="description"></textarea></span>
-		<button style="float:right" disabled> Create New Dataset </button>
-		</div>
-		<br><br>
 		<table>
 			<thead>
 				<tr>
@@ -33,16 +23,22 @@
 			<tbody id="dataset-table">
 			</tbody>
 		</table>
+		<h3>Current:</h3>
+		<div class="input">
+			<label>Dataset Name =</label>
+			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
+		</div>
+		<div class="input">
+			<label>Dataset Description =</label>
+			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
+		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
+		</div>
 		<script src="dataset.js"></script>
 	</div>
 	
 	<!-- Status functions -->
 	<div id="status-div">
 		<h2>Status check:</h2>
-		<div class="status-info">
-			<p id="status-name">No dataset</p>
-			<p id="status-desc">No dataset</p>
-		</div>
 		<table>
 			<thead>
 				<tr>
@@ -64,7 +60,7 @@
 <h2>Tag filters:</h2>
 <a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
 <button onclick="save_json()"> Save changes </button>
-<button onclick="save_json()"> Discard changes </button>
+<button onclick="load_json()"> Discard changes </button>
 <button> Apply filters [test run] </button>
 <button> Apply filters [save output] </button>
 <br>
@@ -159,8 +155,8 @@ Always remove these tags from all images
 <div class="input">
 	<label>Tag source =</label>
 	<select id="t_booru_type">
-		<option value="danbooru" default>danbooru</option>
-		<option value="gelbooru">gelbooru</option>
+		<option value="danbooru" default>Danbooru</option>
+		<option value="gelbooru">Gelbooru</option>
 	</select>
 </div>
 <pre class="tip">

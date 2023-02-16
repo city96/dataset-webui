@@ -5,8 +5,8 @@ from aiohttp import web
 import aiohttp
 import json
 import os
-from check import api_json_status
-from dataset_manager import api_json_dataset
+from status import api_json_status
+from dataset_manager import api_json_dataset, create_dataset
 
 app = web.Application()
 
@@ -35,9 +35,11 @@ async def api_json_save(request):
 		strdata = json.dumps(data, indent=2)
 		print(strdata)
 		# sanity check
-		if len(data["dataset_name"] > 0) and len("tags") > 0:
+		if len(data["meta"]["name"]) > 0 and len(data["tags"]) > 0:
 			with open("dataset.json", "w") as f:
 				f.write(strdata)
+	else:
+		print("no data")
 	return web.json_response({})
 
 async def api_dataset(request):
@@ -45,10 +47,22 @@ async def api_dataset(request):
 		data = api_json_dataset(request.match_info['command'],request.rel_url.query['path'])
 	data = api_json_dataset(request.match_info['command'])
 	return web.json_response(data)
+	
+async def api_dataset_create(request):
+	if os.path.isfile("dataset.json"): return web.json_response({"no"}) # fuck javascript triggering twice
+	if request.body_exists:
+		data = await request.read()
+		print(data)
+		data = json.loads(data)
+		create_dataset(data)
+	else:
+		print("no data")
+	return web.json_response({})
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
 				web.get('/api/status', api_status),
+				web.post('/api/dataset/create', api_dataset_create),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/json/save', api_json_save),
 				web.get('/{name}', handle)])
