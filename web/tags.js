@@ -223,11 +223,9 @@ function tag_json_clear() {
 	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules', 't_image_category_rules'].forEach(function(id){
 		var table = document.getElementById(id)
 		let lastRow = table.rows.length-1
-		while (lastRow > 0) {
+		while (lastRow >= 0) {
+			table.removeChild(table.rows[lastRow])
 			lastRow = table.rows.length-1;
-			if (lastRow >= 0) {
-				table.removeChild(table.rows[lastRow])
-			}
 		}
 	})
 }
