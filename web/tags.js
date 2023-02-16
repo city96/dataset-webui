@@ -378,3 +378,18 @@ function save_json(data) {
 	console.log(data)
 	ajax.send(data);
 }
+
+function fix_tags() {
+	console.log("run")
+	var ajax = new XMLHttpRequest();
+	ajax.responseType = 'json';
+	ajax.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) { 
+			var data = this.response;
+			console.log(data)
+			update_status();
+		};
+	};
+	ajax.open('GET',"/api/tags/run",true);
+	ajax.send();
+}

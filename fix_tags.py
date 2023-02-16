@@ -1,23 +1,27 @@
 #!/usr/bin/python3
-# script to fix and filter tags using the rules in 'dataset.ini'
+# script to fix and filter tags using the rules in 'dataset.json'
 # don't use common.py, this has to remain completely standalone!
 import os
-import configparser
 import random
 import json
 
-if os.path.isfile("dataset.ini"):
-	c = configparser.ConfigParser()
-	c.optionxform=str #case sensitive
-	c.read("dataset.ini")
+c = None
+
+if os.path.isfile("dataset.json"):
+	with open("dataset.json") as f:
+		c = json.load(f)
+		if "tags" not in c.keys():
+			print("no tags")
+			exit(1)
+		c = c["tags"]
 else:
-	print("Missing 'dataset.ini' config")
+	print("Missing 'dataset.json' config")
 	exit(1)
 
 # show removed tags at each step
-debug = c["Tags"]["Debug"].lower() == "true"
+debug = False #c["Debug"].lower() == "true"
 
-# image definition. do NOT edit __str__ and __repr__!
+# image defjsontion. do NOT edit __str__ and __repr__!
 class Image:
 	filename = None
 	category = None
@@ -25,11 +29,11 @@ class Image:
 	tag_path = None
 	tags = []
 	def get_new_img_path(self):
-		new_img_path = os.path.join(c["Tags"]["OutputFolder"],os.path.join(self.category,self.filename))
+		new_img_path = os.path.join(c["folder_output"],os.path.join(self.category,self.filename))
 		return new_img_path 
 	def get_new_tag_path(self):
 		name, ext = os.path.splitext(self.filename)
-		new_tag_path = os.path.join(c["Tags"]["OutputFolder"],os.path.join(self.category,name+".txt"))
+		new_tag_path = os.path.join(c["folder_output"],os.path.join(self.category,name+".txt"))
 		return new_tag_path
 	def __int__(self):
 		return len(self.tags)
@@ -38,7 +42,7 @@ class Image:
 	def __repr__(self):
 		return ", ".join([t.name for t in sorted(self.tags)])
 
-# tag definition. do NOT edit __str__ and __repr__!
+# tag defjsontion. do NOT edit __str__ and __repr__!
 class Tag:
 	name = None
 	position = 10
@@ -102,26 +106,21 @@ def get_filter_info(filter_type, tag_rules):
 			
 
 # filter images by tags
-def image_filter(images, tag_rules):
-	blacklists = get_filter_info("ImageBlacklistTags", tag_rules)
-	filters = get_filter_info("ImageBlacklistFilter", tag_rules)
-	if not blacklists and not filters:
+def image_filter(images, img_blacklist, img_filters):
+	if not img_blacklist and not img_filters:
 		return images
 	print("\nFiltering input images.")
 	removed = []
 	filtered = []
 	for i in images:
-		for b in blacklists.values():
-			if any([t in [x.name for x in i.tags] for t in [x.name for x in b]]):
-				removed.append(i.filename)
-				images.remove(i)
-				break
+		if any([t in [x.name for x in i.tags] for t in [x.name for x in img_blacklist]]):
+			removed.append(i.filename)
+			images.remove(i)
 	for i in images:
-		for f in filters.values():
-			if all([t in [x.name for x in i.tags] for t in [x.name for x in f]]):
+		for f in img_filters:
+			if all([t in [x.name for x in i.tags] for t in [x.name for x in str_to_taglist(f["target"])]]):
 				filtered.append(i.filename)
 				images.remove(i)
-				break
 
 	print(f" removed {len(removed)} images from input [by tags]")
 	if debug: print("REM:",removed)
@@ -169,11 +168,16 @@ def popular_only(images, tag_file, limit, general_only):
 		general_filter = "type"
 
 	for t in raw_tags:
-		if general_only and t[general_filter] == 0:
-			tags.append(t["name"].replace("_"," "))
+		if general_only and t[general_filter] != 0:
+			continue
+		tags.append(t["name"].replace("_"," "))
 		if len(tags) >= limit:
 			break
-
+	
+	if len(tags) <= 5:
+		print(f" failed to load tags from {tag_file}")
+		return images
+	
 	print(f" loaded {len(tags)} tags successfully from {tag_file}")
 	for i in images:
 		for t in i.tags:
@@ -182,7 +186,7 @@ def popular_only(images, tag_file, limit, general_only):
 				i.tags.remove(t)
 
 	print(f" removed {len(set(removed))} obscure tags")
-	if debug: print("REM:",removed)
+	if debug: print("REM:",list(set(removed)))
 	img_status(images)
 	return images
 
@@ -296,32 +300,31 @@ def normalize_hair_style(images,target_style):
 
 # add tags based on folder names. requires entire config file for parsing
 def folder_rules(images, tag_rules):
-	add_rules = get_filter_info("AddFolder", tag_rules)
-	remove_rules = get_filter_info("RemoveFolder", tag_rules)
-	if not add_rules and not remove_rules:
+	if not tag_rules:
 		return images
 	# add rules
-	for rname, r in add_rules.items():
-		added = 0
-		for i in images:
-			if i.category == r[0].name:
-				i.tags += (r[1:])
-				added += 1
-		if added > 0:
-			print(f" AddFolder [{rname}] (+{added} to {r[0].name})")
-	
-	# remove rules
-	for rname, r in remove_rules.items():
-		removed = []
-		for i in images:
-			if i.category == r[0].name:
-				for t in i.tags:
-					if t.name in [str(x) for x in r[1:]]:
-						removed.append(t)
-						i.tags.remove(t)
-		if len(removed) > 0:
-			print(f" RemoveFolder [{rname}] (-{len(removed)} from {r[0].name})")
-			if debug: print(" REM:",list(set(removed)))
+	for rule in tag_rules:
+		tags = str_to_taglist(rule["target"])
+		folder = rule["folder"]
+		if rule["action"] == "add":
+			added = 0
+			for i in images:
+				if i.category == folder:
+					i.tags += (tags)
+					added += 1
+			if added > 0:
+				print(f" AddFolder [{rule['target']}] (+{added} to {folder})")
+		elif rule["action"] == "remove":
+			removed = []
+			for i in images:
+				if i.category == folder:
+					for t in i.tags:
+						if t.name in [x.name for x in tags]:
+							removed.append(t.name)
+							i.tags.remove(t)
+			if len(removed) > 0:
+				print(f" RemoveFolder [{rule['target']}] (-{len(removed)} from {folder})")
+				if debug: print(" REM:",list(set(removed)))
 	return images
 
 # add tags based on existing tags.
@@ -417,8 +420,9 @@ def add_triggerword(images, tws):
 	return images
 
 # global whitelist
-whitelist = str_to_taglist(c["Tags"]["Whitelist"])
-whitelist += str_to_taglist(c["Tags"]["Triggerword"])
+whitelist = str_to_taglist(c["whitelist"])
+whitelist += str_to_taglist(c["triggerword"])
+# whitelist += str_to_taglist(c["triggerword_extra"])
 
 def blacklist(images,blacklist):
 	if not blacklist:
@@ -453,8 +457,9 @@ def recategorize_images(images,sort_tags):
 	categorized = 0
 	for i in images:
 		for t in sort_tags:
-			if t.name in [x.name for x in i.tags]:
-				i.category = f"1_{t.name}"
+			target = str_to_taglist(t["target"])
+			if all(x.name in [x.name for x in i.tags] for x in target):
+				i.category = f"1_{t['category']}"
 				categorized += 1
 	if categorized:
 		print(f"Sorted ~{categorized} images into {len(sort_tags)} new categories")
@@ -479,7 +484,7 @@ def dedupe_tags(images):
 def write_tags(images, folder):
 	print(f"Writing tags to folder '{folder}'")
 	for i in images:
-		cat = os.path.join(c["Tags"]["OutputFolder"],i.category)
+		cat = os.path.join(folder,i.category)
 		if not os.path.isdir(cat):
 			os.mkdir(cat)
 		with open(i.get_new_tag_path(),"w") as f:
@@ -511,56 +516,70 @@ def img_status(images,verbose=False):
 	print(f" Unique tags: {len(list(set(sum([[str(y) for y in x.tags] for x in images],[]))))}")
 	# print("\nDEBUG: tags left:",images[1])
 
-# default logic + command line UI
-def cli_ui():
+# default logic
+def run(save_tags=False,save_images=False):
 	print("Tag fixer")
-	images = image_loader(c["Tags"]["InputFolder"],c["Tags"]["OutputFolder"])
+
+	# reload json
+	if os.path.isfile("dataset.json"):
+		with open("dataset.json") as f:
+			c = json.load(f)
+			if "tags" not in c.keys():
+				print("no tags")
+				return
+			c = c["tags"]
+	else:
+		print("Missing 'dataset.json' config")
+		return
+
+	# load images
+	images = image_loader(c["folder_input"],c["folder_output"])
 	# stats
 	img_status(images,True)
 
-	if c["Tags"]["FixUnderscores"]:
+	if True: #c["FixUnderscores"]:
 		images = underscore_fix(images)
 
 	# filter input images
-	images = image_filter(images,c["Tags"])
+	print(c["image_blacklist"])
+	images = image_filter(images,str_to_taglist(c["image_blacklist"]),c["filter_rules"])
 
 	# popular-only filter
-	tag_file = os.path.join("other",f'{c["Tags"]["TagSource"]}-tags.json')
+	tag_file = os.path.join("other",f'{c["booru"]["type"]}-tags.json')
 	if os.path.isfile(tag_file):
-		general_only = c["Tags"]["GeneralTagsOnly"].lower() == "true"
-		images = popular_only(images,tag_file,int(c["Tags"]["PopularOnly"]),general_only)
+		images = popular_only(images,tag_file,int(c["booru"]["popular_only"]),c["booru"]["general_only"])
 	else:
 		print(f"Missing file {tag_file}\n PopularOnly filter disabled!")
 
 	# apply filters
-	images = frequent_only(images,int(c["Tags"]["FrequentOnly"]))
-	images = normalize_eye_color(images,str_to_taglist(c["Tags"]["EyeColor"]))
-	images = normalize_hair_color(images,str_to_taglist(c["Tags"]["HairColor"]))
-	images = normalize_hair_style(images,str_to_taglist(c["Tags"]["HairStyle"]))
+	images = frequent_only(images,int(c["frequent_only"]))
+	images = normalize_eye_color(images,str_to_taglist(c["normalize"]["eye_color"]))
+	images = normalize_hair_color(images,str_to_taglist(c["normalize"]["hair_color"]))
+	images = normalize_hair_style(images,str_to_taglist(c["normalize"]["hair_style"]))
 
 	# rulesets
 	print("\napplying custom rulesets (if any)")
-	images = folder_rules(images,c["Tags"])
-	images = transitive_rules(images,c["Tags"])
-	images = replace_rules(images,c["Tags"])
-	images = spice_rules(images,c["Tags"])
+	images = folder_rules(images,c["folder_rules"])
+	images = transitive_rules(images,c)
+	images = replace_rules(images,c)
+	images = spice_rules(images,c)
 
 	# post-filters
-	images = add_triggerword(images,str_to_taglist(c["Tags"]["Triggerword"]))
-	images = raise_tags(images,str_to_taglist(c["Tags"]["RaisedTags"]))
-	images = blacklist(images,str_to_taglist(c["Tags"]["Blacklist"]))
-	images = recategorize_images(images,str_to_taglist(c["Tags"]["ImageCategories"]))
+	images = add_triggerword(images,str_to_taglist(c["triggerword"]))
+	images = raise_tags(images,str_to_taglist(c["triggerword_extra"]))
+	images = blacklist(images,str_to_taglist(c["blacklist"]))
+	images = recategorize_images(images,c["category_rules"])
 	images = dedupe_tags(images)
 
 	print("\nFinal:")
 	img_status(images,True)
-	if debug or input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y":
+	if debug or (not save_tags and input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y"):
 		exit(0)
-	write_tags(images,c["Tags"]["OutputFolder"])
+	write_tags(images,c["folder_output"])
 	if not all([os.path.isfile(x.get_new_img_path()) for x in images]):
-		if input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
+		if save_images or input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
 			copy_images(images)
 
 if __name__ == "__main__":
-	cli_ui()
+	run()
 	input("\nPress any key to exit...")

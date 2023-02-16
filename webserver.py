@@ -7,6 +7,7 @@ import json
 import os
 from status import api_json_status
 from dataset_manager import api_json_dataset, create_dataset
+from fix_tags import run
 
 app = web.Application()
 
@@ -47,6 +48,10 @@ async def api_dataset(request):
 		data = api_json_dataset(request.match_info['command'],request.rel_url.query['path'])
 	data = api_json_dataset(request.match_info['command'])
 	return web.json_response(data)
+
+async def api_fix_tags(request):
+	run(True,True)
+	return web.json_response({})
 	
 async def api_dataset_create(request):
 	if os.path.isfile("dataset.json"): return web.json_response({"no"}) # fuck javascript triggering twice
@@ -65,6 +70,7 @@ app.add_routes([web.get('/', index),
 				web.post('/api/dataset/create', api_dataset_create),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/json/save', api_json_save),
+				web.get('/api/tags/run', api_fix_tags),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
