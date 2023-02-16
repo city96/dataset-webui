@@ -145,18 +145,19 @@ def get_dataset(path):
 	return d
 
 # callable version
-def api_json_dataset(command):
+def api_json_dataset(command,path=None):
 	data = {}
-	if command == "get_all":
+	if command == "info":
 		datasets = get_all_saved_datasets()
 		d = get_dataset("./")
-		data["active"] = {
-			"name": d.name,
-			"description": d.description,
-			"save_path": "./",
-			"img_count": d.size,
-			"active": True
-		}
+		if d:
+			data["active"] = {
+				"name": d.name,
+				"description": d.description,
+				"save_path": "./",
+				"img_count": d.size,
+				"active": True
+			}
 		for d in datasets:
 			data[d.save_path] = {
 				"name": d.name,
@@ -165,6 +166,18 @@ def api_json_dataset(command):
 				"img_count": d.size,
 				"active": False
 			}
+	elif path and command == "save" and path == "./":
+		print("save",path)
+		dataset = get_dataset(path)
+		save_dataset(dataset)
+		data["status"] = "ok"
+	elif path and command == "load" and os.path.isdir(path):
+		print("load",path)
+		dataset = get_dataset(path)
+		load_dataset(dataset)
+		data["status"] = "ok"
+	else:
+		print("invalid",command,path)
 	return data
 
 # default CLI ui with checks

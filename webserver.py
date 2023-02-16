@@ -28,13 +28,15 @@ async def api_status(request):
 	return web.json_response(data)
 
 async def api_dataset(request):
-	data = api_json_dataset("get_all")
+	if "path" in request.rel_url.query.keys():
+		data = api_json_dataset(request.match_info['command'],request.rel_url.query['path'])
+	data = api_json_dataset(request.match_info['command'])
 	return web.json_response(data)
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
 				web.get('/api/status', api_status),
-				web.get('/api/dataset', api_dataset),
+				web.get('/api/dataset/{command}', api_dataset),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':

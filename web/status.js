@@ -29,6 +29,11 @@ function status(info){
 	}
 }
 
+function hide_status() {
+	var table = document.getElementById("status-table")
+	table.innerHTML = "";
+}
+
 function update_status() {
 	console.log("status")
 	var ajax = new XMLHttpRequest();
@@ -41,5 +46,3 @@ function update_status() {
 	ajax.open('GET',"/api/status",true);
 	ajax.send();
 }
-
-update_status()

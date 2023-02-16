@@ -2,7 +2,16 @@
 # Script to track progress
 import os
 import json
-from fix_tags import str_to_taglist
+
+# comma separated string to tag list
+def str_to_taglist(string):
+	taglist = []
+	tags = string.replace('\n', ',').split(",")
+	tags = [a.strip() for a in tags]
+	for t in tags:
+		if t:
+			taglist.append(t)
+	return taglist
 
 def get_step_info(folder):
 	data = {
@@ -63,7 +72,7 @@ def get_step_info(folder):
 		if data["img_count"] > 0:
 			data["tag_count"]["average"] = round(len(tags)/data["img_count"],2)
 			print(f'  Avg tag per image: {data["tag_count"]["average"]}')
-		data["tag_count"]["unique"] = len(list(set([x.name for x in tags])))
+		data["tag_count"]["unique"] = len(list(set(tags)))
 		print(f'  Unique tags: {data["tag_count"]["unique"]}')
 	return data
 
