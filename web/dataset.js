@@ -39,7 +39,7 @@ function update_dataset_table(info){
 		// Images
 		var c = r.insertCell(2)
 		if (info[key]["img_count"] > 0) {
-			c.innerHTML = info[key]["img_count"]
+			c.innerHTML = info[key]["img_count"]["total"]
 		} else {
 			c.innerHTML = "-"
 		}

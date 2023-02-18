@@ -5,7 +5,7 @@ from aiohttp import web
 import aiohttp
 import json
 import os
-from status import api_json_status
+from status import get_status
 from dataset_manager import api_json_dataset, create_dataset
 from fix_tags import run
 
@@ -25,8 +25,9 @@ async def handle(request):
 	else:
 		return web.Response(status=404,text="404")
 
-async def api_status(request):
-	data = api_json_status()
+# Get json + folder status
+async def api_get_status(request):
+	data = get_status()
 	return web.json_response(data)
 
 async def api_json_save(request):
@@ -46,7 +47,8 @@ async def api_json_save(request):
 async def api_dataset(request):
 	if "path" in request.rel_url.query.keys():
 		data = api_json_dataset(request.match_info['command'],request.rel_url.query['path'])
-	data = api_json_dataset(request.match_info['command'])
+	else:
+		data = api_json_dataset(request.match_info['command'])
 	return web.json_response(data)
 
 async def api_fix_tags(request):
@@ -66,7 +68,7 @@ async def api_dataset_create(request):
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
-				web.get('/api/status', api_status),
+				web.get('/api/status', api_get_status),
 				web.post('/api/dataset/create', api_dataset_create),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/json/save', api_json_save),

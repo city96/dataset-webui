@@ -1,112 +1,133 @@
 #!/usr/bin/python3
-# Script to track progress
+# Return current dataset status + info from json
 import os
 import json
+from common import Image, Tag, step_list
 
-# comma separated string to tag list
-def str_to_taglist(string):
-	taglist = []
-	tags = string.replace('\n', ',').split(",")
-	tags = [a.strip() for a in tags]
-	for t in tags:
-		if t:
-			taglist.append(t)
-	return taglist
+# global list of warnings
+warn = []
 
-def get_step_info(folder):
-	data = {
-		"img_count" : 0,
-		"categories" : {},
-		"tag_count" : {},
-		"uncategorized" : None,
-	}
-	if not os.path.isdir(folder):
-		data["error"] = "folder for step '{folder}' doesn't exist"
-		print(data["error"])
-		return data
-
-	data["uncategorized"] = sum([os.path.isfile(os.path.join(folder,x)) for x in os.listdir(folder)])
+def str_to_tag_list(string):
+	"""comma separated string to tag list"""
 	tags = []
+	raw_tags = string.replace('\n', ',').split(",")
+	raw_tags = [a.strip() for a in raw_tags]
+	for i in range(len(raw_tags)):
+		if raw_tags[i]:
+			t = Tag()
+			t.name = raw_tags[i]
+			t.position = i
+			tags.append(t)
+	return tags
 
-	for cat in os.listdir(folder):
-		if os.path.isdir(os.path.join(folder,cat)):
-			for k in os.listdir(os.path.join(folder,cat)):
-				path = os.path.join(cat,k)
-				ext = os.path.splitext(k)[1]
-				if ext in [".png",".jpg"]: #img
-					if cat not in data["categories"].keys():
-						data["categories"][cat] = 1
-					else:
-						data["categories"][cat] += 1
-				elif ext in [".txt"]: #tag
-					if folder == "4 - fixed" or folder == "3 - tagged":
-						with open(os.path.join(folder,path)) as f:
-							raw = f.read()
-						if raw:
-							tags += str_to_taglist(raw)
-							
-						continue
-				elif os.path.isdir(path): #dir
-					data["warn"].append(f" Warning! {dirpath} is a category inside a category! it will be ignored")
-					print(data["warn"][-1])
-				else:
-					data["warn"].append(f" Warning! Unknown extension '{ext}' for file {path}")
-					print(data["warn"][-1])
+def get_tags_from_file(path):
+	"""reads tags from txt file, returns list of tags"""
+	if not os.path.isfile(path):
+		return None
+	with open(path,'r') as f:
+		raw = f.read()
+	if not raw.strip():
+		return None
+	tags = str_to_tag_list(raw)
+	return tags
 
-	if data["categories"]:
-		data["img_count"] += sum(data["categories"].values())
-		# print(f' Total categorized images: {data["img_count"]}')
-		# for cat, count in data["categories"].items():
-			# print(f"  {cat} ({count})")
-	if data["uncategorized"]:
-		data["img_count"] += data["uncategorized"]
-		# print(f' Total uncategorized images: {data["uncategorized"]}')
-	if not data["categories"] and not data["uncategorized"]:
-		data["error"] = f"folder for step '{folder}' doesn't have any images"
-		print(data["error"])
-		return data
-	if len(tags)>0:
-		data["tag_count"]["total"] = len(tags)
-		# print(f' Total tags: {data["tag_count"]["total"]}')
-		if data["img_count"] > 0:
-			data["tag_count"]["average"] = round(len(tags)/data["img_count"],2)
-			# print(f'  Avg tag per image: {data["tag_count"]["average"]}')
-		data["tag_count"]["unique"] = len(list(set(tags)))
-		# print(f'  Unique tags: {data["tag_count"]["unique"]}')
-	return data
-
-def api_json_status():
-	folder_list = [
-		"0 - raw",
-		"1 - cropped",
-		"2 - sorted",
-		"3 - tagged",
-		"4 - fixed",
-		"5 - out",
-	]
-
-	if os.path.isfile("dataset.json"):
-		with open("dataset.json") as f:
-			data = json.load(f)
+def get_image_txt(path):
+	"""returns txt file path or none for image path"""
+	if os.path.isfile(path+".txt"):
+		return (path+".txt")
+	txt = os.path.splitext(path)[0] + ".txt"
+	if os.path.isfile(txt):
+		return txt
 	else:
-		data = {}
+		return None
 
-	data["steps"] = {}
-	for f in folder_list:
-		data["steps"][f] = get_step_info(f)
-	# return json.dumps(data)
+def get_folder_images(root_path, category):
+	"""returns list of image objects from a folder, set category"""
+	if not os.path.isdir(root_path):
+		return
+	images = []
+	for filename in os.listdir(root_path):
+		path = os.path.join(root_path,filename)
+		ext = os.path.splitext(filename)[1]
+		if ext in [".png",".jpg",".webp"]:
+			image = Image()
+			image.filename = filename
+			image.path = path
+			image.category = category
+			image.txt = get_image_txt(path)
+			if image.txt:
+				image.tags = get_tags_from_file(image.txt)
+			images.append(image)
+		elif os.path.isdir(path):
+			if not category:
+				continue
+			warn.append(f" Warning! {path} is a category inside a category! it will be ignored")
+			print(warn[-1])
+			continue
+		elif ext in [".txt"]:
+			continue
+		else:
+			warn.append(f" Warning! Unknown extension '{ext}' for file {path}")
+			print(warn[-1])
+			continue
+	return images
+
+def get_step_images(folder):
+	"""returns list of image objects for a given step (folder name)"""
+	images = []
+	images += get_folder_images(folder,None) # uncategorized
+
+	for category in os.listdir(folder):
+		if os.path.isdir(os.path.join(folder,category)):
+			images += get_folder_images(os.path.join(folder,category),category)
+	return images
+
+def get_step_stats(folder):
+	"""return stats about images/tags from folder name"""
+	data = {
+		"image_count" : {},
+		"tag_count" : {},
+	}
+	images = get_step_images(folder)
+	data["image_count"]["total"] = len(images)
+	data["image_count"]["uncategorized"] = sum([x.category == None for x in images])
+	tags = []
+	for i in images:
+		tags += [x.name for x in i.tags]
+	data["tag_count"]["total"] = sum([len(x.tags) for x in images])
+	data["tag_count"]["unique"] = len(set(tags))
 	return data
 
-if __name__ == "__main__":
-	folder_list = [
-		"0 - raw",
-		"1 - cropped",
-		"2 - sorted",
-		"3 - tagged",
-		"4 - fixed",
-		"5 - out",
-	]
+def get_status():
+	"""returns dict with status merged into dataset.json"""
+	if not os.path.isfile("dataset.json"):
+		data = {
+			"status" : {
+				"image_count" : {
+					"total" : 0,
+					"uncategorized" : 0,
+				},
+				"tag_count" : {
+					"total" : 0,
+					"unique" : 0,
+				},
+				"warn": "No active dataset!"
+			}
+		}
+		return data
 
-	for f in folder_list:
-		get_step_info(f)
-	input("\nPress any key to exit...")
+	with open("dataset.json") as f:
+		data = json.load(f)
+		data["status"] = {}
+
+	data["status"]["steps"] = {}
+	for folder in step_list:
+		if not os.path.isdir(folder):
+			warn.append(f"folder for step {folder} missing!")
+		data["status"]["steps"][folder] = get_step_stats(folder)
+
+	data["status"]["warn"] = warn
+	return data
+
+asd = get_status()
+print(json.dumps(asd, indent=2))

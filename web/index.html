@@ -33,7 +33,6 @@
 			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
 		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
 		</div>
-		<script src="dataset.js"></script>
 	</div>
 	
 	<!-- Status functions -->
@@ -51,7 +50,6 @@
 			<tbody id="status-table">
 			</tbody>
 		</table>
-		<script src="status.js"></script>
 	</div>
 	
 	<!-- Tag filters -->
@@ -84,7 +82,7 @@ Don't use underscores, these will be converted to spaces when loading the taglis
 		<option value="3 - tagged" default>3 - tagged</option>
 		<option value="2 - sorted">2 - sorted</option>
 		<option value="1 - cropped">1 - cropped</option>
-		<option value="0 -  raw">0 -  raw</option>
+		<option value="0 - raw">0 - raw</option>
 	</select>
 </div>
 <pre class="tip">
@@ -394,8 +392,10 @@ You might end up with duplicate images/categories if you don't delete them.
 </pre>
 
 <!-- END TAG SETTING LIST -->
-	<script src="tags.js"></script>
 	</div>
+<script src="status.js"></script>
+<!-- <script src="dataset.js"></script> -->
+<!-- <script src="tags.js"></script> -->
 </body>
 </html>
 

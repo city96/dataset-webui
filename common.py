@@ -1,8 +1,43 @@
 #!/usr/bin/python3
 # random functions that are used in multiple scripts
 
+step_list = [
+	"0 - raw",
+	"1 - cropped",
+	"2 - sorted",
+	"3 - tagged",
+	"4 - fixed",
+	"5 - out",
+]
+
+class Image:
+	"""class to store image attributes"""
+	category = None
+	filename = None
+	path = None # full path to file
+	txt = None # full path to file
+	tags = []
+	def __int__(self):
+		return len(self.tags)
+	def __str__(self):
+		return f"{self.filename}"
+	def __repr__(self):
+		return f"{self.filename}"
+
+class Tag:
+	"""class to store tag attributes"""
+	name = None
+	position = 10
+	def __str__(self):
+		return f"{self.name}"
+	def __repr__(self):
+		return f"{self.name}"
+	def __lt__(self, other):
+         return self.position < other.position
+
 # api cacher, "borrowed" from unknown project.
 def api_cacher(api_base, api_url):
+	"""cache api requests in '.cache' folder"""
 	global use_cache
 	if not os.path.exists('.cache') and use_cache:
 		os.makedirs('.cache')

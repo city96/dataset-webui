@@ -145,10 +145,15 @@ def image_loader(folder, output):
 					if os.path.isfile(i.tag_path):
 						i.tags = file_to_taglist(i.tag_path)
 						images.append(i)
-					else:
-						print(f" warning! image {i.filename} has no input tags.")
-						i.tags = str_to_taglist("")
+						continue
+					i.tag_path = os.path.join(folder,os.path.join(cat,k+".txt"))
+					if os.path.isfile(i.tag_path):
+						i.tags = file_to_taglist(i.tag_path)
 						images.append(i)
+						continue
+					print(f" warning! image {i.filename} has no input tags.")
+					i.tags = str_to_taglist("")
+					images.append(i)
 	return images
 
 # load a list of `limit` popular tags, remove tags that aren't in this list

@@ -3,18 +3,11 @@
 import os
 import json
 from common import verify_input
-from status import get_step_info
+from common import step_list as folder_list
+from status import get_step_stats
 
 # core settings
 dataset_folder = "datasets"
-folder_list = [
-	"0 - raw",
-	"1 - cropped",
-	"2 - sorted",
-	"3 - tagged",
-	"4 - fixed",
-	"5 - out",
-]
 
 # store dataset
 class Dataset:
@@ -129,7 +122,7 @@ def get_dataset(path):
 		k = os.path.join(path,k)
 		l = len(os.listdir(k))
 		if l > 0:
-			d.size = get_step_info(k)["img_count"]
+			d.size = get_step_stats(k)["image_count"]["total"]
 			break
 
 	# if d.size == 0:
@@ -148,7 +141,7 @@ def api_json_dataset(command,path=None):
 				"name": d.name,
 				"description": d.description,
 				"save_path": "./",
-				"img_count": d.size,
+				"image_count": d.size,
 				"active": True
 			}
 		for d in datasets:
@@ -156,7 +149,7 @@ def api_json_dataset(command,path=None):
 				"name": d.name,
 				"description": d.description,
 				"save_path": d.save_path,
-				"img_count": d.size,
+				"image_count": d.size,
 				"active": False
 			}
 	elif path and command == "save" and path == "./":
