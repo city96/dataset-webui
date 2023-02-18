@@ -6,7 +6,8 @@ from common import verify_input
 from common import step_list as folder_list
 from status import get_step_stats
 
-# core settings
+# global list of warnings
+warn = []
 dataset_folder = "datasets"
 
 # store dataset
@@ -21,9 +22,8 @@ class Dataset:
 	def __repr__(self):
 		return f"{self.name} ({self.size})"
 
-
-# save current active dataset to the datasets folder
 def save_dataset(dataset): 
+	"""save current active dataset to the datasets folder"""
 	if not os.path.isdir(dataset_folder):
 		os.mkdir(dataset_folder)
 	if not dataset.save_path:
@@ -49,15 +49,18 @@ def save_dataset(dataset):
 	os.rename("dataset.json",os.path.join(dataset.save_path,"dataset.json"))
 	print(f"Saved '{dataset.name}' dataset to {dataset.save_path}")
 
-# check if there is an active dataset and load existing one if possible
 def load_dataset(dataset):
+	"""check if there is an active dataset and load existing one if possible"""
 	#shouldn't happen, sanity check
 	if not os.path.isdir(dataset.save_path):
-		exit(1)
+		warn.append(f"can't load dataset with invalid path {dataset.save_path}")
+		print(warn[-1])
+		return
 	# sanity check, don't collide
 	if any([os.path.isdir(x) for x in folder_list]) or os.path.isfile("dataset.json"):
-		print("target folder not empty!")
-		exit(1)
+		warn.append(f"target folder not empty!")
+		print(warn[-1])
+		return
 
 	for folder in folder_list:
 		new_path = os.path.join(dataset.save_path,folder)
@@ -65,8 +68,8 @@ def load_dataset(dataset):
 	os.rename(os.path.join(dataset.save_path,"dataset.json"),"dataset.json")
 	print(f"Loaded '{dataset.name}' dataset into active folder")
 
-# jsontialize new dataset, get name from user
 def create_dataset(data):
+	"""initialize new dataset from json"""
 	# sanity check, don't collide
 	if any([os.path.isdir(x) for x in folder_list]) or os.path.isfile("dataset.json"):
 		print("target folder not empty!")
@@ -86,82 +89,71 @@ def create_dataset(data):
 		f.write(json.dumps(data, indent=2))
 	print(f"created new dataset '{d.name}'!")
 
-# return a list of saved datasets in dataset_folder
-def get_all_saved_datasets():
+def get_all_datasets():
+	"""return list of all saved dataset objects"""
 	if not os.path.isdir(dataset_folder):
 		return []
 	datasets = []
-	for k in os.listdir(dataset_folder):
-		path = os.path.join(dataset_folder,k)
+	for name in os.listdir(dataset_folder):
+		path = os.path.join(dataset_folder,name)
 		if os.path.isdir(path):
-			d = get_dataset(path)
-			if d:
-				datasets.append(d)
+			dataset = get_folder_dataset(path)
+			if dataset:
+				datasets.append(dataset)
 	return datasets
 
-# get dataset info from folder
-def get_dataset(path):
-	d = Dataset()
+def get_folder_dataset(path):
+	"""get dataset object from folder"""
+	dataset = Dataset()
 	if path.startswith(dataset_folder):
-		d.save_path = path
+		dataset.save_path = path
 	# json load
 	json_path = os.path.join(path,'dataset.json')
 	if not os.path.isfile(json_path):
-		# print(f"no dataset json file! {path}")
+		if path != "./" and len(os.listdir(path)) > 0:
+			warn.append(f"dataset in {path} has no json")
+			print(warn[-1])
 		return
-	else:
-		with open(json_path) as f:
-			config = json.load(f)
-		d.name = config["meta"]["name"].strip()
-		d.description = config["meta"]["description"]
-	if not d.name:
-		print("Your dataset doesn't have a name! edit 'dataset.json' before saving.")
-		exit(1)
+
+	with open(json_path) as f:
+		config = json.load(f)
+	dataset.name = config["meta"]["name"].strip()
+	dataset.description = config["meta"]["description"]
+
+	if not dataset.name:
+		warn.append(f"dataset in {path} has no name/empty json")
+		print(warn[-1])
+		return
+
 	# progress aware folder count
-	for k in reversed(folder_list):
-		k = os.path.join(path,k)
-		l = len(os.listdir(k))
-		if l > 0:
-			d.size = get_step_stats(k)["image_count"]["total"]
+	for step in reversed(folder_list):
+		step = os.path.join(path,step)
+		size = get_step_stats(step)["image_count"]["total"]
+		if size > 0:
+			dataset.size = size
 			break
+	return dataset
 
-	# if d.size == 0:
-		# print(f"Warning! '{d.name}' dataset is empty.")
-		# return
-	return d
-
-# callable version
-def api_json_dataset(command,path=None):
+def dataset_status(command=None,path=None):
+	"""return info about active and saved datasets"""
 	data = {}
-	if command == "info":
-		datasets = get_all_saved_datasets()
-		d = get_dataset("./")
-		if d:
-			data["active"] = {
-				"name": d.name,
-				"description": d.description,
-				"save_path": "./",
-				"image_count": d.size,
-				"active": True
-			}
-		for d in datasets:
-			data[d.save_path] = {
-				"name": d.name,
-				"description": d.description,
-				"save_path": d.save_path,
-				"image_count": d.size,
-				"active": False
-			}
-	elif path and command == "save" and path == "./":
-		print("save",path)
-		dataset = get_dataset(path)
-		save_dataset(dataset)
-		data["status"] = "ok"
-	elif path and command == "load" and os.path.isdir(path):
-		print("load",path)
-		dataset = get_dataset(path)
-		load_dataset(dataset)
-		data["status"] = "ok"
-	else:
-		print("invalid command:",command,path)
+	data["datasets"] = []
+	active = get_folder_dataset("./")
+	if active:
+		data["datasets"].append({
+			"name": active.name,
+			"description": active.description,
+			"save_path": "./",
+			"image_count": active.size,
+			"active": True
+		})
+	for dataset in get_all_datasets():
+		data["datasets"].append({
+			"name": dataset.name,
+			"description": dataset.description,
+			"save_path": dataset.save_path,
+			"image_count": dataset.size,
+			"active": False
+		})
+	data["warn"] = warn
 	return data

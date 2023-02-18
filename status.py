@@ -128,6 +128,3 @@ def get_status():
 
 	data["status"]["warn"] = warn
 	return data
-
-asd = get_status()
-print(json.dumps(asd, indent=2))

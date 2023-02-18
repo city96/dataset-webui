@@ -6,7 +6,7 @@ import aiohttp
 import json
 import os
 from status import get_status
-from dataset_manager import api_json_dataset, create_dataset
+from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from fix_tags import run
 
 app = web.Application()
@@ -44,17 +44,30 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
+# 
 async def api_dataset(request):
+	print(request)
+	path = None
+	data = {}
 	if "path" in request.rel_url.query.keys():
-		data = api_json_dataset(request.match_info['command'],request.rel_url.query['path'])
-	else:
-		data = api_json_dataset(request.match_info['command'])
+		path = request.rel_url.query['path']
+
+	if request.match_info['command'] == "save" and path == "./":
+		print("saving",path)
+		dataset = get_folder_dataset(path)
+		save_dataset(dataset)
+	elif request.match_info['command'] == "load" and os.path.isdir(path):
+		print("loading",path)
+		dataset = get_folder_dataset(path)
+		load_dataset(dataset)
+
+	data = dataset_status() # always re-fetch status after save.
 	return web.json_response(data)
 
 async def api_fix_tags(request):
 	run(True,True)
 	return web.json_response({})
-	
+
 async def api_dataset_create(request):
 	if os.path.isfile("dataset.json"): return web.json_response({"no"}) # fuck javascript triggering twice
 	if request.body_exists:

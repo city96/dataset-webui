@@ -1,45 +1,44 @@
-function update_dataset_table(info){
+function update_dataset_table(datasets){
 	var table = document.getElementById("dataset-table")
 	table.innerHTML = "";
 
 	var has_active = false
 	var current_count = 0
-	for(const key in info) {
-		if (info[key]["active"]) {
+	for(const dataset of datasets) {
+		if (dataset["active"]) {
 			has_active = true
+			break
 		}
 	}
-	
+
 	if (has_active) {
-		console.log("active")
+		update_status()
 		document.getElementById("d_name").disabled = true;
 		document.getElementById("d_description").disabled = true;
 		document.getElementById("d_new").disabled = true;
-		update_status();
-		load_json();
 	} else {
+		hide_status()
 		document.getElementById("d_name").disabled = false;
 		document.getElementById("d_name").value = ""
 		document.getElementById("d_description").disabled = false;
 		document.getElementById("d_description").value = ""
 		document.getElementById("d_new").disabled = false;
-		tag_json_clear();
 	}
 
-	for(const key in info) {
+	for(const dataset of datasets) {
 		// Name
 		r = table.insertRow();
 		var c = r.insertCell(0)
-		c.innerHTML = info[key]["name"]
+		c.innerHTML = dataset["name"]
 		
 		// Folder
 		var cs = r.insertCell(1)
-		cs.innerHTML = info[key]["save_path"]
+		cs.innerHTML = dataset["save_path"]
 		
 		// Images
 		var c = r.insertCell(2)
-		if (info[key]["img_count"] > 0) {
-			c.innerHTML = info[key]["img_count"]["total"]
+		if (dataset["image_count"] > 0) {
+			c.innerHTML = dataset["image_count"]
 		} else {
 			c.innerHTML = "-"
 		}
@@ -48,73 +47,42 @@ function update_dataset_table(info){
 		var c = r.insertCell(3)
 		b = document.createElement('button');
 		c.appendChild(b)
-		if (info[key]["active"]) {
+		if (dataset["active"]) {
 			b.innerHTML = "Save"
-			b.setAttribute('onclick','save_dataset("'+encodeURIComponent(info[key]["save_path"])+'")')
+			b.setAttribute('onclick','save_dataset("'+encodeURIComponent(dataset["save_path"])+'")')
 		} else {
 			b.innerHTML = "Load"
-			b.setAttribute('onclick','load_dataset("'+encodeURIComponent(info[key]["save_path"])+'")')
+			b.setAttribute('onclick','load_dataset("'+encodeURIComponent(dataset["save_path"])+'")')
 			if (has_active) {
 				b.disabled = true;
 			}
 		}
 	}
-	
+
 	return current_count
 }
 
-function update_dataset() {
-	console.log("dataset")
-	var ajax = new XMLHttpRequest();
-	ajax.responseType = 'json';
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			let info = this.response
-			update_dataset_table(info)
-			
-			let current_count = 0
-			for(const key in info) {
-				if (info[key]["active"]) {
-					current_count = info[key]["img_count"]
-				}
-			}
-			if (current_count > 0){
-				update_status();
-			} else {
-				hide_status();
-			}
-		};
-	};
-	ajax.open('GET',"/api/dataset/info",true);
-	ajax.send();
+async function update_datasets() {
+	console.log("Update datasets")
+	let data = await fetch("/api/dataset/info");
+	data = await data.json()
+	update_dataset_table(data["datasets"])
 }
 
-function save_dataset(path) {
+async function save_dataset(path) {
 	if (!path) {return}
-	console.log("dataset save")
-	var ajax = new XMLHttpRequest();
-	ajax.responseType = 'json';
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			update_dataset();
-		};
-	};
-	ajax.open('GET',`/api/dataset/save?path=${path}`,true);
-	ajax.send();
+	console.log("Save dataset")
+	let data = await fetch(`/api/dataset/save?path=${path}`);
+	data = await data.json()
+	update_dataset_table(data["datasets"])
 }
 
-function load_dataset(path) {
+async function load_dataset(path) {
 	if (!path) {return}
-	console.log("dataset load")
-	var ajax = new XMLHttpRequest();
-	ajax.responseType = 'json';
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			update_dataset();
-		};
-	};
-	ajax.open('GET',`/api/dataset/load?path=${path}`,true);
-	ajax.send();
+	console.log("Save dataset")
+	let data = await fetch(`/api/dataset/load?path=${path}`);
+	data = await data.json()
+	update_dataset_table(data["datasets"])
 }
 
 // from page
@@ -145,4 +113,4 @@ function create_dataset(){
 	ajax.send(data);
 }
 
-update_dataset()
+update_datasets()
