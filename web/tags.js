@@ -204,6 +204,52 @@ function image_category_rule_del() {
 	}
 }
 
+function tags_disabled(state) {
+	if (state) {
+		document.getElementById("tag-div").style.color = "#888"
+	} else {
+		document.getElementById("tag-div").style.color = ""
+	}
+	
+	document.getElementById("t_save").disabled = state;
+	document.getElementById("t_load").disabled = state;
+	document.getElementById("t_fix").disabled = state;
+
+	document.getElementById("t_input_folder").disabled = state;
+	document.getElementById("t_output_folder").disabled = state;
+	document.getElementById("t_triggerword").disabled = state;
+	document.getElementById("t_triggerword_extra").disabled = state;
+	document.getElementById("t_whitelist").disabled = state;
+	document.getElementById("t_blacklist").disabled = state;
+	document.getElementById("t_booru_type").disabled = state;
+	document.getElementById("t_booru_general_only").disabled = state;
+	document.getElementById("t_booru_popular_only").disabled = state;
+	document.getElementById("t_frequent_only").disabled = state;
+	document.getElementById("t_norm_eye_color").disabled = state;
+	document.getElementById("t_norm_hair_color").disabled = state;
+	document.getElementById("t_norm_hair_style").disabled = state;
+	document.getElementById("t_image_blacklist").disabled = state;
+	document.getElementById("t_folder_rule_add").disabled = state;
+	document.getElementById("t_folder_rule_del").disabled = state;
+	document.getElementById("t_custom_rule_add").disabled = state;
+	document.getElementById("t_custom_rule_del").disabled = state;
+	document.getElementById("t_spice_rule_add").disabled = state;
+	document.getElementById("t_spice_rule_del").disabled = state;
+	document.getElementById("t_image_filter_rule_add").disabled = state;
+	document.getElementById("t_image_filter_rule_del").disabled = state;
+	document.getElementById("t_image_category_rule_add").disabled = state;
+	document.getElementById("t_image_category_rule_del").disabled = state;
+	
+	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules', 't_image_category_rules'].forEach(function(id){
+		var table = document.getElementById(id)
+		let lastRow = table.rows.length-1
+		while (lastRow >= 0) {
+			table.removeChild(table.rows[lastRow])
+			lastRow = table.rows.length-1;
+		}
+	})
+}
+
 function tag_json_clear() {
 	document.getElementById("t_input_folder").value = "3 - tagged";
 	document.getElementById("t_output_folder").value = "4 - fixed";
@@ -320,25 +366,25 @@ function tag_json_load(data) {
 	}
 	if(data["image_blacklist"]){ document.getElementById("t_image_blacklist").value = data["image_blacklist"] };
 
-	data["folder_rules"].forEach(function(a) {
+	if(data["folder_rules"]){data["folder_rules"].forEach(function(a) {
 		folder_rule_add(a["folder"],a["action"],a["target"])
-	})
+	})}
 
-	data["custom_rules"].forEach(function(a) {
+	if(data["custom_rules"]){data["custom_rules"].forEach(function(a) {
 		custom_rule_add(a["type"],a["source"],a["target"])
-	})
+	})}
 
-	data["spice_rules"].forEach(function(a) {
+	if(data["spice_rules"]){data["spice_rules"].forEach(function(a) {
 		spice_rule_add(a["type"],a["percent"],a["target"])
-	})
+	})}
 
-	data["filter_rules"].forEach(function(a) {
+	if(data["filter_rules"]){data["filter_rules"].forEach(function(a) {
 		image_filter_rule_add(a["target"])
-	})
+	})}
 
-	data["category_rules"].forEach(function(a) {
+	if(data["category_rules"]){data["category_rules"].forEach(function(a) {
 		image_category_rule_add(a["category"],a["target"])
-	})
+	})}
 	
 	return
 }

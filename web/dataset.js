@@ -18,6 +18,7 @@ function update_dataset_table(datasets){
 		document.getElementById("d_new").disabled = true;
 	} else {
 		hide_status()
+		tags_disabled(true)
 		document.getElementById("d_name").disabled = false;
 		document.getElementById("d_name").value = ""
 		document.getElementById("d_description").disabled = false;
@@ -103,7 +104,7 @@ function create_dataset(){
 	var ajax = new XMLHttpRequest();
 	ajax.onreadystatechange = function() {
 		if (this.readyState == 4 && this.status == 200) { 
-			update_dataset()
+			update_datasets()
 		};
 	};
 	ajax.open('POST',"/api/dataset/create",false);

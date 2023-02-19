@@ -136,6 +136,7 @@ def get_folder_dataset(path):
 
 def dataset_status(command=None,path=None):
 	"""return info about active and saved datasets"""
+	warn = [] # reset warnings
 	data = {}
 	data["datasets"] = []
 	active = get_folder_dataset("./")

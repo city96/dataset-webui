@@ -7,7 +7,8 @@ import json
 import os
 from status import get_status
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
-from fix_tags import run
+from common import step_list
+# from fix_tags import run
 
 app = web.Application()
 
@@ -21,6 +22,14 @@ async def handle(request):
 	path = os.path.join("web", str(request.url.relative())[1:])
 	
 	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css",".js"]:
+		return web.FileResponse(path)
+	else:
+		return web.Response(status=404,text="404")
+
+async def handle_image(request):
+	path = str(request.path)[5:]
+	print(path)
+	if os.path.isfile(path) and any(path.startswith(x) for x in step_list):
 		return web.FileResponse(path)
 	else:
 		return web.Response(status=404,text="404")
@@ -65,7 +74,7 @@ async def api_dataset(request):
 	return web.json_response(data)
 
 async def api_fix_tags(request):
-	run(True,True)
+	# run(True,True)
 	return web.json_response({})
 
 async def api_dataset_create(request):
@@ -86,6 +95,7 @@ app.add_routes([web.get('/', index),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/json/save', api_json_save),
 				web.get('/api/tags/run', api_fix_tags),
+				web.get('/img/{name:.*}', handle_image),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':

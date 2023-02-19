@@ -100,6 +100,7 @@ def get_step_stats(folder):
 
 def get_status():
 	"""returns dict with status merged into dataset.json"""
+	warn = [] # reset warnings
 	if not os.path.isfile("dataset.json"):
 		data = {
 			"status" : {

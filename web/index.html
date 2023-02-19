@@ -57,9 +57,9 @@
 <!-- START TAG SETTING LIST -->
 <h2>Tag filters:</h2>
 <a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
-<button onclick="save_json()"> Save changes </button>
-<button onclick="load_json()"> Discard changes </button>
-<button onclick="fix_tags()"> Apply filters [save output] </button>
+<button id="t_save" onclick="save_json()"> Save changes </button>
+<button id="t_load" onclick="load_json()"> Discard changes </button>
+<button id="t_fix" onclick="fix_tags()"> Apply filters [save output] </button>
 <br>
 <p> Script output will appear here: </p>
 <pre class="tip" id="t_output">
@@ -254,8 +254,8 @@ on the viewing angle (eg. can't see single braid in portrait photo).
 </table>
 
 <br>
-<button onclick="folder_rule_add()"> Add rule </button>
-<button onclick="folder_rule_del()"> Delete last rule </button>
+<button id="t_folder_rule_add" onclick="folder_rule_add()"> Add rule </button>
+<button id="t_folder_rule_del" onclick="folder_rule_del()"> Delete last rule </button>
 
 <pre class="tip">
 Folder tags
@@ -282,8 +282,8 @@ them to the RaisedTags function as well.
 </table>
 
 <br>
-<button onclick="custom_rule_add()"> Add rule </button>
-<button onclick="custom_rule_del()"> Delete last rule </button>
+<button id="t_custom_rule_add" onclick="custom_rule_add()"> Add rule </button>
+<button id="t_custom_rule_del" onclick="custom_rule_del()"> Delete last rule </button>
 
 <pre class="tip">
 Transitivity rule:
@@ -312,8 +312,8 @@ Replace all tags in the [Target tags] list with the [Source tag]
 </table>
 
 <br>
-<button onclick="spice_rule_add()"> Add rule </button>
-<button onclick="spice_rule_del()"> Delete last rule </button>
+<button id="t_spice_rule_add" onclick="spice_rule_add()"> Add rule </button>
+<button id="t_spice_rule_del" onclick="spice_rule_del()"> Delete last rule </button>
 
 <pre class="tip">
 Add/Remove tags randomly
@@ -350,8 +350,8 @@ This is a pre-filter, meaning all images with this tag are removed
 </table>
 
 <br>
-<button onclick="image_filter_rule_add()"> Add rule </button>
-<button onclick="image_filter_rule_del()"> Delete last rule </button>
+<button id="t_image_filter_rule_add" onclick="image_filter_rule_add()"> Add rule </button>
+<button id="t_image_filter_rule_del" onclick="image_filter_rule_del()"> Delete last rule </button>
 
 <pre class="tip">
 Remove images by tag combination.
@@ -375,8 +375,8 @@ This is a pre-filter, meaning all images with this tag are removed
 </table>
 
 <br>
-<button onclick="image_category_rule_add()"> Add rule </button>
-<button onclick="image_category_rule_del()"> Delete last rule </button>
+<button id="t_image_category_rule_add" onclick="image_category_rule_add()"> Add rule </button>
+<button id="t_image_category_rule_del" onclick="image_category_rule_del()"> Delete last rule </button>
 <pre class="tip">
 Categorize images by tags. [supports multiple rules]
 This will create extra folders in your OutputFolder for each tag you list here.
@@ -395,7 +395,7 @@ You might end up with duplicate images/categories if you don't delete them.
 	</div>
 <script src="status.js"></script>
 <script src="dataset.js"></script>
-<!-- <script src="tags.js"></script> -->
+<script src="tags.js"></script>
 </body>
 </html>
 

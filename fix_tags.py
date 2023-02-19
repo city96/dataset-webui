@@ -16,7 +16,7 @@ if os.path.isfile("dataset.json"):
 		c = c["tags"]
 else:
 	print("Missing 'dataset.json' config")
-	exit(1)
+	# exit(1)
 
 # show removed tags at each step
 debug = False #c["Debug"].lower() == "true"

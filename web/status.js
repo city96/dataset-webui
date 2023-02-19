@@ -1,6 +1,8 @@
 function update_status_table(steps) {
 	let table = document.getElementById("status-table")
 	table.innerHTML = "";
+	
+	let tags = false
 	for(const step in steps) {
 		// Name
 		r = table.insertRow();
@@ -25,6 +27,12 @@ function update_status_table(steps) {
 			c2.innerHTML = "-"
 			c3.innerHTML = "-"
 		}
+		
+		if (steps[step]["tag_count"]["total"] > 0 && !tags) {
+			// run from here
+			tags_disabled(false)
+			tags = true
+		}
 	}
 }
 
@@ -39,6 +47,7 @@ async function update_status(tags){
 	document.getElementById("d_description").value = data["meta"]["description"];
 	
 	update_status_table(data["status"]["steps"])
+	tag_json_load(data["tags"])
 }
 
 function hide_status() {
