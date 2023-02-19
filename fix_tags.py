@@ -9,17 +9,21 @@ c = None
 
 if os.path.isfile("dataset.json"):
 	with open("dataset.json") as f:
-		c = json.load(f)
-		if "tags" not in c.keys():
+		data = json.load(f)
+		if "tags" not in data.keys():
 			print("no tags")
 			exit(1)
-		c = c["tags"]
+		c = data["tags"]
 else:
 	print("Missing 'dataset.json' config")
 	# exit(1)
 
 # show removed tags at each step
 debug = False #c["Debug"].lower() == "true"
+
+# status for webui
+status = []
+warn = []
 
 # image defjsontion. do NOT edit __str__ and __repr__!
 class Image:
@@ -81,7 +85,8 @@ def underscore_fix(images):
 				t.name = t.name.replace("_"," ")
 				fixed += 1
 	if fixed > 0:
-		print(f"warning: tags with underscores found. Fixed {fixed} tags.")
+		status.append(f"tags with underscores found. Fixed {fixed} tags.")
+		print(status[-1])
 	return images
 
 # get filter by name, return filter name and filtered tags as array
@@ -109,7 +114,8 @@ def get_filter_info(filter_type, tag_rules):
 def image_filter(images, img_blacklist, img_filters):
 	if not img_blacklist and not img_filters:
 		return images
-	print("\nFiltering input images.")
+	status.append("\nFiltering input images.")
+	print(status[-1])
 	removed = []
 	filtered = []
 	for i in images:
@@ -122,11 +128,14 @@ def image_filter(images, img_blacklist, img_filters):
 				filtered.append(i.filename)
 				images.remove(i)
 
-	print(f" removed {len(removed)} images from input [by tags]")
+	status.append(f" removed {len(removed)} images from input [by tags]")
+	print(status[-1])
 	if debug: print("REM:",removed)
-	print(f" removed {len(filtered)} images from input [by filter]")
+	status.append(f" removed {len(filtered)} images from input [by filter]")
+	print(status[-1])
 	if debug: print("REM:",filtered)
-	print(f" Images: {len(images)}")
+	status.append(f" Images: {len(images)}")
+	print(status[-1])
 	return images
 
 # load all images in folder
@@ -151,7 +160,8 @@ def image_loader(folder, output):
 						i.tags = file_to_taglist(i.tag_path)
 						images.append(i)
 						continue
-					print(f" warning! image {i.filename} has no input tags.")
+					warn.append(f" warning! image {i.filename} has no input tags.")
+					print(warn[-1])
 					i.tags = str_to_taglist("")
 					images.append(i)
 	return images
@@ -160,7 +170,8 @@ def image_loader(folder, output):
 def popular_only(images, tag_file, limit, general_only):
 	if not limit or not os.path.isfile(tag_file):
 		return images
-	print("\nfiltering unpopular tags")
+	status.append("\nfiltering unpopular tags")
+	print(status[-1])
 	tags = []
 	removed = []
 
@@ -180,17 +191,20 @@ def popular_only(images, tag_file, limit, general_only):
 			break
 	
 	if len(tags) <= 5:
-		print(f" failed to load tags from {tag_file}")
+		warm.append(f" failed to load tags from {tag_file}")
+		print(warn[-1])
 		return images
 	
-	print(f" loaded {len(tags)} tags successfully from {tag_file}")
+	status.append(f" loaded {len(tags)} tags successfully from {tag_file}")
+	print(status[-1])
 	for i in images:
 		for t in i.tags:
 			if t.name not in tags and not any([t.name == x.name for x in whitelist]):
 				removed.append(t.name)
 				i.tags.remove(t)
 
-	print(f" removed {len(set(removed))} obscure tags")
+	status.append(f" removed {len(set(removed))} obscure tags")
+	print(status[-1])
 	if debug: print("REM:",list(set(removed)))
 	img_status(images)
 	return images
@@ -199,7 +213,8 @@ def popular_only(images, tag_file, limit, general_only):
 def frequent_only(images,freq):
 	if not freq:
 		return
-	print(f"\nfiltering infrequent tags (min {freq})")
+	status.append(f"\nfiltering infrequent tags (min {freq})")
+	print(status[-1])
 	tags = {}
 	removed = []
 
@@ -215,7 +230,8 @@ def frequent_only(images,freq):
 				removed.append(t.name)
 				i.tags.remove(t)
 
-	print(f" removed {len(removed)} instances of infrequent tags")
+	status.append(f" removed {len(removed)} instances of infrequent tags")
+	print(status[-1])
 	if debug: print("REM:",removed)
 	img_status(images)
 	return(images)
@@ -226,7 +242,8 @@ def normalize_eye_color(images,target_color):
 		return images
 	removed = []
 
-	print("\nattempting to normalize eye colors")
+	status.append("\nattempting to normalize eye colors")
+	print(status[-1])
 	valid = ["blue", "red", "brown", "green", "purple", "yellow", "pink", "black", "aqua", "orange", "grey", "gray", "silver", "glowing", "multicolored", "white"]
 
 	for i in images:
@@ -252,7 +269,8 @@ def normalize_hair_color(images,target_color):
 		return images
 	removed = []
 
-	print("\nattempting to normalize hair colors")
+	status.append("\nattempting to normalize hair colors")
+	print(status[-1])
 	valid = ["blonde", "brown", "black", "blue", "cyan", "purple", "pink", "lavender", "red", "white", "multicolored", "green", "silver", "grey", "orange", "two-tone", "streaked", "aqua", "gradient", "light brown", "light blue", "dark blue", "platinum blonde"]
 
 	for i in images:
@@ -278,7 +296,8 @@ def normalize_hair_style(images,target_style):
 		return images
 	removed = []
 
-	print("\nattempting to normalize hair style")
+	status.append("\nattempting to normalize hair style")
+	print(status[-1])
 	valid = ["long", "short", "very long", "braided", "medium", "shoulder-length", "floating", "drill", "wavy", "antenna", "spiked", "messy", "curly", "low-tied long", "asymmetrical", "tentacle", "absurdly long", "extremely long", "tied"]
 	extra = ["twin braids", "double braid", "single braid", "side braid", "french braid", "hair ornament", "hair ribbon", "hair braid", "hair bow", "hair clips", "hair flower", "hair bun", "hair intakes", "hair tubes", "hair vents", "hair rings", "hair loop", "hair tie", "hair bell", "ponytail", "side ponytail", "low ponytail", "short ponytail", "braided ponytail", "folded ponytail"]
 
@@ -318,7 +337,8 @@ def folder_rules(images, tag_rules):
 					i.tags += (tags)
 					added += 1
 			if added > 0:
-				print(f" AddFolder [{rule['target']}] (+{added} to {folder})")
+				status.append(f" AddFolder [{rule['target']}] (+{added} to {folder})")
+				print(status[-1])
 		elif rule["action"] == "remove":
 			removed = []
 			for i in images:
@@ -328,7 +348,8 @@ def folder_rules(images, tag_rules):
 							removed.append(t.name)
 							i.tags.remove(t)
 			if len(removed) > 0:
-				print(f" RemoveFolder [{rule['target']}] (-{len(removed)} from {folder})")
+				status.append(f" RemoveFolder [{rule['target']}] (-{len(removed)} from {folder})")
+				print(status[-1])
 				if debug: print(" REM:",list(set(removed)))
 	return images
 
@@ -344,7 +365,8 @@ def transitive_rules(images, tag_rules):
 				i.tags += (r[1:])
 				added += 1
 		if added > 0:
-			print(f" AddRule [{rname}] (+{added})")
+			status.append(f" AddRule [{rname}] (+{added})")
+			print(status[-1])
 	return images
 
 # replace redundant tags
@@ -366,7 +388,8 @@ def replace_rules(images, tag_rules):
 				i.tags.append(r[0])
 				added += 1
 		if added > 0 or len(removed) > 0:
-			print(f" ReplaceRule [{rname}] (+{added} | -{len(removed)})")
+			status.append(f" ReplaceRule [{rname}] (+{added} | -{len(removed)})")
+			print(status[-1])
 			if debug: print(" REM:",list(set(removed)))
 	return images
 
@@ -390,7 +413,8 @@ def spice_rules(images, tag_rules):
 					added += 1
 		added_perc = added/total
 		if added > 0:
-			print(f" AddSpice [{rname}] (+{added}|{round(added_perc*100)}%)")
+			status.append(f" AddSpice [{rname}] (+{added}|{round(added_perc*100)}%)")
+			print(status[-1])
 	# remove rules
 	for rname, r in remove_rules.items():
 		perc = float(r[0].name)
@@ -406,7 +430,8 @@ def spice_rules(images, tag_rules):
 						i.tags.remove(t)
 			removed_perc = len(removed)/total
 		if len(removed) > 0:
-			print(f" RemoveSpice [{rname}] (-{len(removed)}|{round(removed_perc*100)}%)")
+			status.append(f" RemoveSpice [{rname}] (-{len(removed)}|{round(removed_perc*100)}%)")
+			print(status[-1])
 			if debug: print(" REM:",list(set(removed)))
 	return images
 
@@ -416,7 +441,8 @@ def add_triggerword(images, tws):
 		return images
 	for t in tws:
 		t.position = 0
-	print("\nadding triggerwords")
+	status.append("\nadding triggerwords")
+	print(status[-1])
 	for i in images:
 		for t in i.tags:
 			if t.name in [str(x) for x in tws]:
@@ -438,7 +464,8 @@ def blacklist(images,blacklist):
 			if t.name in [str(x) for x in blacklist]:
 				i.tags.remove(t)
 				removed += 1
-	print(f"blacklist applied {removed} times")
+	status.append(f"blacklist applied {removed} times")
+	print(status[-1])
 	return images
 
 # move tags to front of list, shuffle to increase fairness.
@@ -452,7 +479,8 @@ def raise_tags(images, to_raise):
 				t.position = random.randint(4,8)
 				raised += 1
 	if raised > 0:
-		print(f"Raised {len(to_raise)} tag(s) {raised} times")
+		status.append(f"Raised {len(to_raise)} tag(s) {raised} times")
+		print(status[-1])
 	return images
 
 # change output category based on tags
@@ -467,7 +495,8 @@ def recategorize_images(images,sort_tags):
 				i.category = f"1_{t['category']}"
 				categorized += 1
 	if categorized:
-		print(f"Sorted ~{categorized} images into {len(sort_tags)} new categories")
+		status.append(f"Sorted ~{categorized} images into {len(sort_tags)} new categories")
+		print(status[-1])
 	return images
 
 # remove duplicates, final pass
@@ -482,7 +511,8 @@ def dedupe_tags(images):
 			else:
 				tmp.append(t.name)
 	if duplicates:
-		print(f"Removed {len(duplicates)} duplicate tags")
+		status.append(f"Removed {len(duplicates)} duplicate tags")
+		print(status[-1])
 	return images
 
 # write all tags to the desired output folder
@@ -514,27 +544,38 @@ def copy_images(images):
 # read only status of tag count
 def img_status(images,verbose=False):
 	if verbose:
-		print(f" Images: {len(images)}")
-		print(f" Total tags: {sum([int(x) for x in images])}")
-		print(f" Avg tag per image: {round(sum([int(x) for x in images])/len(images),2)}")
+		status.append(f" Images: {len(images)}")
+		print(status[-1])
+		status.append(f" Total tags: {sum([int(x) for x in images])}")
+		print(status[-1])
+		status.append(f" Avg tag per image: {round(sum([int(x) for x in images])/len(images),2)}")
+		print(status[-1])
 	 # I'm proud of this one, probably the worst thing I've ever written in python:
-	print(f" Unique tags: {len(list(set(sum([[str(y) for y in x.tags] for x in images],[]))))}")
+	status.append(f" Unique tags: {len(list(set(sum([[str(y) for y in x.tags] for x in images],[]))))}")
+	print(status[-1])
 	# print("\nDEBUG: tags left:",images[1])
 
 # default logic
 def run(save_tags=False,save_images=False):
-	print("Tag fixer")
+	global status
+	global warn
+	status = []
+	warn = []
+	status.append("Tag fixer")
+	print(status[-1])
 
 	# reload json
 	if os.path.isfile("dataset.json"):
 		with open("dataset.json") as f:
 			c = json.load(f)
 			if "tags" not in c.keys():
-				print("no tags")
+				warn.append("no tags")
+				print(warn[-1])
 				return
 			c = c["tags"]
 	else:
-		print("Missing 'dataset.json' config")
+		warn.append("Missing 'dataset.json' config")
+		print(warn[-1])
 		return
 
 	# load images
@@ -554,7 +595,8 @@ def run(save_tags=False,save_images=False):
 	if os.path.isfile(tag_file):
 		images = popular_only(images,tag_file,int(c["booru"]["popular_only"]),c["booru"]["general_only"])
 	else:
-		print(f"Missing file {tag_file}\n PopularOnly filter disabled!")
+		warn.append(f"Missing file {tag_file}\n PopularOnly filter disabled!")
+		print(warn[-1])
 
 	# apply filters
 	images = frequent_only(images,int(c["frequent_only"]))
@@ -563,7 +605,8 @@ def run(save_tags=False,save_images=False):
 	images = normalize_hair_style(images,str_to_taglist(c["normalize"]["hair_style"]))
 
 	# rulesets
-	print("\napplying custom rulesets (if any)")
+	status.append("\napplying custom rulesets (if any)")
+	print(status[-1])
 	images = folder_rules(images,c["folder_rules"])
 	images = transitive_rules(images,c)
 	images = replace_rules(images,c)
@@ -576,7 +619,8 @@ def run(save_tags=False,save_images=False):
 	images = recategorize_images(images,c["category_rules"])
 	images = dedupe_tags(images)
 
-	print("\nFinal:")
+	status.append("\nFinal:")
+	print(status[-1])
 	img_status(images,True)
 	if debug or (not save_tags and input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y"):
 		exit(0)
@@ -584,6 +628,11 @@ def run(save_tags=False,save_images=False):
 	if not all([os.path.isfile(x.get_new_img_path()) for x in images]):
 		if save_images or input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
 			copy_images(images)
+	
+	
+	data["tags"]["status"] = "\n".join(status)
+	data["tags"]["warn"] = "\n".join(warn)
+	return data
 
 if __name__ == "__main__":
 	run()

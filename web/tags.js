@@ -404,15 +404,16 @@ function load_json() {
 	ajax.send();
 }
 
-function save_json(data) {
+function save_json() {
 	var data = get_current_json()
 
 	var ajax = new XMLHttpRequest();
 	ajax.onreadystatechange = function() {
 		if (this.readyState == 4 && this.status == 200) { 
-			var asd = tag_json_get()
-			var a = document.getElementById("t_output")
-			a.innerHTML = JSON.stringify(asd, null, 2);
+			console.log(data)
+			// var asd = tag_json_get()
+			// var a = document.getElementById("t_output")
+			// a.innerHTML = JSON.stringify(asd, null, 2);
 		};
 	};
 	ajax.open('POST',"/api/json/save",true);
@@ -423,17 +424,15 @@ function save_json(data) {
 	ajax.send(data);
 }
 
-function fix_tags() {
+async function fix_tags() {
+	save_json()
 	console.log("run")
-	var ajax = new XMLHttpRequest();
-	ajax.responseType = 'json';
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			var data = this.response;
-			console.log(data)
-			update_status();
-		};
-	};
-	ajax.open('GET',"/api/tags/run",true);
-	ajax.send();
+	let data = await fetch("/api/tags/run");
+	data = await data.json()
+	console.log(data);
+	
+	document.getElementById("t_output").innerHTML = data["tags"]["status"];
+	document.getElementById("t_warn").innerHTML = data["tags"]["warn"];
+
+	update_status(true)
 }

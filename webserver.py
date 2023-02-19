@@ -8,7 +8,7 @@ import os
 from status import get_status
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
-# from fix_tags import run
+from fix_tags import run
 
 app = web.Application()
 
@@ -74,8 +74,8 @@ async def api_dataset(request):
 	return web.json_response(data)
 
 async def api_fix_tags(request):
-	# run(True,True)
-	return web.json_response({})
+	status = run(True,True)
+	return web.json_response(status)
 
 async def api_dataset_create(request):
 	if os.path.isfile("dataset.json"): return web.json_response({"no"}) # fuck javascript triggering twice
