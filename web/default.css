@@ -56,3 +56,9 @@ td select {
 .input span input {
     width: 100%;
 }
+
+#t_pop {
+	max-height: 300px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}

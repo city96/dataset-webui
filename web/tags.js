@@ -1,3 +1,17 @@
+function popular_tags(tags) {
+	var table = document.getElementById("t_pop_table")
+	table.innerHTML = "";
+
+	for(const key in tags) {
+		r = table.insertRow();
+		let c0 = r.insertCell(0)
+		c0.innerHTML = tags[key]
+		
+		let c1 = r.insertCell(1)
+		c1.innerHTML = key
+	}
+}
+
 
 function folder_rule_add(folder, action, target) {
 	var table = document.getElementById("t_folder_rules")
@@ -433,6 +447,8 @@ async function fix_tags() {
 	
 	document.getElementById("t_output").innerHTML = data["tags"]["status"];
 	document.getElementById("t_warn").innerHTML = data["tags"]["warn"];
+	console.log(data["tags"]["popular"])
+	popular_tags(data["tags"]["popular"])
 
 	update_status(true)
 }

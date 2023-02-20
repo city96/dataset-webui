@@ -120,20 +120,20 @@ def image_filter(images, img_blacklist, img_filters):
 	filtered = []
 	for i in images:
 		if any([t in [x.name for x in i.tags] for t in [x.name for x in img_blacklist]]):
-			removed.append(i.filename)
-			images.remove(i)
+			removed.append(i)
+	for k in removed: images.remove(k)
 	for i in images:
 		for f in img_filters:
 			if all([t in [x.name for x in i.tags] for t in [x.name for x in str_to_taglist(f["target"])]]):
 				filtered.append(i.filename)
-				images.remove(i)
+	for k in filtered: images.remove(k)
 
 	status.append(f" removed {len(removed)} images from input [by tags]")
 	print(status[-1])
-	if debug: print("REM:",removed)
+	if debug: print("REM:",[x.filename for x in removed])
 	status.append(f" removed {len(filtered)} images from input [by filter]")
 	print(status[-1])
-	if debug: print("REM:",filtered)
+	if debug: print("REM:",[x.filename for x in filtered])
 	status.append(f" Images: {len(images)}")
 	print(status[-1])
 	return images
@@ -198,10 +198,13 @@ def popular_only(images, tag_file, limit, general_only):
 	status.append(f" loaded {len(tags)} tags successfully from {tag_file}")
 	print(status[-1])
 	for i in images:
+		new = []
 		for t in i.tags:
 			if t.name not in tags and not any([t.name == x.name for x in whitelist]):
 				removed.append(t.name)
-				i.tags.remove(t)
+			else:
+				new.append(t)
+		i.tags = new
 
 	status.append(f" removed {len(set(removed))} obscure tags")
 	print(status[-1])
@@ -225,14 +228,17 @@ def frequent_only(images,freq):
 			else:
 				tags[t.name] += 1
 	for i in images:
+		new = []
 		for t in i.tags:
 			if tags[t.name] < freq and not any([t.name == x.name for x in whitelist]):
 				removed.append(t.name)
-				i.tags.remove(t)
+			else:
+				new.append(t)
+		i.tags = new
 
-	status.append(f" removed {len(removed)} instances of infrequent tags")
+	status.append(f" removed {len(set(removed))} infrequent tags")
 	print(status[-1])
-	if debug: print("REM:",removed)
+	if debug: print("REM:",list(set(removed)))
 	img_status(images)
 	return(images)
 
@@ -248,13 +254,18 @@ def normalize_eye_color(images,target_color):
 
 	for i in images:
 		tagged = False
+		new = []
 		for t in i.tags:
 			if t.name.endswith("eyes"):
 				color = t.name.split(" eyes")[0]
 				if color in valid and not any([t.name == x.name for x in whitelist]):
 					removed.append(t.name)
-					i.tags.remove(t)
 					tagged = True
+				else:
+					new.append(t)
+			else:
+				new.append(t)
+		i.tags = new
 		if tagged:
 			i.tags += target_color
 
@@ -275,13 +286,18 @@ def normalize_hair_color(images,target_color):
 
 	for i in images:
 		tagged = False
+		new = []
 		for t in i.tags:
 			if t.name.endswith("hair"):
 				color = t.name.split(" hair")[0]
 				if color in valid and not any([t.name == x.name for x in whitelist]):
 					removed.append(t.name)
-					i.tags.remove(t)
 					tagged = True
+				else:
+					new.append(t)
+			else:
+				new.append(t)
+		i.tags = new
 		if tagged:
 			i.tags += target_color
 
@@ -303,17 +319,21 @@ def normalize_hair_style(images,target_style):
 
 	for i in images:
 		tagged = False
+		new = []
 		for t in i.tags:
 			if t.name.endswith("hair"):
 				style = t.name.split(" hair")[0]
 				if style in valid and not any([t.name == x.name for x in whitelist]):
 					removed.append(t.name)
-					i.tags.remove(t)
 					tagged = True
+				else:
+					new.append(t)
 			elif t.name in extra and not any([t.name == x.name for x in whitelist]):
-				i.tags.remove(t)
 				removed.append(t.name)
 				tagged = True
+			else:
+				new.append(t)
+		i.tags = new
 		if tagged:
 			i.tags += target_style
 
@@ -343,10 +363,13 @@ def folder_rules(images, tag_rules):
 			removed = []
 			for i in images:
 				if i.category == folder:
+					new = []
 					for t in i.tags:
 						if t.name in [x.name for x in tags]:
 							removed.append(t.name)
-							i.tags.remove(t)
+						else:
+							new.append(t)
+					i.tags = new
 			if len(removed) > 0:
 				status.append(f" RemoveFolder [{rule['target']}] (-{len(removed)} from {folder})")
 				print(status[-1])
@@ -379,11 +402,14 @@ def replace_rules(images, tag_rules):
 		removed = []
 		for i in images:
 			tagged = False
+			new = []
 			for t in i.tags:
 				if t.name in [str(x) for x in r[1:]]:
 					tagged = True
 					removed.append(t.name)
-					i.tags.remove(t)
+				else:
+					new.append(t)
+			i.tags = new
 			if r[0].name not in [str(x) for x in i.tags] and tagged:
 				i.tags.append(r[0])
 				added += 1
@@ -422,12 +448,17 @@ def spice_rules(images, tag_rules):
 		removed = []
 		removed_perc = 0
 		for i in images:
+			new = []
 			for t in i.tags:
 				if t.name in [str(x) for x in r[1:]]:
 					total += 1
 					if perc > random.random() and perc > removed_perc: #overshoot
 						removed.append(t)
-						i.tags.remove(t)
+					else:
+						new.append(t)
+				else:
+					new.append(t)
+			i.tags = new
 			removed_perc = len(removed)/total
 		if len(removed) > 0:
 			status.append(f" RemoveSpice [{rname}] (-{len(removed)}|{round(removed_perc*100)}%)")
@@ -444,9 +475,11 @@ def add_triggerword(images, tws):
 	status.append("\nadding triggerwords")
 	print(status[-1])
 	for i in images:
+		new = []
 		for t in i.tags:
-			if t.name in [str(x) for x in tws]:
-				i.tags.remove(t)
+			if t.name not in [str(x) for x in tws]:
+				new.append(t)
+		i.tags = new
 		i.tags += tws
 	return images
 
@@ -460,10 +493,13 @@ def blacklist(images,blacklist):
 		return images
 	removed = 0
 	for i in images:
+		new = []
 		for t in i.tags:
 			if t.name in [str(x) for x in blacklist]:
-				i.tags.remove(t)
 				removed += 1
+			else:
+				new.append(t)
+		i.tags = new
 	status.append(f"blacklist applied {removed} times")
 	print(status[-1])
 	return images
@@ -503,17 +539,30 @@ def recategorize_images(images,sort_tags):
 def dedupe_tags(images):
 	duplicates = []
 	for i in images:
-		tmp = []
+		new = []
 		for t in i.tags:
-			if t.name in tmp:
+			if t.name in [x.name for x in new]:
 				duplicates.append(t.name)
-				i.tags.remove(t)
 			else:
-				tmp.append(t.name)
+				new.append(t)
+		i.tags = new
 	if duplicates:
 		status.append(f"Removed {len(duplicates)} duplicate tags")
 		print(status[-1])
 	return images
+
+# get popular tags
+def popular_tags(images):
+	print("asd:")
+	tags = {}
+	for i in images:
+		for t in i.tags:
+			if t.name not in tags.keys():
+				tags[t.name] = 1
+			else:
+				tags[t.name] += 1
+	tags = {k: v for k, v in sorted(tags.items(), key=lambda item: item[1], reverse=True)}
+	return tags
 
 # write all tags to the desired output folder
 def write_tags(images, folder):
@@ -554,6 +603,15 @@ def img_status(images,verbose=False):
 	status.append(f" Unique tags: {len(list(set(sum([[str(y) for y in x.tags] for x in images],[]))))}")
 	print(status[-1])
 	# print("\nDEBUG: tags left:",images[1])
+
+# save logic
+def save(images, save_tags, save_images):
+	if debug or (not save_tags and input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y"):
+		return
+	write_tags(images,c["folder_output"])
+	if not all([os.path.isfile(x.get_new_img_path()) for x in images]):
+		if save_images or input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
+			copy_images(images)
 
 # default logic
 def run(save_tags=False,save_images=False):
@@ -622,18 +680,16 @@ def run(save_tags=False,save_images=False):
 	status.append("\nFinal:")
 	print(status[-1])
 	img_status(images,True)
-	if debug or (not save_tags and input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y"):
-		exit(0)
-	write_tags(images,c["folder_output"])
-	if not all([os.path.isfile(x.get_new_img_path()) for x in images]):
-		if save_images or input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
-			copy_images(images)
 	
+	# save to disk
+	save(images, save_tags, save_images)
 	
+	# return data
+	data["tags"]["popular"] = popular_tags(images)
 	data["tags"]["status"] = "\n".join(status)
 	data["tags"]["warn"] = "\n".join(warn)
 	return data
 
 if __name__ == "__main__":
+	debug = True
 	run()
-	input("\nPress any key to exit...")
