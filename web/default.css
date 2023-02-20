@@ -46,6 +46,7 @@ td select {
 
 .input textarea {
 	width: 100%;
+	resize: vertical;
 }
 
 .input span {
