@@ -637,10 +637,10 @@ def run(save_tags=False,save_images=False):
 		print(warn[-1])
 
 	# apply filters
-	images = frequent_only(images,int(c["frequent_only"]))
 	images = normalize_eye_color(images,str_to_taglist(c["normalize"]["eye_color"]))
 	images = normalize_hair_color(images,str_to_taglist(c["normalize"]["hair_color"]))
 	images = normalize_hair_style(images,str_to_taglist(c["normalize"]["hair_style"]))
+	images = frequent_only(images,int(c["frequent_only"]))
 
 	# rulesets
 	status.append("\napplying custom rulesets (if any)")
