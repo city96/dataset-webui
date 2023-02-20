@@ -1,3 +1,16 @@
+function tag_add_to_blacklist(tag) {
+	let element = document.getElementById("t_blacklist")
+	let blacklist = element.value;
+	if (!blacklist.endsWith(",")) {
+		blacklist = blacklist + ", "
+	}
+	if (blacklist.endsWith(",")) {
+		blacklist = blacklist + " "
+	}
+	blacklist = blacklist + tag
+	element.value = blacklist
+}
+
 function popular_tags(tags) {
 	var table = document.getElementById("t_pop_table")
 	table.innerHTML = "";
@@ -9,6 +22,12 @@ function popular_tags(tags) {
 		
 		let c1 = r.insertCell(1)
 		c1.innerHTML = key
+		
+		let c2 = r.insertCell(2)
+		b = document.createElement('button');
+		c2.appendChild(b)
+		b.innerHTML = "+"
+		b.setAttribute('onclick','this.disabled=true; tag_add_to_blacklist("'+key+'")')
 	}
 }
 
