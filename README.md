@@ -25,15 +25,15 @@ python webserver.py
 Access the webui on the following URL: http://127.0.0.1:8080/
 
 ## Folder structure
-You can start a new project by running `dataset-manager.py`. This is the script that is used to switch between multiple datasets as well.
 
 The folders created are meant to be used as follows:
 - `0 - raw` - raw images from the internet / screenshots
-- `1 - cropped` - cropped (and manually edited) images
+- `1 - cropped` - cropped images (1:1 aspect ratio)
 - `2 - sorted` - images grouped by quality / topic / etc
 - `3 - tagged` - generated or scraped tags + downscaling of images to uniform resolution
 - `4 - fixed` - automatically fixed tags based on ruleset (`fix-tags.py`)
-- `5 - out` - (optional) final manual review / tag edits using extenral software.
+- `5 - out` - (optional) final manual review / tag edits using external software.
+- `datasets` - all your datasets are saved here
 
 ### download-tag-list.py
 This script will simply download a .json file with the most commonly used booru tags into the `other` folder.
