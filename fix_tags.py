@@ -94,7 +94,7 @@ def image_filter(images, img_blacklist, img_filters):
 	for i in images:
 		for f in img_filters:
 			if all([t in [x.name for x in i.tags] for t in [x.name for x in str_to_taglist(f["target"])]]):
-				filtered.append(i.filename)
+				filtered.append(i)
 	for k in filtered: images.remove(k)
 
 	status.append(f" removed {len(removed)} images from input [by tags]")
