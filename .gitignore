@@ -5,8 +5,11 @@
 4 - fixed/
 5 - out/
 .cache
+__pycache__/
 datasets/
 dataset.ini
+dataset.json
+venv
 other/*-tags.json
 guide.md
 broken/

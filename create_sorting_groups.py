@@ -155,5 +155,6 @@ def cli_ui():
 		print(f" {f}")
 		os.mkdir(f)
 
-cli_ui()
-input("\nPress any key to exit...")
+if __name__ == "__main__":
+	cli_ui()
+	input("\nPress any key to exit...")

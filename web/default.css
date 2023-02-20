@@ -1,0 +1,64 @@
+body {
+	max-width: max-content;
+	margin: auto;
+}
+
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+td, th {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 8px;
+}
+
+tr:nth-child(even) {
+	background-color: #dddddd;
+}
+
+td button {
+	width: 100%;
+}
+
+.tip {
+	color: #666;
+}
+
+label {
+	display: inline-block;
+}
+
+td input {
+	width: 97%;
+}
+
+td select {
+	width: 100%;
+}
+
+.input label {
+    float: left;
+    padding: 0 8px 0 0;
+}
+
+.input textarea {
+	width: 100%;
+}
+
+.input span {
+    overflow: hidden;
+    display: block;
+    padding: 0 8px 0 0;
+}
+.input span input {
+    width: 100%;
+}
+
+#t_pop {
+	max-height: 300px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
