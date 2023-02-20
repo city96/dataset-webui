@@ -79,27 +79,6 @@ def underscore_fix(images):
 		print(status[-1])
 	return images
 
-# get filter by name, return filter name and filtered tags as array
-def get_filter_info(filter_type, tag_rules):
-	rules = {}
-	for k in tag_rules.keys():
-		if '.' in k:
-			name, fname = k.split('.',1)
-		else:
-			name = k
-			fname = "Unnamed"
-			# edge case
-			i = 2
-			while fname in rules.keys():
-				fname = f"Default-{i}"
-				i += 1;
-		if name.lower() == filter_type.lower():
-			tags = str_to_taglist(tag_rules[k])
-			if tags:
-				rules[fname] = tags
-	return rules
-			
-
 # filter images by tags
 def image_filter(images, img_blacklist, img_filters):
 	if not img_blacklist and not img_filters:
@@ -367,83 +346,93 @@ def folder_rules(images, tag_rules):
 	return images
 
 # add tags based on existing tags.
-def transitive_rules(images, tag_rules):
-	rules = get_filter_info("AddRule", tag_rules)
-	if not rules:
+def transitive_rules(images, custom_rules):
+	if not custom_rules:
 		return images
-	for rname, r in rules.items():
+	for rule in custom_rules:
+		if rule["type"] != "add":
+			continue
 		added = 0
+		source = str_to_taglist(rule["source"])
 		for i in images:
-			if any([t.name == r[0].name for t in i.tags]):
-				i.tags += (r[1:])
-				added += 1
+			if any([t.name in [x.name for x in source] for t in i.tags]):
+				for t in str_to_taglist(rule["target"]):
+					if t.name not in [x.name for x in i.tags]:
+						i.tags.append(t)
+						added += 1
 		if added > 0:
-			status.append(f" AddRule [{rname}] (+{added})")
+			status.append(f" AddRule [{rule['source']}] (+{added})")
 			print(status[-1])
 	return images
 
 # replace redundant tags
-def replace_rules(images, tag_rules):
-	rules = get_filter_info("ReplaceRule", tag_rules)
-	if not rules:
+def replace_rules(images, custom_rules):
+	if not custom_rules:
 		return images
-	for rname, r in rules.items():
+	for rule in custom_rules:
+		if rule["type"] != "replace":
+			continue
+		source = str_to_taglist(rule["source"])
 		added = 0
 		removed = []
 		for i in images:
 			tagged = False
 			new = []
 			for t in i.tags:
-				if t.name in [str(x) for x in r[1:]]:
+				if t.name in [x.name for x in source]:
 					tagged = True
 					removed.append(t.name)
 				else:
 					new.append(t)
 			i.tags = new
-			if r[0].name not in [str(x) for x in i.tags] and tagged:
-				i.tags.append(r[0])
-				added += 1
+			for t in str_to_taglist(rule["target"]):
+				if tagged and t.name not in [x.name for x in i.tags]:
+					i.tags.append(t)
+					added += 1
 		if added > 0 or len(removed) > 0:
-			status.append(f" ReplaceRule [{rname}] (+{added} | -{len(removed)})")
+			status.append(f" ReplaceRule [{rule['target']}] (+{added} | -{len(removed)})")
 			print(status[-1])
 			if debug: print(" REM:",list(set(removed)))
 	return images
 
 # experimental spice rules
-def spice_rules(images, tag_rules):
-	add_rules = get_filter_info("AddSpice", tag_rules)
-	remove_rules = get_filter_info("RemoveSpice", tag_rules)
-	if not add_rules and not remove_rules:
+def spice_rules(images, spice_rules):
+	if not spice_rules:
 		return images
 	# add rules
-	for rname, r in add_rules.items():
-		perc = float(r[0].name)
+	for rule in spice_rules:
+		if rule["type"] != "add":
+			continue
+		perc = float(rule["percent"])/100
 		total = 0
 		added = 0
 		added_perc = 0
 		for i in images:
-			for t in r[1:]:
+			for t in str_to_taglist(rule["target"]):
 				total += 1
 				if perc > random.random():
 					i.tags.append(t)
 					added += 1
 		added_perc = added/total
 		if added > 0:
-			status.append(f" AddSpice [{rname}] (+{added}|{round(added_perc*100)}%)")
+			status.append(f" AddSpice [{rule['target']}] (+{added}|{round(added_perc*100)}%)")
 			print(status[-1])
 	# remove rules
-	for rname, r in remove_rules.items():
-		perc = float(r[0].name)
+	for rule in spice_rules:
+		if rule["type"] != "remove":
+			continue
+		perc = float(rule["percent"])/100
+		target = str_to_taglist(rule["target"])
 		total = 1
 		removed = []
 		removed_perc = 0
 		for i in images:
 			new = []
 			for t in i.tags:
-				if t.name in [str(x) for x in r[1:]]:
+				if t.name in [x.name for x in target]:
 					total += 1
 					if perc > random.random() and perc > removed_perc: #overshoot
-						removed.append(t)
+						removed.append(t.name)
 					else:
 						new.append(t)
 				else:
@@ -451,7 +440,7 @@ def spice_rules(images, tag_rules):
 			i.tags = new
 			removed_perc = len(removed)/total
 		if len(removed) > 0:
-			status.append(f" RemoveSpice [{rname}] (-{len(removed)}|{round(removed_perc*100)}%)")
+			status.append(f" RemoveSpice [{rule['target']}] (-{len(removed)}|{round(removed_perc*100)}%)")
 			print(status[-1])
 			if debug: print(" REM:",list(set(removed)))
 	return images
@@ -657,9 +646,9 @@ def run(save_tags=False,save_images=False):
 	status.append("\napplying custom rulesets (if any)")
 	print(status[-1])
 	images = folder_rules(images,c["folder_rules"])
-	images = transitive_rules(images,c)
-	images = replace_rules(images,c)
-	images = spice_rules(images,c)
+	images = transitive_rules(images,c["custom_rules"])
+	images = replace_rules(images,c["custom_rules"])
+	images = spice_rules(images,c["spice_rules"])
 
 	# post-filters
 	images = add_triggerword(images,str_to_taglist(c["triggerword"]))

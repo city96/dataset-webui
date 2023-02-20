@@ -304,11 +304,13 @@ them to the RaisedTags function as well.
 Transitivity rule:
 Any image that has the [Source tag] will also get the [Target tags] added.
 If you have multiple [Source tags], then it looks for all of them
-(eg. add "red hakama" and "hakama skirt" to all images tagged with "miko")
+([Source tag:miko] would add [Target tag:red hakama,hakama skirt] to all images
+tagged with miko)
 
 Replacement rule:
-Replace all tags in the [Target tags] list with the [Source tag]
-(eg. replace replace "bell" and "jingle bell" with "neck bell")
+Replace all tags in the [Source tag] list with the [Target tags]
+([Source tags:jingle bell,neck bell] would replace those two
+tags with [Target tag:bell])
 </pre>
 <hr>
 
