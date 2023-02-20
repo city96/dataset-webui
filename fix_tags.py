@@ -6,17 +6,7 @@ import random
 import json
 
 c = None
-
-if os.path.isfile("dataset.json"):
-	with open("dataset.json") as f:
-		data = json.load(f)
-		if "tags" not in data.keys():
-			print("no tags")
-			exit(1)
-		c = data["tags"]
-else:
-	print("Missing 'dataset.json' config")
-	# exit(1)
+whitelist = []
 
 # show removed tags at each step
 debug = False #c["Debug"].lower() == "true"
@@ -483,11 +473,6 @@ def add_triggerword(images, tws):
 		i.tags += tws
 	return images
 
-# global whitelist
-whitelist = str_to_taglist(c["whitelist"])
-whitelist += str_to_taglist(c["triggerword"])
-# whitelist += str_to_taglist(c["triggerword_extra"])
-
 def blacklist(images,blacklist):
 	if not blacklist:
 		return images
@@ -553,7 +538,6 @@ def dedupe_tags(images):
 
 # get popular tags
 def popular_tags(images):
-	print("asd:")
 	tags = {}
 	for i in images:
 		for t in i.tags:
@@ -615,8 +599,10 @@ def save(images, save_tags, save_images):
 
 # default logic
 def run(save_tags=False,save_images=False):
+	global whitelist
 	global status
 	global warn
+	global c
 	status = []
 	warn = []
 	status.append("Tag fixer")
@@ -625,12 +611,12 @@ def run(save_tags=False,save_images=False):
 	# reload json
 	if os.path.isfile("dataset.json"):
 		with open("dataset.json") as f:
-			c = json.load(f)
-			if "tags" not in c.keys():
+			data = json.load(f)
+			if "tags" not in data.keys():
 				warn.append("no tags")
 				print(warn[-1])
 				return
-			c = c["tags"]
+			c = data["tags"]
 	else:
 		warn.append("Missing 'dataset.json' config")
 		print(warn[-1])
@@ -647,6 +633,11 @@ def run(save_tags=False,save_images=False):
 	# filter input images
 	print(c["image_blacklist"])
 	images = image_filter(images,str_to_taglist(c["image_blacklist"]),c["filter_rules"])
+
+	# load whitelist
+	whitelist = str_to_taglist(c["whitelist"])
+	whitelist += str_to_taglist(c["triggerword"])
+	# whitelist += str_to_taglist(c["triggerword_extra"])
 
 	# popular-only filter
 	tag_file = os.path.join("other",f'{c["booru"]["type"]}-tags.json')
