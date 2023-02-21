@@ -13,9 +13,8 @@ function update_dataset_table(datasets){
 
 	if (has_active) {
 		update_status()
-		document.getElementById("d_name").disabled = true;
-		document.getElementById("d_description").disabled = true;
 		document.getElementById("d_new").disabled = true;
+		document.getElementById("d_update").disabled = false;
 	} else {
 		hide_status()
 		tags_disabled(true)
@@ -24,6 +23,7 @@ function update_dataset_table(datasets){
 		document.getElementById("d_description").disabled = false;
 		document.getElementById("d_description").value = ""
 		document.getElementById("d_new").disabled = false;
+		document.getElementById("d_update").disabled = true;
 	}
 
 	for(const dataset of datasets) {
@@ -87,31 +87,42 @@ async function load_dataset(path) {
 }
 
 // from page
-function get_current_json() {
-	var data = {};
-	data["meta"] = {};
-	data["meta"]["name"] = document.getElementById("d_name").value;
-	data["meta"]["description"] = document.getElementById("d_description").value;
-	
-	data["tags"] = tag_json_get()
+function get_dataset_json() {
+	let data = {};
+	data["name"] = document.getElementById("d_name").value;
+	data["description"] = document.getElementById("d_description").value;
 	return data;
 }
 
-function create_dataset(){
+async function save_dataset_json() {
+	console.log("Save dataset/json")
+	document.getElementById("d_update").disabled = true;
+	let data = {}
+	data["meta"] = get_dataset_json()
+
+	await fetch('/api/json/save', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json; charset=UTF-8'
+		},
+		body: JSON.stringify(data)
+	})
+	update_datasets()
+}
+
+async function create_dataset(){
 	document.getElementById("d_new").disabled = true;
-	data = get_current_json()
+	let data = {}
+	data["meta"] = get_dataset_json()
 
-	var ajax = new XMLHttpRequest();
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			update_datasets()
-		};
-	};
-	ajax.open('POST',"/api/dataset/create",false);
-	ajax.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
-
-	data = JSON.stringify(data)
-	ajax.send(data);
+	await fetch('/api/dataset/create', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json; charset=UTF-8'
+		},
+		body: JSON.stringify(data)
+	})
+	update_datasets()
 }
 
 update_datasets()

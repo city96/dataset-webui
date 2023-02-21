@@ -422,43 +422,31 @@ function tag_json_load(data) {
 	return
 }
 
-function load_json() {
-	console.log("tagapi")
-	var ajax = new XMLHttpRequest();
-	ajax.responseType = 'json';
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			var data = this.response;
-			console.log(data)
-			tag_json_load(data["tags"]);
-		};
-	};
-	ajax.open('GET',"/api/status",true);
-	ajax.send();
-}
+async function save_tag_json() {
+	console.log("Save tag/json")
+	document.getElementById("t_save").disabled = true;
+	document.getElementById("t_load").disabled = true;
+	document.getElementById("t_fix").disabled = true;
+	let data = {}
+	data["tags"] = tag_json_get()
 
-function save_json() {
-	var data = get_current_json()
-
-	var ajax = new XMLHttpRequest();
-	ajax.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) { 
-			console.log(data)
-			// var asd = tag_json_get()
-			// var a = document.getElementById("t_output")
-			// a.innerHTML = JSON.stringify(asd, null, 2);
-		};
-	};
-	ajax.open('POST',"/api/json/save",true);
-	ajax.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
-
-	data = JSON.stringify(data)
+	await fetch('/api/json/save', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json; charset=UTF-8'
+		},
+		body: JSON.stringify(data)
+	})
 	console.log(data)
-	ajax.send(data);
+
+	document.getElementById("t_save").disabled = false;
+	document.getElementById("t_load").disabled = false;
+	document.getElementById("t_fix").disabled = false;
+	update_status(true)
 }
 
 async function fix_tags() {
-	save_json()
+	save_tag_json()
 	console.log("run")
 	let data = await fetch("/api/tags/run");
 	data = await data.json()

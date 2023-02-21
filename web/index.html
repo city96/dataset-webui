@@ -32,6 +32,7 @@
 			<label>Dataset Description =</label>
 			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
 		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
+		<button id="d_update" style="float:right" onclick="save_dataset_json()"> Update Dataset Metadata </button>
 		</div>
 	</div>
 	
@@ -57,8 +58,8 @@
 <!-- START TAG SETTING LIST -->
 <h2>Tag filters:</h2>
 <a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
-<button id="t_save" onclick="save_json()"> Save changes </button>
-<button id="t_load" onclick="load_json()"> Discard changes </button>
+<button id="t_save" onclick="save_tag_json()"> Save changes </button>
+<button id="t_load" onclick="update_status()"> Discard changes </button>
 <button id="t_fix" onclick="fix_tags()"> Apply filters [save output] </button>
 <br>
 <p> Script output will appear here: </p>

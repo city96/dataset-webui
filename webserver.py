@@ -6,6 +6,7 @@ import aiohttp
 import json
 import os
 from status import get_status
+from save import save_json
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import run
@@ -43,12 +44,7 @@ async def api_json_save(request):
 	if request.body_exists:
 		data = await request.read()
 		data = json.loads(data)
-		strdata = json.dumps(data, indent=2)
-		print(strdata)
-		# sanity check
-		if len(data["meta"]["name"]) > 0 and len(data["tags"]) > 0:
-			with open("dataset.json", "w") as f:
-				f.write(strdata)
+		save_json(data)
 	else:
 		print("no data")
 	return web.json_response({})
