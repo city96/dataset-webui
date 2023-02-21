@@ -38,8 +38,8 @@ class Tag:
 # api cacher, "borrowed" from unknown project.
 def api_cacher(api_base, api_url):
 	"""cache api requests in '.cache' folder"""
-	global use_cache
-	if not os.path.exists('.cache') and use_cache:
+	import os, json, requests, time
+	if not os.path.exists('.cache'):
 		os.makedirs('.cache')
 
 	filename = api_url.replace(api_base,'')
@@ -48,7 +48,7 @@ def api_cacher(api_base, api_url):
 	filename = filename.replace('&','_')
 	path = os.path.join('.cache',filename+'.json')
 
-	if os.path.isfile(path) and use_cache:
+	if os.path.isfile(path):
 		print('   cached', api_url)
 		with open(path, 'r') as f:
 			data_json = json.load(f)
