@@ -5,6 +5,12 @@ This project aims to help with the creation and management of LoRa training data
 
 *Pull requests are welcome. Currently everything is just cobbled together*
 
+Roadmap:
+- Implement cropping
+- Implement sorting
+- Fix category management / assignment
+- Fix orphaned images
+
 ## Getting started
 (optional) create a venv first:
 ```
