@@ -59,22 +59,26 @@ async function crop_json_save() {
 	document.getElementById("c_save").disabled = false;
 }
 
+function crop_update_status_text(target,data) {
+	if (data["crop_data"] === undefined && data["ignored"] != true) {
+		target.innerHTML = "Unknown/Not cropped"
+		target.style.color = "gray"
+	} else if (!(data["crop_data"] === undefined) && data["ignored"] != true) {
+		target.innerHTML = "Cropped"
+		target.style.color = "green"
+	} else if (data["ignored"] == true) {
+		target.innerHTML = "Ignored"
+		target.style.color = "red"
+	} else {
+		target.innerHTML = "???"
+		target.style.color = "orange"
+	}
+}
+
 async function crop_update_current() {
 	let current = crop_data["images"][crop_data["current"]]
-	let status = document.getElementById("c_status")
-	if (current["crop_data"] === undefined && current["ignored"] != true) {
-		status.innerHTML = "Image: Unknown/Not cropped"
-		status.style.color = "gray"
-	} else if (!(current["crop_data"] === undefined) && current["ignored"] != true) {
-		status.innerHTML = "Image: Cropped"
-		status.style.color = "green"
-	} else if (current["ignored"] == true) {
-		status.innerHTML = "Image: Ignored"
-		status.style.color = "red"
-	} else {
-		status.innerHTML = "Image: ???"
-		status.style.color = "orange"
-	}
+	crop_update_status_text(document.getElementById("c_status"),current)
+
 	if (crop.image == undefined) {
 		return
 	}
@@ -155,6 +159,7 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 	if ((crop_data["current"]+1) >= crop_data["images"].length) {
 		return
 	}
+	crop_update_status_text(document.getElementById("c_status_prev"),crop_data["images"][crop_data["current"]])
 	crop_data["current"]++
 	crop_update_current()
 	crop_status()
@@ -164,6 +169,7 @@ function crop_prev_image() {
 	if ((crop_data["current"]-1) < 0) {
 		return
 	}
+	crop_update_status_text(document.getElementById("c_status_prev"),crop_data["images"][crop_data["current"]])
 	crop_data["current"]--
 	crop_update_current()
 	crop_status()
