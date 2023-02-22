@@ -34,6 +34,12 @@ function update_status_table(steps) {
 			tags = true
 		}
 	}
+	if (!tags) {
+		tags_disabled(true)
+	}
+	
+	// enable cropping
+	crop_disabled(!(steps["0 - raw"]["image_count"]["total"] > 0))
 }
 
 // call to update parts of page
@@ -48,6 +54,7 @@ async function update_status(tags){
 	
 	update_status_table(data["status"]["steps"])
 	tag_json_load(data["tags"])
+	crop_json_load(data["crop"])
 }
 
 function hide_status() {

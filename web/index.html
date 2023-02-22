@@ -52,9 +52,40 @@
 			</tbody>
 		</table>
 	</div>
-	
+
+	<!-- Cropping -->
+	<div id="crop-div">
+		<h2>Cropping:</h2>
+		<button style="font-size:20px" id="c_save" onclick="crop_json_save()"> Save </button>
+		<table>
+			<thead>
+				<tr>
+					<td>  </td>
+					<td> Total </td>
+					<td> Missing </td>
+					<td> Unknown </td>
+					<td> Ignored </td>
+					<td> Cropped </td>
+				</tr>
+			</thead>
+			<tbody id="crop-table">
+			</tbody>
+		</table>
+		<br>
+		<h2 id="c_status">-</h2>
+		<br>
+		<!-- <button id="c_save" onclick=""> Save changes </button> -->
+		<button style="font-size:40px" id="c_prev" onclick="crop_prev_image()"> Prev </button>
+		<button style="font-size:40px" id="c_ignore" onclick="crop_next_image(false,true)"> Ignore+Next </button>
+		<button style="font-size:40px" id="c_crop" onclick="crop_next_image(true)"> Crop+Next </button>
+		<button style="font-size:40px" id="c_next" onclick="crop_next_image()"> Next </button>
+		<div id="crop-img-div">
+			<img id="crop-img">
+		</div>
+	</div>
 	<!-- Tag filters -->
 	<div id="tag-div">
+
 <!-- START TAG SETTING LIST -->
 <h2>Tag filters:</h2>
 <a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
@@ -415,6 +446,7 @@ You might end up with duplicate images/categories if you don't delete them.
 <script src="status.js"></script>
 <script src="dataset.js"></script>
 <script src="tags.js"></script>
+<script src="crop.js"></script>
 </body>
 </html>
 

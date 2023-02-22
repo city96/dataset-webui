@@ -14,6 +14,10 @@ def save_json(new):
 		print(" tags")
 		data["tags"] = new["tags"]
 
+	if "crop" in new.keys():
+		print(" tags")
+		data["crop"] = new["crop"]
+
 	for key in new.keys():
 		if key not in data.keys():
 			print(f" add '{key}'")

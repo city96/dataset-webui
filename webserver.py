@@ -7,6 +7,7 @@ import json
 import os
 from status import get_status
 from save import save_json
+from crop import crop_info
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import run
@@ -22,8 +23,13 @@ async def favicon(request):
 async def handle(request):
 	path = os.path.join("web", str(request.url.relative())[1:])
 	
-	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css",".js"]:
+	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css"]:
 		return web.FileResponse(path)
+	elif os.path.isfile(path) and os.path.splitext(path)[1] in [".js"]:
+		headers = {
+			"Content-Type" : "application/javascript"
+		}
+		return web.FileResponse(path,headers=headers)
 	else:
 		return web.Response(status=404,text="404")
 
@@ -49,7 +55,10 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
-# 
+async def api_crop(request):
+	data = crop_info()
+	return web.json_response(data)
+
 async def api_dataset(request):
 	print(request)
 	path = None
@@ -87,6 +96,7 @@ async def api_dataset_create(request):
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
 				web.get('/api/status', api_get_status),
+				web.get('/api/crop/{command}', api_crop),
 				web.post('/api/dataset/create', api_dataset_create),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/json/save', api_json_save),
