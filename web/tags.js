@@ -380,6 +380,7 @@ function tag_json_get() {
 
 function tag_json_load(data) {
 	tag_json_clear();
+	if(!data){ return }
 	if(data["folder_input"]){ document.getElementById("t_input_folder").value = data["folder_input"]; };
 	if(data["folder_output"]){ document.getElementById("t_output_folder").value = data["folder_output"]; };
 	if(data["triggerword"]){ document.getElementById("t_triggerword").value = data["triggerword"]; };

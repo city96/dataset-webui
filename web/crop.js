@@ -5,6 +5,9 @@ function crop_disabled(state) {
 		document.getElementById("c_apply").disabled = true;
 		document.getElementById("crop-div").style.color = "#888"
 		document.getElementById("crop-img-div").innerHTML = ""
+		if (crop) {
+			crop.destroy()
+		}
 		crop = null
 		crop_data = null
 		crop_disable_shortcuts()
@@ -102,13 +105,15 @@ async function crop_update_current() {
 	
 	let old_url = new URL(crop.image.src)
 	let url = "/img/0 - raw/" + current["filename"]
-	if (old_url.pathname != url) {
-		crop.replace(url,true)
+	if (decodeURIComponent(old_url.pathname) != url) {
+		console.log("replace")
+		let asd = await crop.replace(url)
 	}
 	
 	if (current["crop_data"] === undefined) {
 		return
 	}
+	await new Promise(r => setTimeout(r, 15)); // why ??
 	crop.setData(current["crop_data"])
 }
 
@@ -170,7 +175,7 @@ function crop_status(reload=false){
 
 function crop_next_image(set_crop=false, set_ignore=false) {
 	if (set_crop) {
-		crop_data["images"][crop_data["current"]]["crop_data"] = crop.getData()
+		crop_data["images"][crop_data["current"]]["crop_data"] = crop.getData(true)
 		crop_data["images"][crop_data["current"]]["ignored"] = false
 	}
 	if (set_ignore) {

@@ -15,7 +15,7 @@ def save_json(new):
 		data["tags"] = new["tags"]
 
 	if "crop" in new.keys():
-		print(" tags")
+		print(" crop")
 		data["crop"] = new["crop"]
 
 	for key in new.keys():
