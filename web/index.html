@@ -56,6 +56,15 @@
 	<!-- Cropping -->
 	<div id="crop-div">
 		<h2>Cropping:</h2>
+		<button id="c_enable_shortcuts" onclick="crop_enable_shortcuts()"> Enable Shortcuts </button>
+		<div id="c_shortcuts" style="display:none">
+			<p class="tip"> Shortcuts registered! </p>
+			<p style="color:red"> Disable shortcuts after you're done with the cropping phase! </p>
+			<button id="c_disable_shortcuts" onclick="crop_disable_shortcuts()"> Disable Shortcuts </button>
+			<h3> Shortcuts </h3>
+			<img style="width: 50%;" src="crop-shortcuts.png"> 
+		</div>
+		<hr>
 		<button style="font-size:20px" id="c_save" onclick="crop_json_save()"> Save </button>
 		<table>
 			<thead>

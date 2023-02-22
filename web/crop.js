@@ -3,6 +3,34 @@ function crop_disabled(state) {
 	console.log(state)
 }
 
+function crop_enable_shortcuts() {
+	console.log("crop/shortcuts on")
+	document.getElementById("c_shortcuts").style.display = "block";
+	document.getElementById("c_enable_shortcuts").disabled = true;
+	document.getElementById("c_disable_shortcuts").disabled = false;
+	document.addEventListener('keyup', crop_shortcuts, false);
+	document.activeElement.blur();
+}
+
+function crop_disable_shortcuts() {
+	console.log("crop/shortcuts off")
+	document.getElementById("c_shortcuts").style.display = "none";
+	document.getElementById("c_enable_shortcuts").disabled = false;
+	document.getElementById("c_disable_shortcuts").disabled = true;
+	document.removeEventListener('keyup', crop_shortcuts, false);
+}
+
+function crop_shortcuts(e) {
+	// console.log(e)
+	if (e.key === 'z') { crop_prev_image() //next
+	} else if (e.key === 'x') { crop_next_image(false,true) // ignore+next
+	} else if (e.key === 'c') { crop_next_image(true) // crop+next
+	} else if (e.key === 'v') { crop_next_image() //next
+	} else {
+		console.log(e)
+	}
+}
+
 var crop_data
 async function crop_json_load() {
 	let data = await fetch("/api/crop/info");
@@ -115,12 +143,12 @@ function crop_status(reload=false){
 	}
 }
 
-function crop_next_image(crop=false, ignore=false) {
-	if (crop) {
+function crop_next_image(set_crop=false, set_ignore=false) {
+	if (set_crop) {
 		crop_data["images"][crop_data["current"]]["crop_data"] = crop.getData()
 		crop_data["images"][crop_data["current"]]["ignored"] = false
 	}
-	if (ignore) {
+	if (set_ignore) {
 		crop_data["images"][crop_data["current"]]["ignored"] = true
 	}
 	
@@ -133,7 +161,6 @@ function crop_next_image(crop=false, ignore=false) {
 }
 
 function crop_prev_image() {
-	crop_data["images"][crop_data["current"]]["crop_data"] = crop.getData()
 	if ((crop_data["current"]-1) < 0) {
 		return
 	}

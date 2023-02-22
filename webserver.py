@@ -23,7 +23,7 @@ async def favicon(request):
 async def handle(request):
 	path = os.path.join("web", str(request.url.relative())[1:])
 	
-	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css"]:
+	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css",".png"]:
 		return web.FileResponse(path)
 	elif os.path.isfile(path) and os.path.splitext(path)[1] in [".js"]:
 		headers = {
