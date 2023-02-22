@@ -44,6 +44,8 @@ def crop_info():
 			"size" : None,
 			"date" : None,
 		})
+	if data["crop"]["current"] > len(images):
+		data["crop"]["current"] = 0
 	data["crop"]["images"] = images
 	data["crop"]["missing"] = missing
 	return data

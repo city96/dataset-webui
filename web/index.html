@@ -86,8 +86,9 @@
 		<br>
 		<h3>Prev. displayed Image: <span id="c_status_prev">-</span></h3>
 		<h2>Current Image: <span id="c_status">-</span></h2>
+		<input type="checkbox" id="c_skip"> Only show Uncropped 
 		<br>
-		<!-- <button id="c_save" onclick=""> Save changes </button> -->
+		<button style="font-size:40px" id="c_first" onclick="crop_first_image()"> First </button>
 		<button style="font-size:40px" id="c_prev" onclick="crop_prev_image()"> Prev </button>
 		<button style="font-size:40px" id="c_ignore" onclick="crop_next_image(false,true)"> Ignore+Next </button>
 		<button style="font-size:40px" id="c_crop" onclick="crop_next_image(true)"> Crop+Next </button>

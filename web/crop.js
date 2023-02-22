@@ -106,8 +106,8 @@ async function crop_update_current() {
 	let old_url = new URL(crop.image.src)
 	let url = "/img/0 - raw/" + current["filename"]
 	if (decodeURIComponent(old_url.pathname) != url) {
-		console.log("replace")
-		let asd = await crop.replace(url)
+		console.log("replace", crop_data["current"])
+		crop.replace(url)
 	}
 	
 	if (current["crop_data"] === undefined) {
@@ -181,12 +181,39 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 	if (set_ignore) {
 		crop_data["images"][crop_data["current"]]["ignored"] = true
 	}
-	
-	if ((crop_data["current"]+1) >= crop_data["images"].length) {
-		return
-	}
+
 	crop_update_status_text(document.getElementById("c_status_prev"),crop_data["images"][crop_data["current"]])
-	crop_data["current"]++
+	
+	if (document.getElementById("c_skip").checked) {
+		let i = crop_data["current"]
+		let loop = false
+		while(true) {
+			i++
+			if (i >= crop_data["images"].length) {
+				if (loop) {
+					break
+				} else {
+					loop = true
+					i = 0
+				}
+			}
+			if (!crop_data["images"][i]["ignored"] && crop_data["images"][i]["crop_data"] === undefined) {
+				crop_data["current"] = i
+				break
+			}
+		}
+	} else {
+		if ((crop_data["current"]+1) >= crop_data["images"].length) {
+			return
+		}
+		crop_data["current"]++
+	}
+	crop_update_current()
+	crop_status()
+}
+
+function crop_first_image() {
+	crop_data["current"] = 0
 	crop_update_current()
 	crop_status()
 }
