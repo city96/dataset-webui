@@ -7,7 +7,7 @@ import json
 import os
 from status import get_status
 from save import save_json
-from crop import crop_info
+from crop import crop_info, apply_crop
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import run
@@ -56,7 +56,11 @@ async def api_json_save(request):
 	return web.json_response({})
 
 async def api_crop(request):
+	c_warn = []
+	if request.match_info['command'] == "run":
+		c_warn = apply_crop()
 	data = crop_info()
+	data["crop"]["warn"] = c_warn
 	return web.json_response(data)
 
 async def api_dataset(request):

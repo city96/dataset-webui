@@ -1,6 +1,23 @@
 function crop_disabled(state) {
-	console.log("crop")
-	console.log(state)
+	if (state) {
+		document.getElementById("c_enable_shortcuts").disabled = true;
+		document.getElementById("c_save").disabled = true;
+		document.getElementById("c_apply").disabled = true;
+		document.getElementById("crop-div").style.color = "#888"
+		document.getElementById("crop-img-div").innerHTML = ""
+		crop = null
+		crop_data = null
+		crop_disable_shortcuts()
+		return
+	}
+	if (crop) { // already init
+		return 
+	}
+	document.getElementById("crop-div").style.color = ""
+	document.getElementById("c_enable_shortcuts").disabled = false;
+	document.getElementById("c_save").disabled = false;
+	document.getElementById("c_apply").disabled = false;
+	crop_init()
 }
 
 function crop_enable_shortcuts() {
@@ -112,7 +129,11 @@ function crop_status_current(row=document.getElementById("crop_table_current"),n
 				cropped++
 			}
 		} else {
-			unknown++
+			if (image["ignored"]) {
+				ignored++
+			} else {
+				unknown++
+			}
 		}
 	}
 	
@@ -188,7 +209,11 @@ async function crop_init() {
 
 	await import('./cropper.js');
 
-	const image = document.getElementById('crop-img');
+	let div = document.getElementById("crop-img-div")
+	let image = document.createElement("img")
+	image.setAttribute('id', 'crop-img');
+	div.appendChild(image)
+
 	image.src = "/img/0 - raw/" + crop_data["images"][crop_data["current"]]["filename"]
 	let options = {
 		"viewMode" : 1,
@@ -200,4 +225,13 @@ async function crop_init() {
 	crop = new Cropper(image, options)
 	crop_update_current()
 }
-crop_init()
+
+async function crop_apply() {
+	save_tag_json()
+	console.log("run")
+	let data = await fetch("/api/crop/run");
+	data = await data.json()
+	console.log(data);
+	document.getElementById("c_warn").innerHTML = data["crop"]["warn"]
+	update_status(true)
+}

@@ -16,7 +16,9 @@ function update_dataset_table(datasets){
 		document.getElementById("d_new").disabled = true;
 		document.getElementById("d_update").disabled = false;
 	} else {
+		console.log("No active dataset")
 		hide_status()
+		crop_disabled(true)
 		tags_disabled(true)
 		document.getElementById("d_name").disabled = false;
 		document.getElementById("d_name").value = ""

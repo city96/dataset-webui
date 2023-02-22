@@ -65,7 +65,10 @@
 			<img style="width: 50%;" src="crop-shortcuts.png"> 
 		</div>
 		<hr>
-		<button style="font-size:20px" id="c_save" onclick="crop_json_save()"> Save </button>
+		<button style="font-size:25px" id="c_save" onclick="crop_json_save()"> Save </button>
+		<button style="font-size:25px" id="c_apply" onclick="crop_apply()"> Apply Crop [save output] </button>
+		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
+		<pre id="c_warn"></pre>
 		<table>
 			<thead>
 				<tr>
@@ -90,7 +93,6 @@
 		<button style="font-size:40px" id="c_crop" onclick="crop_next_image(true)"> Crop+Next </button>
 		<button style="font-size:40px" id="c_next" onclick="crop_next_image()"> Next </button>
 		<div id="crop-img-div">
-			<img id="crop-img">
 		</div>
 	</div>
 	<!-- Tag filters -->
