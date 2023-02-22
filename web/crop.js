@@ -75,7 +75,7 @@ async function crop_json_save() {
 		},
 		body: JSON.stringify(data)
 	})
-	await crop_json_load() // verify
+	crop_json_load() // verify
 	document.getElementById("c_save").disabled = false;
 }
 
