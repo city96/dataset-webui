@@ -6,10 +6,14 @@ This project aims to help with the creation and management of LoRa training data
 *Pull requests are welcome. Currently everything is just cobbled together*
 
 Roadmap:
-- Implement cropping
 - Implement sorting
 - Fix category management / assignment
 - Fix orphaned images
+
+Known issues:
+- No files/folders are ever deleted, leading to clutter/orphaned images
+- Webui scrolls by random amount on first button click
+- Folder dropdowns are placeholders
 
 ## Getting started
 (optional) create a venv first:
