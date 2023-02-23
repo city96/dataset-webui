@@ -32,6 +32,7 @@
 			<label>Dataset Description =</label>
 			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
 		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
+		<button id="d_update" style="float:right" onclick="save_dataset_json()"> Update Dataset Metadata </button>
 		</div>
 	</div>
 	
@@ -51,14 +52,58 @@
 			</tbody>
 		</table>
 	</div>
-	
+
+	<!-- Cropping -->
+	<div id="crop-div">
+		<h2>Cropping:</h2>
+		<button id="c_enable_shortcuts" onclick="crop_enable_shortcuts()"> Enable Shortcuts </button>
+		<div id="c_shortcuts" style="display:none">
+			<p class="tip"> Shortcuts registered! </p>
+			<p style="color:red"> Disable shortcuts after you're done with the cropping phase! </p>
+			<button id="c_disable_shortcuts" onclick="crop_disable_shortcuts()"> Disable Shortcuts </button>
+			<h3> Shortcuts </h3>
+			<img style="width: 50%;" src="crop-shortcuts.png"> 
+		</div>
+		<hr>
+		<button style="font-size:25px" id="c_save" onclick="crop_json_save()"> Save </button>
+		<button style="font-size:25px" id="c_apply" onclick="crop_apply()"> Apply Crop [save output] </button>
+		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
+		<pre id="c_warn"></pre>
+		<table>
+			<thead>
+				<tr>
+					<td>  </td>
+					<td> Total </td>
+					<td> Missing </td>
+					<td> Unknown </td>
+					<td> Ignored </td>
+					<td> Cropped </td>
+				</tr>
+			</thead>
+			<tbody id="crop-table">
+			</tbody>
+		</table>
+		<br>
+		<h3>Prev. displayed Image: <span id="c_status_prev">-</span></h3>
+		<h2>Current Image: <span id="c_status">-</span></h2>
+		<input type="checkbox" id="c_skip"> Only show Uncropped 
+		<br>
+		<button style="font-size:40px" id="c_first" onclick="crop_first_image()"> First </button>
+		<button style="font-size:40px" id="c_prev" onclick="crop_prev_image()"> Prev </button>
+		<button style="font-size:40px" id="c_ignore" onclick="crop_next_image(false,true)"> Ignore+Next </button>
+		<button style="font-size:40px" id="c_crop" onclick="crop_next_image(true)"> Crop+Next </button>
+		<button style="font-size:40px" id="c_next" onclick="crop_next_image()"> Next </button>
+		<div id="crop-img-div">
+		</div>
+	</div>
 	<!-- Tag filters -->
 	<div id="tag-div">
+
 <!-- START TAG SETTING LIST -->
 <h2>Tag filters:</h2>
 <a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
-<button id="t_save" onclick="save_json()"> Save changes </button>
-<button id="t_load" onclick="load_json()"> Discard changes </button>
+<button id="t_save" onclick="save_tag_json()"> Save changes </button>
+<button id="t_load" onclick="update_status()"> Discard changes </button>
 <button id="t_fix" onclick="fix_tags()"> Apply filters [save output] </button>
 <br>
 <p> Script output will appear here: </p>
@@ -414,6 +459,7 @@ You might end up with duplicate images/categories if you don't delete them.
 <script src="status.js"></script>
 <script src="dataset.js"></script>
 <script src="tags.js"></script>
+<script src="crop.js"></script>
 </body>
 </html>
 
