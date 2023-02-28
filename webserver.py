@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # web based UI
+import argparse
 import asyncio
 from aiohttp import web
 import aiohttp
@@ -109,4 +110,19 @@ app.add_routes([web.get('/', index),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
-	web.run_app(app, host="127.0.0.1")
+	parser = argparse.ArgumentParser(description='Run webui')
+	parser.add_argument('-p', '--port', type=int, default=8080, help='Port to host webui on')
+	parser.add_argument('--autolaunch', action=argparse.BooleanOptionalAction, help='Open webui in default browser')
+	parser.add_argument('--listen', action=argparse.BooleanOptionalAction, help='Allow access from LAN (NOT RECOMMENDED)')
+
+	args = parser.parse_args()
+	host = "0.0.0.0" if args.listen else "127.0.0.1"
+
+	if args.autolaunch:
+		try: # this probably won't work on linux
+			os.startfile(f"http://127.0.0.1:{args.port}/")
+		except:
+			print("Failed to launch default browser")
+			pass
+
+	web.run_app(app, host=host, port=args.port)

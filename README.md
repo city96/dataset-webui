@@ -27,12 +27,18 @@ install the requirements:
 pip install -r requirements.txt
 ```
 
-start by running:
+start either by running `start.bat` or manually using:
 ```
 python webserver.py
 ```
 
 Access the webui on the following URL: http://127.0.0.1:8080/
+
+### Launch arguments
+Add these to `start.bat` or use them when calling `webserver.py` directly.
+- `-p PORT`, `--port PORT` - Port to host webui on
+- `--autolaunch` - Open webui in default browser
+- `--listen` - Allow access from LAN (NOT RECOMMENDED)
 
 ### download-dependencies.py
 Running this script is recommended to get all features of the webui.
