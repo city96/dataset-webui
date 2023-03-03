@@ -154,7 +154,7 @@ async function crop_update_current() {
 	if (current["crop_data"] === undefined) {
 		return
 	}
-	await new Promise(r => setTimeout(r, 15)); // why ??
+	await new Promise(r => setTimeout(r, 50)); // why ??
 	crop.setData(current["crop_data"])
 }
 

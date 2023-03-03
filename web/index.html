@@ -11,6 +11,19 @@
 	<!-- Dataset functions -->
 	<div id="dataset-div">
 		<h2>Datasets:</h2>
+		<h3>Current:</h3>
+		<div class="input">
+			<label>Dataset Name =</label>
+			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
+		</div>
+		<div class="input">
+			<label>Dataset Description =</label>
+			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
+		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
+		<button id="d_update" style="float:right" onclick="save_dataset_json()"> Update Dataset Metadata </button>
+		</div>
+
+		<h3>All:</h3>
 		<table>
 			<thead>
 				<tr>
@@ -23,17 +36,6 @@
 			<tbody id="dataset-table">
 			</tbody>
 		</table>
-		<h3>Current:</h3>
-		<div class="input">
-			<label>Dataset Name =</label>
-			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
-		</div>
-		<div class="input">
-			<label>Dataset Description =</label>
-			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
-		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
-		<button id="d_update" style="float:right" onclick="save_dataset_json()"> Update Dataset Metadata </button>
-		</div>
 	</div>
 	
 	<!-- Status functions -->
@@ -87,17 +89,20 @@
 		<h3>Prev. displayed Image: <span id="c_status_prev">-</span></h3>
 		<h2>Current Image: <span id="c_status">-</span></h2>
 		<input type="checkbox" id="c_skip"> Only show Uncropped 
+		<br><br>
+		<div id="cb_mask"> <!--
+			--><button style="background-image: url('c_mask_copy.png')" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button><!--
+			--><button style="background-image: url('c_mask_half.png')" id="cm_half" onclick="crop_mask_half()"> Half Mask </button><!--
+			--><button style="background-image: url('c_mask_fill.png')" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button><!--
+		--></div>
 		<br>
-		<a>Mask:</a>
-		<button style="font-size:20px" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button>
-		<button style="font-size:20px" id="cm_half" onclick="crop_mask_half()"> Half Mask </button>
-		<button style="font-size:20px" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button>
-		<br>
-		<button style="font-size:40px" id="c_first" onclick="crop_first_image()"> First </button>
-		<button style="font-size:40px" id="c_prev" onclick="crop_prev_image()"> Prev </button>
-		<button style="font-size:40px" id="c_ignore" onclick="crop_next_image(false,true)"> Ignore+Next </button>
-		<button style="font-size:40px" id="c_crop" onclick="crop_next_image(true)"> Crop+Next </button>
-		<button style="font-size:40px" id="c_next" onclick="crop_next_image()"> Next </button>
+		<div id="cb_img"> <!--
+			--><button style="background-image: url('c_prev.png')" id="c_prev" onclick="crop_prev_image()" title="Go to previous image, don't save current selection"> Prev </button><!--
+			--><button style="background-image: url('c_first.png')" id="c_first" onclick="crop_first_image()" title="Go to first image, don't save current selection"> First </button><!--
+			--><button style="background-image: url('c_ignore.png')" id="c_ignore" onclick="crop_next_image(false,true)" title="Go to next image, mark current as ignored."> Ignore+Next </button><!--
+			--><button style="background-image: url('c_crop.png')" id="c_crop" onclick="crop_next_image(true)" title="Go to next image, save current selected area"> Crop+Next </button><!--
+			--><button style="background-image: url('c_next.png')" id="c_next" onclick="crop_next_image()" title="Go to next, don't save current selection"> Next </button><!--
+		--></div>
 		<div id="crop-img-div">
 		</div>
 	</div>
@@ -430,6 +435,7 @@ This is a pre-filter, meaning all images with this tag are removed
 <hr>
 
 <!-- image_category -->
+<p> Image category rules = </p>
 <table>
 	<thead>
 		<tr>

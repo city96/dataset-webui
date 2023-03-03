@@ -1,44 +1,82 @@
+:root {
+  --main: #cccccc;
+  --back: #010101;
+  --acnt: rgba(255,255,255,0.1);
+  --warn: red;
+  --info: #999;
+}
+
+/* Light mode */
+/* 
+:root {
+  --main: #010101;
+  --back: #fff;
+  --acnt: rgba(0,0,0,0.05);
+  --warn: red;
+  --info: #555;
+}
+*/
+
+/* Core  */
 body {
-	max-width: max-content;
-	margin: auto;
+	color: var(--main);
+	background-color: var(--back);
 }
 
-table {
-	font-family: arial, sans-serif;
-	border-collapse: collapse;
-	width: 100%;
-}
-
-td, th {
-	border: 1px solid #dddddd;
-	text-align: left;
-	padding: 8px;
-}
-
-tr:nth-child(even) {
-	background-color: #dddddd;
-}
-
-td button {
-	width: 100%;
-}
-
-.tip {
-	color: #666;
+h2 {
+	margin-top: 0;
+	font-size: 30px;
 }
 
 label {
 	display: inline-block;
 }
 
+/* Elements */
+
+#dataset-div, #status-div, #crop-div, #tag-div {
+	min-width: 35%;
+	max-width: max-content;
+	margin: auto;
+	padding: 30px;
+	margin-bottom: 30px;
+	background-color: var(--acnt);
+}
+
+.tip {
+	color: var(--info);
+}
+
+/* Table */
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+}
+td, th {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 8px;
+}
+tr:nth-child(even) {
+	background-color: var(--acnt);
+}
+td button {
+	width: 100%;
+}
 td input {
 	width: 97%;
 }
-
 td select {
 	width: 100%;
 }
 
+/* Input */
+input, button { 
+	border-radius: 0 !important;
+	color: revert;
+	background-color: revert;
+}
 .input label {
     float: left;
     padding: 0 8px 0 0;
@@ -58,17 +96,47 @@ td select {
     width: 100%;
 }
 
+#cb_mask button {
+	width: 15%;
+	height: 100px;
+	background-size: 100% 100%;
+}
+
+#cb_img button { 
+	width: 20%;
+	height: 100px;
+	background-size: 100% 100%;
+}
+
+#cb_img button:hover, #cb_mask button:hover {  
+	background-color: var(--acnt);
+}
+
+#cb_img button, #cb_mask button {  
+	/* https://stackoverflow.com/a/22672444 */
+	background-color: transparent;
+	background-repeat: no-repeat;
+	border: none;
+	cursor: pointer;
+	overflow: hidden;
+	outline: none;
+
+	color: var(--main) !important;
+	font-size: 15px;
+	text-shadow: 2px 2px 2px var(--back);
+}
+
 #t_pop {
 	max-height: 300px;
 	overflow-y: scroll;
 	overflow-x: hidden;
 }
 
-#crop-img-div {
-	max-width: 700px;
-}
-
+/* img */
 img {
 	display: block;
 	max-width: 100%;
+}
+#crop-img-div {
+	max-width: 700px;
 }
