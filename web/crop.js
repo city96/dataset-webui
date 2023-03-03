@@ -40,12 +40,53 @@ function crop_disable_shortcuts() {
 	document.removeEventListener('keyup', crop_shortcuts, false);
 }
 
+function crop_mask_prev() {
+	if (crop_data["current"] == 0) {
+		return
+	}
+	crop.setData(crop_data["images"][crop_data["current"]-1]["crop_data"])
+}
+
+function crop_mask_fill() {
+	let crop_data = crop.getData()
+	if (crop.image.naturalHeight  > crop.image.naturalWidth) {
+		crop_data.width = crop.image.naturalWidth
+		crop_data.height = crop.image.naturalWidth
+		crop_data.x = 0
+		if (crop_data.y > (crop.image.naturalHeight-crop.image.naturalWidth)) {
+			crop_data.y = crop.image.naturalHeight-crop.image.naturalWidth
+		}
+	} else {
+		crop_data.width = crop.image.naturalHeight
+		crop_data.height = crop.image.naturalHeight
+		crop_data.y = 0
+		if (crop_data.x > (crop.image.naturalWidth-crop.image.naturalHeight)) {
+			crop_data.x = crop.image.naturalWidth-crop.image.naturalHeight
+		}
+	}
+	crop.setData(crop_data)
+}
+function crop_mask_half() {
+	let crop_data = crop.getData()
+	if (crop.image.naturalHeight  > crop.image.naturalWidth) {
+		crop_data.width = crop.image.naturalWidth / 2
+		crop_data.height = crop.image.naturalWidth /2
+	} else {
+		crop_data.width = crop.image.naturalHeight / 2
+		crop_data.height = crop.image.naturalHeight /2
+	}
+	crop.setData(crop_data)
+}
+
 function crop_shortcuts(e) {
 	// console.log(e)
 	if (e.key === 'z') { crop_prev_image() //next
 	} else if (e.key === 'x') { crop_next_image(false,true) // ignore+next
 	} else if (e.key === 'c') { crop_next_image(true) // crop+next
 	} else if (e.key === 'v') { crop_next_image() //next
+	} else if (e.key === 's') { crop_mask_prev() // mask from prev
+	} else if (e.key === 'd') { crop_mask_half() // mask half
+	} else if (e.key === 'f') { crop_mask_fill() // mask fill
 	} else {
 		console.log(e)
 	}

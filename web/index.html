@@ -88,6 +88,11 @@
 		<h2>Current Image: <span id="c_status">-</span></h2>
 		<input type="checkbox" id="c_skip"> Only show Uncropped 
 		<br>
+		<a>Mask:</a>
+		<button style="font-size:20px" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button>
+		<button style="font-size:20px" id="cm_half" onclick="crop_mask_half()"> Half Mask </button>
+		<button style="font-size:20px" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button>
+		<br>
 		<button style="font-size:40px" id="c_first" onclick="crop_first_image()"> First </button>
 		<button style="font-size:40px" id="c_prev" onclick="crop_prev_image()"> Prev </button>
 		<button style="font-size:40px" id="c_ignore" onclick="crop_next_image(false,true)"> Ignore+Next </button>
