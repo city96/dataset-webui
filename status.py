@@ -117,10 +117,12 @@ def get_status():
 		}
 		return data
 
-	with open("dataset.json") as f:
-		data = json.load(f)
-		data["status"] = {}
+	# with open("dataset.json") as f:
+		# data = json.load(f)
+		# data["status"] = {}
 
+	data = {}
+	data["status"] = {}
 	data["status"]["steps"] = {}
 	for folder in step_list:
 		if not os.path.isdir(folder):

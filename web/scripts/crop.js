@@ -11,11 +11,13 @@ function crop_disabled(state) {
 		crop = null
 		crop_data = null
 		crop_disable_shortcuts()
+		document.getElementById("c_init").disabled = false;
 		return
 	}
 	if (crop) { // already init
 		return 
 	}
+	document.getElementById("c_init").disabled = true;
 	document.getElementById("crop-div").style.color = ""
 	document.getElementById("c_enable_shortcuts").disabled = false;
 	document.getElementById("c_save").disabled = false;
@@ -100,6 +102,7 @@ async function crop_json_load() {
 	if (crop_data["current"] === undefined) {
 		crop_data["current"] = 0
 	}
+	document.getElementById("c_warn").innerHTML = data["crop"]["warn"]
 	crop_status(true)
 }
 
@@ -121,15 +124,19 @@ async function crop_json_save() {
 }
 
 function crop_update_status_text(target,data) {
-	if (data["crop_data"] === undefined && data["ignored"] != true) {
+	
+	if (data["crop_data"] === undefined && !data["ignored"] && !data["on_disk"]) {
 		target.innerHTML = "Unknown/Not cropped"
 		target.style.color = "gray"
-	} else if (!(data["crop_data"] === undefined) && data["ignored"] != true) {
+	} else if (!(data["crop_data"] === undefined) && !data["ignored"]) {
 		target.innerHTML = "Cropped"
 		target.style.color = "green"
 	} else if (data["ignored"] == true) {
 		target.innerHTML = "Ignored"
 		target.style.color = "red"
+	} else if (data["on_disk"]) {
+		target.innerHTML = "On-disk/Cropped externally"
+		target.style.color = "blue"
 	} else {
 		target.innerHTML = "???"
 		target.style.color = "orange"
@@ -152,6 +159,7 @@ async function crop_update_current() {
 	}
 	
 	if (current["crop_data"] === undefined) {
+		console.log("no data")
 		return
 	}
 	await new Promise(r => setTimeout(r, 50)); // why ??
@@ -166,6 +174,7 @@ function crop_status_current(row=document.getElementById("crop_table_current"),n
 	let cropped = 0
 	let ignored = 0
 	let unknown = 0
+	let on_disk = 0
 	for (const image of crop_data["images"]) {
 		total++
 		if (!(image["crop_data"] === undefined)) {
@@ -173,10 +182,15 @@ function crop_status_current(row=document.getElementById("crop_table_current"),n
 				ignored++
 			} else {
 				cropped++
+				if (image["on_disk"]) {
+					on_disk++
+				}
 			}
 		} else {
 			if (image["ignored"]) {
 				ignored++
+			} else if (image["on_disk"]) {
+				on_disk++
 			} else {
 				unknown++
 			}
@@ -197,6 +211,9 @@ function crop_status_current(row=document.getElementById("crop_table_current"),n
 	
 	let c_cropped = row.insertCell(5)
 	c_cropped.innerHTML = cropped
+
+	let c_on_disk = row.insertCell(6)
+	c_on_disk.innerHTML = on_disk
 }
 
 function crop_status(reload=false){
@@ -232,19 +249,24 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 			i++
 			if (i >= crop_data["images"].length) {
 				if (loop) {
-					break
+					document.getElementById("c_status").innerHTML = "No more images left!"
+					document.getElementById("c_status").style.color = "orange"
+					return
 				} else {
 					loop = true
 					i = 0
 				}
 			}
-			if (!crop_data["images"][i]["ignored"] && crop_data["images"][i]["crop_data"] === undefined) {
+			if (!crop_data["images"][i]["ignored"] && !crop_data["images"][i]["on_disk"] && crop_data["images"][i]["crop_data"] === undefined) {
 				crop_data["current"] = i
+				console.log(i)
 				break
 			}
 		}
 	} else {
 		if ((crop_data["current"]+1) >= crop_data["images"].length) {
+			document.getElementById("c_status").innerHTML = "Last image reached!"
+			document.getElementById("c_status").style.color = "orange"
 			return
 		}
 		crop_data["current"]++
@@ -280,7 +302,7 @@ async function crop_init() {
 	link.rel = "stylesheet"
 	document.head.appendChild(link);
 
-	await import('./cropper.js');
+	await import('/cropper.js');
 
 	let div = document.getElementById("crop-img-div")
 	let image = document.createElement("img")
@@ -305,6 +327,5 @@ async function crop_apply() {
 	let data = await fetch("/api/crop/run");
 	data = await data.json()
 	console.log(data);
-	document.getElementById("c_warn").innerHTML = data["crop"]["warn"]
-	update_status(true)
+	document.getElementById("c_out").innerHTML = data["crop"]["warn"]
 }

@@ -3,27 +3,21 @@
 <head>
 	<title>Dataset Scripts</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
 	<link rel="icon" type="image/png" href="favicon.ico">
 	<link rel="stylesheet" href="default.css">
 </head>
 <body>
 	<h1>LoRA Dataset Script Webui</h1>
-	<!-- Dataset functions -->
-	<div id="dataset-div">
-		<h2>Datasets:</h2>
-		<h3>Current:</h3>
-		<div class="input">
-			<label>Dataset Name =</label>
-			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
-		</div>
-		<div class="input">
-			<label>Dataset Description =</label>
-			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
-		<button id="d_new" style="float:right" onclick="create_dataset()"> Create New Dataset </button>
-		<button id="d_update" style="float:right" onclick="save_dataset_json()"> Update Dataset Metadata </button>
-		</div>
 
-		<h3>All:</h3>
+
+<!-- Dataset functions -->
+	<div class="category">
+	<h1> Datasets </h1>
+	<!-- all -->
+	<div id="dataset-div" class="module">
+		<h2>All datasets:</h2>
+		<button class="update" onclick="dataset_update()"> ⭮ </button>
 		<table>
 			<thead>
 				<tr>
@@ -37,10 +31,30 @@
 			</tbody>
 		</table>
 	</div>
-	
-	<!-- Status functions -->
-	<div id="status-div">
-		<h2>Status check:</h2>
+	<!-- Current -->
+	<div id="dataset-current-div" class="module">
+		<h2>Current:</h2>
+		<div class="input">
+			<label>Dataset Name =</label>
+			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
+		</div>
+		<div class="input">
+			<label>Dataset Description =</label>
+			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
+		<button id="d_new" style="float:right" onclick="dataset_new()"> Create New Dataset </button>
+		<button id="d_update" style="float:right" onclick="dataset_save()"> Update Dataset Metadata </button>
+		</div>
+	</div>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/dataset.js"></script> 
+
+
+<!-- Status functions -->
+	<div id="status-div" class="module">
+		<h2>Status:</h2>
+		<p class="warn float-warn" id="status-float-warn"></p>
+		<button class="update" onclick="status_update()"> ⭮ </button>
 		<table>
 			<thead>
 				<tr>
@@ -54,23 +68,29 @@
 			</tbody>
 		</table>
 	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/status.js"></script>
 
-	<!-- Cropping -->
-	<div id="crop-div">
+
+<!-- Cropping -->
+	<div id="crop-div" class="module">
 		<h2>Cropping:</h2>
+		<button class="update" id="c_init" onclick="crop_disabled(false)"> ↑ </button>
+		
 		<button id="c_enable_shortcuts" onclick="crop_enable_shortcuts()"> Enable Shortcuts </button>
 		<div id="c_shortcuts" style="display:none">
 			<p class="tip"> Shortcuts registered! </p>
 			<p style="color:red"> Disable shortcuts after you're done with the cropping phase! </p>
 			<button id="c_disable_shortcuts" onclick="crop_disable_shortcuts()"> Disable Shortcuts </button>
 			<h3> Shortcuts </h3>
-			<img style="width: 50%;" src="crop-shortcuts.png"> 
+			<img style="width: 50%;" src="assets/crop-shortcuts.png"> 
 		</div>
 		<hr>
 		<button style="font-size:25px" id="c_save" onclick="crop_json_save()"> Save </button>
 		<button style="font-size:25px" id="c_apply" onclick="crop_apply()"> Apply Crop [save output] </button>
 		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
-		<pre id="c_warn"></pre>
+		<pre id="c_out"></pre>
+		<pre id="c_warn" class="warn"></pre>
 		<table>
 			<thead>
 				<tr>
@@ -80,6 +100,7 @@
 					<td> Unknown </td>
 					<td> Ignored </td>
 					<td> Cropped </td>
+					<td> On-disk </td>
 				</tr>
 			</thead>
 			<tbody id="crop-table">
@@ -91,23 +112,27 @@
 		<input type="checkbox" id="c_skip"> Only show Uncropped 
 		<br><br>
 		<div id="cb_mask"> <!--
-			--><button style="background-image: url('c_mask_copy.png')" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button><!--
-			--><button style="background-image: url('c_mask_half.png')" id="cm_half" onclick="crop_mask_half()"> Half Mask </button><!--
-			--><button style="background-image: url('c_mask_fill.png')" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button><!--
+			--><button style="background-image: url('assets/c_mask_copy.png')" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button><!--
+			--><button style="background-image: url('assets/c_mask_half.png')" id="cm_half" onclick="crop_mask_half()"> Half Mask </button><!--
+			--><button style="background-image: url('assets/c_mask_fill.png')" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button><!--
 		--></div>
 		<br>
 		<div id="cb_img"> <!--
-			--><button style="background-image: url('c_prev.png')" id="c_prev" onclick="crop_prev_image()" title="Go to previous image, don't save current selection"> Prev </button><!--
-			--><button style="background-image: url('c_first.png')" id="c_first" onclick="crop_first_image()" title="Go to first image, don't save current selection"> First </button><!--
-			--><button style="background-image: url('c_ignore.png')" id="c_ignore" onclick="crop_next_image(false,true)" title="Go to next image, mark current as ignored."> Ignore+Next </button><!--
-			--><button style="background-image: url('c_crop.png')" id="c_crop" onclick="crop_next_image(true)" title="Go to next image, save current selected area"> Crop+Next </button><!--
-			--><button style="background-image: url('c_next.png')" id="c_next" onclick="crop_next_image()" title="Go to next, don't save current selection"> Next </button><!--
+			--><button style="background-image: url('assets/c_prev.png')" id="c_prev" onclick="crop_prev_image()" title="Go to previous image, don't save current selection"> Prev </button><!--
+			--><button style="background-image: url('assets/c_first.png')" id="c_first" onclick="crop_first_image()" title="Go to first image, don't save current selection"> First </button><!--
+			--><button style="background-image: url('assets/c_ignore.png')" id="c_ignore" onclick="crop_next_image(false,true)" title="Go to next image, mark current as ignored."> Ignore+Next </button><!--
+			--><button style="background-image: url('assets/c_crop.png')" id="c_crop" onclick="crop_next_image(true)" title="Go to next image, save current selected area"> Crop+Next </button><!--
+			--><button style="background-image: url('assets/c_next.png')" id="c_next" onclick="crop_next_image()" title="Go to next, don't save current selection"> Next </button><!--
 		--></div>
 		<div id="crop-img-div">
 		</div>
 	</div>
-	<!-- Tag filters -->
-	<div id="tag-div">
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/crop.js"></script>
+
+
+<!-- Tags -->
+	<div id="tag-div" class="module">
 
 <!-- START TAG SETTING LIST -->
 <h2>Tag filters:</h2>
@@ -467,10 +492,8 @@ You might end up with duplicate images/categories if you don't delete them.
 
 <!-- END TAG SETTING LIST -->
 	</div>
-<script src="status.js"></script>
-<script src="dataset.js"></script>
-<script src="tags.js"></script>
-<script src="crop.js"></script>
+<script src="scripts/common.js"></script>
+<!-- <script src="scripts/tags.js"></script> -->
 </body>
 </html>
 

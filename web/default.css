@@ -1,5 +1,6 @@
 :root {
   --main: #cccccc;
+  --none: #666666;
   --back: #010101;
   --acnt: rgba(255,255,255,0.1);
   --warn: red;
@@ -34,17 +35,50 @@ label {
 
 /* Elements */
 
-#dataset-div, #status-div, #crop-div, #tag-div {
-	min-width: 35%;
+.module {
+	position: relative;
+	/* min-width: 35%; */
+	min-width: 600px;
 	max-width: max-content;
 	margin: auto;
-	padding: 30px;
 	margin-bottom: 30px;
+	padding: 30px;
 	background-color: var(--acnt);
+}
+
+.category {
+	border: var(--acnt);
+	border-style: solid;
+	margin: 20px;
+	padding: 0px 7px;
+}
+
+.category h1 {
+	font-style: italic;
+	margin: 0px;
+	padding: 0px;
+}
+
+.module .update {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.module .float-warn {
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0px;
+	padding: 0px;
 }
 
 .tip {
 	color: var(--info);
+}
+
+.warn {
+	color: var(--warn);
 }
 
 /* Table */

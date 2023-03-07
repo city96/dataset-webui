@@ -35,6 +35,7 @@ async def handle(request):
 		return web.Response(status=404,text="404")
 
 async def handle_image(request):
+	"""Return any file that is present in any of the step folders"""
 	path = str(request.path)[5:]
 	print(path)
 	if os.path.isfile(path) and any(path.startswith(x) for x in step_list):
@@ -42,12 +43,8 @@ async def handle_image(request):
 	else:
 		return web.Response(status=404,text="404")
 
-# Get json + folder status
-async def api_get_status(request):
-	data = get_status()
-	return web.json_response(data)
-
 async def api_json_save(request):
+	"""Update part of the dataset.json file [handled by save.py]"""
 	if request.body_exists:
 		data = await request.read()
 		data = json.loads(data)
@@ -56,58 +53,75 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
-async def api_crop(request):
-	c_warn = []
-	if request.match_info['command'] == "run":
-		c_warn = apply_crop()
-	data = crop_info()
-	data["crop"]["warn"] = c_warn
-	return web.json_response(data)
-
 async def api_dataset(request):
-	print(request)
+	"""Dataset operations [handled by dataset_manager.py]"""
 	path = None
 	data = {}
 	if "path" in request.rel_url.query.keys():
 		path = request.rel_url.query['path']
 
-	if request.match_info['command'] == "save" and path == "./":
+	# Move current dataset to datasets folder
+	if request.match_info['command'] == "store" and path == "./":
 		print("saving",path)
 		dataset = get_folder_dataset(path)
 		save_dataset(dataset)
+	
+	# Load dataset into active folder
 	elif request.match_info['command'] == "load" and os.path.isdir(path):
 		print("loading",path)
 		dataset = get_folder_dataset(path)
 		load_dataset(dataset)
 
-	data = dataset_status() # always re-fetch status after save.
+	elif request.match_info['command'] == "create" and not os.path.isfile("dataset.json"):
+		print("creating new dataset")
+		if request.body_exists:
+			data = await request.read()
+			data = json.loads(data)
+			create_dataset(data)
+		else:
+			return web.json_response(data,status=400)
+
+	# Return active+current dataset metadata
+	elif request.match_info['command'] == "info":
+		print("getting stored dataset info")
+		data = dataset_status()
+
+	# Unknown request
+	else:
+		return web.json_response(data,status=400)
 	return web.json_response(data)
 
-async def api_fix_tags(request):
-	status = run(True,True)
-	return web.json_response(status)
+async def api_status(request):
+	"""Current dataset status [handled by status.py]"""
+	data = get_status()
+	return web.json_response(data)
 
-async def api_dataset_create(request):
-	if os.path.isfile("dataset.json"): return web.json_response({"no"}) # fuck javascript triggering twice
-	if request.body_exists:
-		data = await request.read()
-		print(data)
-		data = json.loads(data)
-		create_dataset(data)
-	else:
-		print("no data")
-	return web.json_response({})
+async def api_crop(request):
+	"""Image cropping and cropping info [handled by crop.py]"""
+	c_warn = []
+	if request.match_info['command'] == "run":
+		c_warn = apply_crop()
+	data = crop_info()
+	data["crop"]["warn"] += c_warn
+	return web.json_response(data)
+
+# async def api_fix_tags(request):
+	# status = run(True,True)
+	# return web.json_response(status)
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
-				web.get('/api/status', api_get_status),
-				web.get('/api/crop/{command}', api_crop),
-				web.post('/api/dataset/create', api_dataset_create),
-				web.get('/api/dataset/{command}', api_dataset),
-				web.post('/api/json/save', api_json_save),
-				web.get('/api/tags/run', api_fix_tags),
+				web.get('/{name}', handle),
+				web.get('/assets/{name}', handle),
+				web.get('/scripts/{name}', handle),
 				web.get('/img/{name:.*}', handle_image),
-				web.get('/{name}', handle)])
+				web.get('/api/dataset/{command}', api_dataset),
+				web.post('/api/dataset/{command}', api_dataset),
+				web.get('/api/status', api_status),
+				web.get('/api/crop/{command}', api_crop),
+				web.post('/api/json/save', api_json_save),
+				# web.get('/api/tags/run', api_fix_tags),
+				])
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Run webui')

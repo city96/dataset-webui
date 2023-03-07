@@ -1,4 +1,4 @@
-function update_status_table(steps) {
+function status_updateTable(steps) {
 	let table = document.getElementById("status-table")
 	table.innerHTML = "";
 	
@@ -30,34 +30,47 @@ function update_status_table(steps) {
 		
 		if (steps[step]["tag_count"]["total"] > 0 && !tags) {
 			// run from here
-			tags_disabled(false)
+			// tags_disabled(false)
 			tags = true
 		}
 	}
-	if (!tags) {
-		tags_disabled(true)
-	}
+	// if (!tags) {
+		// tags_disabled(true)
+	// }
 	
 	// enable cropping
-	crop_disabled(!(steps["0 - raw"]["image_count"]["total"] > 0))
+	// crop_disabled(!(steps["0 - raw"]["image_count"]["total"] > 0))
 }
 
-// call to update parts of page
-async function update_status(tags){
+async function status_update(){
 	console.log("Update page/json")
+	lock_update()
 	let data = await fetch("/api/status");
 	data = await data.json()
-
-
-	document.getElementById("d_name").value = data["meta"]["name"];
-	document.getElementById("d_description").value = data["meta"]["description"];
 	
-	update_status_table(data["status"]["steps"])
-	tag_json_load(data["tags"])
-	crop_json_load(data["crop"])
+	if (!data || !data["status"]) {
+		status_disable("No active dataset.")
+		lock_update(false)
+		return
+	} else {
+		document.getElementById("status-float-warn").style.display = "none"; 
+		document.getElementById("status-div").style.color = "var(--main)"
+	}
+	
+	status_updateTable(data["status"]["steps"])
+	lock_update(false)
 }
 
-function hide_status() {
+function status_disable(message=null) {
 	let table = document.getElementById("status-table")
 	table.innerHTML = "";
+	document.getElementById("status-div").style.color = "var(--none)"
+
+	if (message) {
+		document.getElementById("status-float-warn").style.display = "block"; 
+		document.getElementById("status-float-warn").innerHTML = message
+	} else {
+		document.getElementById("status-float-warn").style.display = "none"; 
+	}
+	
 }
