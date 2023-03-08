@@ -48,13 +48,17 @@ async function status_update(){
 	let data = await fetch("/api/status");
 	data = await data.json()
 	
-	if (!data || !data["status"]) {
-		status_disable("No active dataset.")
+	if (data == undefined || data.status == undefined || data.status.steps.length == 0) {
+		if (data.status.warn.length > 0) {
+			status_disable(data.status.warn)
+		} else {
+			status_disable("No active dataset")
+		}
 		lock_update(false)
 		return
 	} else {
+		document.getElementById("status-div").classList.remove("locked");
 		document.getElementById("status-float-warn").style.display = "none"; 
-		document.getElementById("status-div").style.color = "var(--main)"
 	}
 	
 	status_updateTable(data["status"]["steps"])
@@ -64,7 +68,7 @@ async function status_update(){
 function status_disable(message=null) {
 	let table = document.getElementById("status-table")
 	table.innerHTML = "";
-	document.getElementById("status-div").style.color = "var(--none)"
+	document.getElementById("status-div").classList.add("locked");
 
 	if (message) {
 		document.getElementById("status-float-warn").style.display = "block"; 

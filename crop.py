@@ -10,6 +10,14 @@ warn = []
 def crop_info():
 	global warn
 	warn = []
+	if not os.path.isfile("dataset.json"):
+		data = {
+			"crop" : {
+				"warn" : ["No active dataset"]
+			}
+		}
+		return data
+	
 	with open("dataset.json") as f:
 		data = json.load(f)
 
@@ -84,8 +92,6 @@ def crop_info():
 
 	# find missing
 	disk_only = list(set(data["crop"]["disk"]) - set([x["filename"] if "crop_data" in x.keys() else None for x in images]))
-	print([x.filename for x in disk][1])
-	print([x["filename"] for x in images][0])
 	if len(disk_only) > 0:
 		warn.append(f"you have {len(disk_only)} image(s) that were cropped externally.")
 

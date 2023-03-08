@@ -55,7 +55,6 @@ function dataset_hasActive(active) {
 		document.getElementById("d_update").disabled = false;
 		document.getElementById("d_name").value = active.name
 		document.getElementById("d_description").value = active.description
-		
 		update_all()
 	} else {
 		console.log("No active dataset")
@@ -66,7 +65,7 @@ function dataset_hasActive(active) {
 		document.getElementById("d_new").disabled = false;
 		document.getElementById("d_update").disabled = true;
 		
-		disable_all("No active dataset") // other scripts
+		reset_all("No active dataset") // other scripts
 	}
 }
 

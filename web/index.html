@@ -34,6 +34,7 @@
 	<!-- Current -->
 	<div id="dataset-current-div" class="module">
 		<h2>Current:</h2>
+		<p class="warn float-warn" id="dataset-current-float-warn"></p>
 		<div class="input">
 			<label>Dataset Name =</label>
 			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
@@ -75,7 +76,8 @@
 <!-- Cropping -->
 	<div id="crop-div" class="module">
 		<h2>Cropping:</h2>
-		<button class="update" id="c_init" onclick="crop_disabled(false)"> ↑ </button>
+		<p class="warn float-warn" id="crop-float-warn"></p>
+		<button class="update" id="c_init" onclick="crop_init()"> ↑ </button>
 		
 		<button id="c_enable_shortcuts" onclick="crop_enable_shortcuts()"> Enable Shortcuts </button>
 		<div id="c_shortcuts" style="display:none">
@@ -88,6 +90,7 @@
 		<hr>
 		<button style="font-size:25px" id="c_save" onclick="crop_json_save()"> Save </button>
 		<button style="font-size:25px" id="c_apply" onclick="crop_apply()"> Apply Crop [save output] </button>
+		<button style="font-size:25px" id="c_revert" onclick="crop_revert()"> Revert Changes </button>
 		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
 		<pre id="c_out"></pre>
 		<pre id="c_warn" class="warn"></pre>

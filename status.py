@@ -104,15 +104,8 @@ def get_status():
 	if not os.path.isfile("dataset.json"):
 		data = {
 			"status" : {
-				"image_count" : {
-					"total" : 0,
-					"uncategorized" : 0,
-				},
-				"tag_count" : {
-					"total" : 0,
-					"unique" : 0,
-				},
-				"warn": "No active dataset!"
+				"steps" : [],
+				"warn": ["No active dataset"],
 			}
 		}
 		return data

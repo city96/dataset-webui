@@ -1,6 +1,6 @@
 :root {
   --main: #cccccc;
-  --none: #666666;
+  --lock: #666666;
   --back: #010101;
   --acnt: rgba(255,255,255,0.1);
   --warn: red;
@@ -79,6 +79,29 @@ label {
 
 .warn {
 	color: var(--warn);
+}
+
+.locked {
+	color: var(--lock);
+	background-color: rgba(255,255,255,0.05);
+	/* filter: brightness(0.7); */
+	pointer-events: none;
+	user-select: none;
+}
+
+.locked input, .locked textarea, .locked button {
+	background-color: rgba(255,255,255,0.25);
+}
+
+.locked * {
+	border-color: rgba(255,255,255,0.25);
+}
+
+.locked .update {
+	color: var(--main);
+	filter: none;
+	pointer-events: auto;
+	user-select: auto;
 }
 
 /* Table */
