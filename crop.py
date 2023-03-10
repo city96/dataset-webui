@@ -13,7 +13,7 @@ def crop_info():
 	if not os.path.isfile("dataset.json"):
 		data = {
 			"crop" : {
-				"warn" : ["No active dataset"]
+				"warn" : ["No images"]
 			}
 		}
 		return data
@@ -42,27 +42,27 @@ def crop_info():
 	disk = get_step_images(step_list[1])
 
 	for i in data["crop"]["images"]:
-		if i["filename"] in [x.filename for x in valid]:
+		if i["filename"] in [x.get_id() for x in valid]:
 			images.append(i)
 		else:
 			missing.append(i)
 
 	for i in data["crop"]["missing"]:
-		if i["filename"] in [x.filename for x in valid]:
+		if i["filename"] in [x.get_id() for x in valid]:
 			images.append(i)
 		else:
 			missing.append(i)
 	
 	for i in disk: # also list output images [on disk]
-		data["crop"]["disk"].append(i.filename)
+		data["crop"]["disk"].append(i.get_id())
 
 	for i in valid:
-		if i.filename in [x["filename"] for x in images]:
+		if i.get_id() in [x["filename"] for x in images]:
 			continue
-		if i.filename in [x["filename"] for x in missing]:
+		if i.get_id() in [x["filename"] for x in missing]:
 			continue
 		images.append({
-			"filename" : i.filename,
+			"filename" : i.get_id(),
 			"category" : i.category,
 		})
 
@@ -109,6 +109,10 @@ def crop_image(data):
 		warn.append(f"missing {old_path}")
 		print(warn[-1])
 		return
+	if os.path.split(data["filename"])[0]:
+		cat = os.path.split(new_path)[0]
+		if not os.path.isdir(cat):
+			os.mkdir(cat)
 	if os.path.isfile(new_path):
 		print(f"already exists {new_path}")
 		return
@@ -133,7 +137,7 @@ def apply_crop():
 	valid = get_step_images(step_list[0])
 	cropped = 0
 	for i in data["crop"]["images"]:
-		if i["filename"] in [x.filename for x in valid]:
+		if i["filename"] in [x.get_id() for x in valid]:
 			if "ignored" in i.keys() and i["ignored"]:
 				continue
 			if "crop_data" not in i.keys():

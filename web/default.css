@@ -153,6 +153,14 @@ input, button {
     width: 100%;
 }
 
+#c_file {
+	margin: 0;
+	color: var(--info);
+	overflow: hidden;
+	max-width: 700px;
+	white-space: nowrap;
+}
+
 #cb_mask button {
 	width: 15%;
 	height: 100px;

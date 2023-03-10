@@ -15,6 +15,7 @@ function crop_reset(message=null) {
 	div.classList.add("locked");
 
 	document.getElementById("c_status").innerHTML = ""
+	document.getElementById("c_filename").innerHTML = ""
 	document.getElementById("c_status_prev").innerHTML = ""
 
 	if (message) {
@@ -153,6 +154,7 @@ function crop_update_status_text(target,data) {
 async function crop_update_current() {
 	let current = crop_data["images"][crop_data["current"]]
 	crop_update_status_text(document.getElementById("c_status"),current)
+	document.getElementById("c_filename").innerHTML = crop_data["images"][crop_data["current"]].filename
 
 	if (crop.image == undefined) {
 		return

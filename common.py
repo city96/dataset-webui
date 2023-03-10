@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # random functions that are used in multiple scripts
+import os
 
 step_list = [
 	"0 - raw",
@@ -23,6 +24,11 @@ class Image:
 		return f"{self.filename}"
 	def __repr__(self):
 		return f"{self.filename}"
+	def get_id(self):
+		if self.category:
+			return(os.path.join(self.category, self.filename))
+		else:
+			return(self.filename)
 
 class Tag:
 	"""class to store tag attributes"""

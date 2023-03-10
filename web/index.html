@@ -88,9 +88,9 @@
 			<img style="width: 50%;" src="assets/crop-shortcuts.png"> 
 		</div>
 		<hr>
-		<button style="font-size:25px" id="c_save" onclick="crop_json_save()"> Save </button>
-		<button style="font-size:25px" id="c_apply" onclick="crop_apply()"> Apply Crop [save output] </button>
-		<button style="font-size:25px" id="c_revert" onclick="crop_revert()"> Revert Changes </button>
+		<button style="font-size:25px" id="c_save" onclick="crop_json_save()" title="Save information to dataset.json without exporting images"> Save </button>
+		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." > Apply Crop</button>
+		<button style="font-size:25px" id="c_revert" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)"> Revert Changes </button>
 		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
 		<pre id="c_out"></pre>
 		<pre id="c_warn" class="warn"></pre>
@@ -111,6 +111,7 @@
 		</table>
 		<br>
 		<h3>Prev. displayed Image: <span id="c_status_prev">-</span></h3>
+		<h3 id="c_file">Current Path: [<span id="c_filename">-</span>]</h3>
 		<h2>Current Image: <span id="c_status">-</span></h2>
 		<input type="checkbox" id="c_skip"> Only show Uncropped 
 		<br><br>
