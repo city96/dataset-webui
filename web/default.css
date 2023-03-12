@@ -205,3 +205,21 @@ img {
 #crop-img-div {
 	max-width: 700px;
 }
+
+.cat_slider {
+	width: 80%;
+}
+
+.cat_slide_val {
+	width: 10%;
+	font-size: 16px;
+	padding: 5px;
+}
+
+#sort-cat-table * {
+  text-align: center;
+}
+
+.cat_keep_check {
+	width: auto;
+}

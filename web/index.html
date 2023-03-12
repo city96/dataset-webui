@@ -135,6 +135,62 @@
 	<script src="scripts/crop.js"></script>
 
 
+<!-- Sorting functions -->
+	<div class="category">
+	<h1> Sorting </h1>
+
+	<div id="sort-cat-div" class="module">
+		<h2>Categories:</h2>
+		<p class="warn float-warn" id="sort-cat-float-warn"></p>
+		<button class="update" onclick="sort_cat_update()"> ⭮ </button>
+		
+		<button style="font-size:25px" id="sc_save" onclick="sort_cat_json_save(); sort_cat_lock(false)" disabled> Save </button>
+		<button style="font-size:25px" id="sc_revert" onclick="sort_cat_update(); sort_cat_lock(false)" disabled> Revert Changes </button>
+		<br><br>
+
+		<table>
+			<thead>
+				<tr>
+					<td> Category name </td>
+					<td> Weight </td>
+					<td> Color </td>
+					<td> Keep </td>
+					<td> Images </td>
+				</tr>
+			</thead>
+			<tbody id="sort-cat-table">
+			</tbody>
+		</table>
+		<br>
+		<label>Add new category:</label>
+		<span><input type="text" id="sc_new_name" placeholder="category name"> </input></span>
+		<button id="sc_new_add" onclick="sort_cat_add()"> Add category </button>
+
+		<pre class="tip">To remove an existing category, assign all items in that category to another one.</pre>
+		<pre class="tip">Categories with "keep" checked will never be removed.</pre>
+		
+		<label>Try to load data from output (dangerous):</label> <button id="sc_load" onclick="sort_cat_disk(); sort_cat_lock()" disabled> Load from output </button>
+	</div>
+
+	<div id="sort-div" class="module">
+		<h2>Sorting:</h2>
+		<p class="warn float-warn" id="sort-float-warn"></p>
+		<button class="update" onclick="sort_update()"> ⭮ </button>
+		<table>
+			<thead>
+				<tr>
+					<td> asd </td>
+				</tr>
+			</thead>
+			<tbody id="sort-table">
+			</tbody>
+		</table>
+	</div>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/sort.js"></script>
+
+
 <!-- Tags -->
 	<div id="tag-div" class="module">
 

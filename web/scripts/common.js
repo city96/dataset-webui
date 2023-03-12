@@ -11,6 +11,7 @@ function update_all() {
 	lock_update()
 	status_update()
 	crop_init()
+	sort_cat_update()
 	lock_update(false)
 }
 
@@ -19,6 +20,7 @@ function reset_all(message=null) {
 	lock_update()
 	status_disable(message)
 	crop_reset(message)
+	sort_cat_disable(message)
 }
 
 var locked = false
@@ -27,7 +29,7 @@ function lock_all(whitelist=[]) {
 	if (locked) {
 		return
 	}
-	const divs = ["dataset-div","dataset-current-div","status-div","crop-div","tag-div"]
+	const divs = ["dataset-div","dataset-current-div","status-div","crop-div","sort-cat-div","sort-div","tag-div"]
 	for (const id of divs) {
 		let div = document.getElementById(id)
 		if (whitelist.includes(id)) {
@@ -40,6 +42,7 @@ function lock_all(whitelist=[]) {
 		}
 	}
 	locked = true
+	lock_update()
 }
 
 // Unlock all fields (on save)
@@ -47,7 +50,7 @@ function unlock_all() {
 	if (!locked) {
 		return
 	}
-	const divs = ["dataset-div","dataset-current-div","status-div","crop-div","tag-div"]
+	const divs = ["dataset-div","dataset-current-div","status-div","crop-div","sort-cat-div","sort-div","tag-div"]
 	for (const id of divs) {
 		let div = document.getElementById(id)
 		div.classList.remove("locked");
@@ -57,4 +60,5 @@ function unlock_all() {
 		}
 	}
 	locked = false
+	lock_update(false)
 }

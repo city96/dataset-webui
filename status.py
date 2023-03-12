@@ -2,7 +2,7 @@
 # Return current dataset status + info from json
 import os
 import json
-from common import Image, Tag, step_list
+from common import Image, Tag, Category, step_list
 
 # global list of warnings
 warn = []
@@ -79,7 +79,13 @@ def get_step_images(folder):
 
 	for category in os.listdir(folder):
 		if os.path.isdir(os.path.join(folder,category)):
-			images += get_folder_images(os.path.join(folder,category),category)
+			try:
+				weight, name = category.split("_",1)
+				weight = int(weight)
+				cat = Category(name,weight)
+			except:
+				cat = Category(category)
+			images += get_folder_images(os.path.join(folder,category),cat)
 	return images
 
 def get_step_stats(folder):

@@ -10,13 +10,26 @@ def save_json(new):
 		print(" meta")
 		data["meta"] = new["meta"]
 
+	if "crop" in new.keys():
+		print(" crop")
+		new["crop"].pop('disk', None)
+		new["crop"].pop('warn', None)
+		data["crop"] = new["crop"]
+
+	if "sort" in new.keys():
+		print(" sort")
+		if "sort" not in data.keys():
+			data["sort"] = {}
+		if "categories" in new["sort"].keys():
+			print("  cat")
+			data["sort"]["categories"] = new["sort"]["categories"]
+		if "images" in new["sort"].keys():
+			print("  img")
+			data["sort"]["images"] = new["sort"]["images"]
+
 	if "tags" in new.keys():
 		print(" tags")
 		data["tags"] = new["tags"]
-
-	if "crop" in new.keys():
-		print(" crop")
-		data["crop"] = new["crop"]
 
 	for key in new.keys():
 		if key not in data.keys():

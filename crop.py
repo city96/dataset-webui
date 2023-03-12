@@ -1,6 +1,7 @@
 import os
 from common import Image, Tag, step_list
 from status import get_step_images
+from sort import mesh_image_list
 import json
 from PIL import Image as pImage
 
@@ -38,33 +39,14 @@ def crop_info():
 
 	images = []
 	missing = []
-	valid = get_step_images(step_list[0])
+
 	disk = get_step_images(step_list[1])
-
-	for i in data["crop"]["images"]:
-		if i["filename"] in [x.get_id() for x in valid]:
-			images.append(i)
-		else:
-			missing.append(i)
-
-	for i in data["crop"]["missing"]:
-		if i["filename"] in [x.get_id() for x in valid]:
-			images.append(i)
-		else:
-			missing.append(i)
 	
+	images, missing = mesh_image_list(data["crop"], get_step_images(step_list[0]))
+	
+	data["crop"]["disk"] = []
 	for i in disk: # also list output images [on disk]
 		data["crop"]["disk"].append(i.get_id())
-
-	for i in valid:
-		if i.get_id() in [x["filename"] for x in images]:
-			continue
-		if i.get_id() in [x["filename"] for x in missing]:
-			continue
-		images.append({
-			"filename" : i.get_id(),
-			"category" : i.category,
-		})
 
 	nrm = [] # normalize values / remove useless keys
 	for i in images:
