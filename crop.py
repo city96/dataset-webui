@@ -1,7 +1,7 @@
 import os
 from common import Image, Tag, step_list
 from status import get_step_images
-from sort import mesh_image_list
+from category import mesh_image_list
 import json
 from PIL import Image as pImage
 

@@ -88,7 +88,7 @@ def get_sort_categories(path,data):
 	
 	return categories
 
-def sort_info(disk_only=False):
+def category_info(disk_only=False):
 	global warn
 	warn = []
 	folder = step_list[2] if disk_only else step_list[1]
@@ -132,7 +132,7 @@ def sort_info(disk_only=False):
 			"weight" : "1",
 			"count" : sum([x["category"] == "default" for x in images])
 		})
-	[print(x) if (x["category"] == "default") else print("",end="") for x in images]
+
 	if disk_only:
 		for i in range(len(data["images"])):
 			data["images"][i]["filename"] = get_original_filename(data["images"][i]["filename"],step_list[1])

@@ -9,7 +9,7 @@ import os
 from status import get_status
 from save import save_json
 from crop import crop_info, apply_crop
-from sort import sort_info
+from category import category_info
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import run
@@ -110,13 +110,13 @@ async def api_crop(request):
 	data["crop"]["warn"] += c_warn
 	return web.json_response(data)
 
-async def api_sort(request):
-	"""Image sorting and grouping [handled by sort.py]"""
+async def api_category(request):
+	"""Image sorting and grouping - categories [handled by category.py]"""
 	data = {}
 	if request.match_info['command'] == "disk":
-		data = sort_info(disk_only=True)
+		data = category_info(disk_only=True)
 	else:
-		data = sort_info()
+		data = category_info()
 	return web.json_response(data)
 
 # async def api_fix_tags(request):
@@ -133,7 +133,7 @@ app.add_routes([web.get('/', index),
 				web.post('/api/dataset/{command}', api_dataset),
 				web.get('/api/status', api_status),
 				web.get('/api/crop/{command}', api_crop),
-				web.get('/api/sort/{command}', api_sort),
+				web.get('/api/category/{command}', api_category),
 				web.post('/api/json/save', api_json_save),
 				# web.get('/api/tags/run', api_fix_tags),
 				])

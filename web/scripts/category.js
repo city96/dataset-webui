@@ -71,7 +71,7 @@ async function sort_cat_disk() {
 	if (!c) { return };
 	
 	lock_update()
-	let data = await fetch("/api/sort/disk");
+	let data = await fetch("/api/category/disk");
 	data = await data.json()
 	
 	if (data == undefined || data.sort == undefined || data.sort.categories.length == 0) {
@@ -93,7 +93,7 @@ async function sort_cat_disk() {
 
 async function sort_cat_update(new_cat = null) {
 	if (!new_cat) { lock_update() }
-	let data = await fetch("/api/sort/info");
+	let data = await fetch("/api/category/info");
 	data = await data.json()
 	disk = null
 	
