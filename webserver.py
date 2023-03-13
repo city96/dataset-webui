@@ -24,16 +24,20 @@ async def favicon(request):
 
 async def handle(request):
 	path = os.path.join("web", str(request.url.relative())[1:])
-	
-	if os.path.isfile(path) and os.path.splitext(path)[1] in [".html",".css",".png"]:
+	if not os.path.isfile(path):
+		path = os.path.join("external", str(request.url.relative())[1:])
+		if not os.path.isfile(path):
+			return web.Response(status=404,text="404")
+
+	if os.path.splitext(path)[1] in [".html",".css",".png"]:
 		return web.FileResponse(path)
-	elif os.path.isfile(path) and os.path.splitext(path)[1] in [".js"]:
+	elif os.path.splitext(path)[1] in [".js"]:
 		headers = {
 			"Content-Type" : "application/javascript"
 		}
 		return web.FileResponse(path,headers=headers)
 	else:
-		return web.Response(status=404,text="404")
+		return web.Response(status=403,text="403")
 
 async def handle_image(request):
 	"""Return any file that is present in any of the step folders"""
@@ -136,7 +140,7 @@ app.add_routes([web.get('/', index),
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Run webui')
-	parser.add_argument('-p', '--port', type=int, default=8080, help='Port to host webui on')
+	parser.add_argument('-p', '--port', type=int, dest="port", default=8080, help='Port to host webui on')
 	parser.add_argument('--autolaunch', action=argparse.BooleanOptionalAction, help='Open webui in default browser')
 	parser.add_argument('--listen', action=argparse.BooleanOptionalAction, help='Allow access from LAN (NOT RECOMMENDED)')
 

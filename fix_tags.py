@@ -629,7 +629,7 @@ def run(save_tags=False,save_images=False):
 	# whitelist += str_to_taglist(c["triggerword_extra"])
 
 	# popular-only filter
-	tag_file = os.path.join("other",f'{c["booru"]["type"]}-tags.json')
+	tag_file = os.path.join("external",f'{c["booru"]["type"]}-tags.json')
 	if os.path.isfile(tag_file):
 		images = popular_only(images,tag_file,int(c["booru"]["popular_only"]),c["booru"]["general_only"])
 	else:
