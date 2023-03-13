@@ -10,6 +10,7 @@ from status import get_status
 from save import save_json
 from crop import crop_info, apply_crop
 from category import category_info
+from sort import sort_info
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import run
@@ -42,7 +43,6 @@ async def handle(request):
 async def handle_image(request):
 	"""Return any file that is present in any of the step folders"""
 	path = str(request.path)[5:]
-	print(path)
 	if os.path.isfile(path) and any(path.startswith(x) for x in step_list):
 		return web.FileResponse(path)
 	else:
@@ -119,6 +119,12 @@ async def api_category(request):
 		data = category_info()
 	return web.json_response(data)
 
+async def api_sort(request):
+	"""Image sorting and grouping - sorting [handled by sort.py]"""
+	data = {}
+	data = sort_info()
+	return web.json_response(data)
+
 # async def api_fix_tags(request):
 	# status = run(True,True)
 	# return web.json_response(status)
@@ -134,6 +140,7 @@ app.add_routes([web.get('/', index),
 				web.get('/api/status', api_status),
 				web.get('/api/crop/{command}', api_crop),
 				web.get('/api/category/{command}', api_category),
+				web.get('/api/sort/{command}', api_sort),
 				web.post('/api/json/save', api_json_save),
 				# web.get('/api/tags/run', api_fix_tags),
 				])

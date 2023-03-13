@@ -110,9 +110,10 @@ def category_info(disk_only=False):
 	data["images"] = images
 	data["missing"] = missing
 
+	disk_cat = [x.category.name if x.category else None for x in get_step_images(folder)]
 	for c in categories:
 		count = sum([x["category"] == c.name for x in images])
-		disk = c.name in [x.category.name if x.category else None for x in get_step_images(folder)]
+		disk = c.name in disk_cat
 		if disk_only and not disk:
 			continue
 		if count == 0 and not c.keep and not disk:
@@ -130,6 +131,7 @@ def category_info(disk_only=False):
 		data["categories"].insert(0,{
 			"name" : "default",
 			"weight" : "1",
+			"color" : "#555555",
 			"count" : sum([x["category"] == "default" for x in images])
 		})
 
@@ -138,8 +140,3 @@ def category_info(disk_only=False):
 			data["images"][i]["filename"] = get_original_filename(data["images"][i]["filename"],step_list[1])
 
 	return {"sort": data}
-
-# test
-# print(json.dumps(sort_info()["sort"]["categories"],indent=2))
-# print(json.dumps(sort_info(True),indent=2))
-# print(get_original_filename("3_weight\\0001.jpg",step_list[1]))
