@@ -237,15 +237,18 @@ img {
 	border: 0px;
 }
 
-.sort-img a {
-	position: absolute;
-	left: 0;
-	bottom: 0;
+.cat, .tcat {
 	color: white;
 	font-size: 20px;
 	padding: 2px 8px;
 	font-weight: bold;
 	text-shadow: black 0px 0px 8px;
+}
+
+.sort-img a {
+	position: absolute;
+	left: 0;
+	bottom: 0;
 }
 .sort-img .tcat {
 	display: none;
@@ -271,6 +274,7 @@ img {
 
 .sort-img img {
 	width: 300px;
+	height: 300px;
 }
 
 .sort-img {
@@ -285,3 +289,12 @@ img {
 /* #sort-img-grid:hover .sort-img:hover { */
 	/* opacity: 1.0 !important; */
 /* } */
+
+#sort-buttons .cat {
+	margin-right: 4px !important; 
+}
+
+#sort-buttons:hover .cat:not(:hover) {
+	background-color: #000 !important;
+	color: #666;
+}

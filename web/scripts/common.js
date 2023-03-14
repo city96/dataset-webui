@@ -12,6 +12,7 @@ function update_all() {
 	status_update()
 	crop_init()
 	sort_cat_update()
+	sort_update()
 	lock_update(false)
 }
 

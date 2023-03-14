@@ -48,8 +48,10 @@ def get_folder_images(root_path, category):
 	images = []
 	for filename in os.listdir(root_path):
 		path = os.path.join(root_path,filename)
+		if '.orphaned' in path:
+			continue
 		ext = os.path.splitext(filename)[1]
-		if ext in [".png",".jpg",".webp"]:
+		if ext in [".png",".jpg",".jpeg",".webp"]:
 			image = Image()
 			image.filename = filename
 			image.path = path

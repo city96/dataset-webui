@@ -10,7 +10,7 @@ from status import get_status
 from save import save_json
 from crop import crop_info, apply_crop
 from category import category_info
-from sort import sort_info
+from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import run
@@ -122,7 +122,10 @@ async def api_category(request):
 async def api_sort(request):
 	"""Image sorting and grouping - sorting [handled by sort.py]"""
 	data = {}
-	data = sort_info()
+	if request.match_info['command'] == "write":
+		sort_write()
+	else:		
+		data = sort_info()
 	return web.json_response(data)
 
 # async def api_fix_tags(request):
