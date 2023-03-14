@@ -63,6 +63,14 @@ label {
 	position: absolute;
 	top: 0;
 	right: 0;
+	color: #000000;
+	background-color: var(--main);
+}
+
+.module .update:disabled, .module .update[disabled] {
+	color: var(--main);
+	background-color: var(--back);
+	border-color: var(--back);
 }
 
 .module .float-warn {
@@ -93,12 +101,11 @@ label {
 	background-color: rgba(255,255,255,0.25);
 }
 
-.locked * {
+.locked table * {
 	border-color: rgba(255,255,255,0.25);
 }
 
 .locked .update {
-	color: var(--main);
 	filter: none;
 	pointer-events: auto;
 	user-select: auto;

@@ -52,13 +52,14 @@ async function status_update(){
 		if (data.status.warn.length > 0) {
 			status_disable(data.status.warn)
 		} else {
-			status_disable("No active dataset")
+			status_disable("Nothing to load from disk")
 		}
 		lock_update(false)
 		return
 	} else {
 		document.getElementById("status-div").classList.remove("locked");
 		document.getElementById("status-float-warn").style.display = "none"; 
+		disabled = disabled.filter(function(i){return (i!=="status-div")})
 	}
 	
 	status_updateTable(data["status"]["steps"])
@@ -69,6 +70,7 @@ function status_disable(message=null) {
 	let table = document.getElementById("status-table")
 	table.innerHTML = "";
 	document.getElementById("status-div").classList.add("locked");
+	if (!disabled.includes("status-div")) { disabled.push("status-div") }
 
 	if (message) {
 		document.getElementById("status-float-warn").style.display = "block"; 

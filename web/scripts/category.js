@@ -92,26 +92,27 @@ async function sort_cat_disk() {
 }
 
 async function sort_cat_update(new_cat = null) {
-	if (!new_cat) { lock_update() }
 	let data = await fetch("/api/category/info");
 	data = await data.json()
 	disk = null
 	
-	if (data == undefined || data.sort == undefined || data.sort.categories.length == 0) {
+	if (!data || !data.sort || !data.sort.images || data.sort.images.length == 0) {
 		document.getElementById("sort-cat-float-warn").style.display = "block"; 
-		document.getElementById("sort-cat-float-warn").innerHTML = "Nothing to load from disk"
-		lock_update(false)
+		let warn = "Nothing to load from disk"
+		if (data.warn) { warn = data.warn }
+		sort_cat_disable(warn)
 		return
 	} else {
-		document.getElementById("sort-cat-div").classList.remove("locked");
 		if (!new_cat) {
 			document.getElementById("sort-cat-float-warn").style.display = "none";
 		}
+		//unlock self
+		document.getElementById("sort-cat-div").classList.remove("locked");
+		disabled = disabled.filter(function(i){return (i!=="sort-cat-div")})
 	}
 	if (new_cat) { data["sort"]["categories"].push(new_cat) }
 	sort_cat_updateTable(data["sort"]["categories"])
 	if (!new_cat) { sort_cat_lock(false) }
-	if (!new_cat) { lock_update(false) }
 }
 
 async function sort_cat_json_save() {
@@ -141,8 +142,6 @@ async function sort_cat_json_save() {
 		body: JSON.stringify({"sort" : data})
 	})
 	sort_cat_update()
-	// unlock_all()
-	// lock_update(false)
 	disk = null
 }
 
@@ -158,9 +157,9 @@ function sort_cat_add() {
 	sort_cat_update(cat)
 }
 
-function sort_cat_lock(state=true) {
+function sort_cat_lock(state=true) { // unsaved changes
 	if (locked != state) {
-		if (state) { lock_all(["sort-cat-div"]) }
+		if (state) { lock_all(["sort-cat-div"],"You have unsaved changes") }
 		else { unlock_all() }
 	}
 	document.getElementById("sc_save").disabled = !state;
@@ -172,12 +171,12 @@ function sort_cat_lock(state=true) {
 }
 
 function sort_cat_disable(message=null) {
-	let table = document.getElementById("crop-table")
-	table.innerHTML = "";
 	document.getElementById("sort-cat-div").classList.add("locked");
+	if (!disabled.includes("sort-cat-div")) { disabled.push("sort-cat-div") }
 	document.getElementById("sc_save").disabled = true;
 	document.getElementById("sc_load").disabled = true;
 	document.getElementById("sc_revert").disabled = true;
+	document.getElementById("sort-cat-table").innerHTML = "";
 
 	if (message) {
 		document.getElementById("sort-cat-float-warn").style.display = "block"; 

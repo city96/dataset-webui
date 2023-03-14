@@ -8,12 +8,13 @@ function crop_reset(message=null) {
 	document.getElementById("crop-img-div").innerHTML = ""
 	
 	let div = document.getElementById("crop-div")
-	let buttons = div.getElementsByTagName("Button")
-	for (const button of buttons) {
-		button.disabled = true
-	}
 	div.classList.add("locked");
 
+	document.getElementById("c_save").disabled = true
+	document.getElementById("c_apply").disabled = true
+	document.getElementById("c_revert").disabled = true
+
+	document.getElementById("c_warn").innerHTML = ""
 	document.getElementById("c_status").innerHTML = ""
 	document.getElementById("c_filename").innerHTML = ""
 	document.getElementById("c_status_prev").innerHTML = ""
@@ -128,11 +129,9 @@ async function crop_json_save() {
 	crop_json_load() // verify
 	document.getElementById("c_save").disabled = false;
 	unlock_all()
-	lock_update(false)
 }
 
 function crop_update_status_text(target,data) {
-	
 	if (data["crop_data"] === undefined && !data["ignored"] && !data["on_disk"]) {
 		target.innerHTML = "Unknown/Not cropped"
 		target.style.color = "gray"
@@ -250,8 +249,10 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 	}
 
 	if (set_crop || set_ignore) { // unsaved changes
-		lock_update()
-		lock_all(["crop-div"])
+		lock_all(["crop-div"],"You have unsaved changes")
+		document.getElementById("c_save").disabled = false
+		document.getElementById("c_apply").disabled = true
+		document.getElementById("c_revert").disabled = false
 	}
 
 	crop_update_status_text(document.getElementById("c_status_prev"),crop_data["images"][crop_data["current"]])
@@ -308,22 +309,27 @@ function crop_prev_image() {
 var crop
 var crop_index
 async function crop_init() {
+	await crop_json_load()
+	if (!crop_data || !crop_data.images || crop_data.images.length == 0) {
+		document.getElementById("crop-div").classList.add("locked");
+		if (!disabled.includes("crop-div")) { disabled.push("crop-div") }
+		let warn = "Nothing to load from disk"
+		if(crop_data.warn) { warn = crop_data.warn }
+		crop_reset(warn)
+		return
+	}
 	if (crop) { // already init
 		return 
 	}
-
-	await crop_json_load()
-	if (crop_data === undefined || crop_data.images === undefined || crop_data.images.length == 0) {
-		return
-	}
-
-	document.getElementById("c_init").disabled = true;
 	let buttons = document.getElementById("crop-div").getElementsByTagName("Button")
-	for (const button of buttons) {
-		button.disabled = false
-	}
+
+	document.getElementById("c_save").disabled = true
+	document.getElementById("c_apply").disabled = false
+	document.getElementById("c_revert").disabled = true
+
 	document.getElementById("crop-div").classList.remove("locked");
-	document.getElementById("crop-float-warn").style.display = "none"; 
+	document.getElementById("crop-float-warn").style.display = "none";
+	disabled = disabled.filter(function(i){return (i!=="crop-div")})
 	crop_disable_shortcuts()
 
 	let link = document.createElement( "link" )
@@ -366,5 +372,4 @@ function crop_revert() {
 	crop_reset()
 	crop_init()
 	unlock_all()
-	lock_update(false)
 }

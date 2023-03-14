@@ -77,7 +77,7 @@
 	<div id="crop-div" class="module">
 		<h2>Cropping:</h2>
 		<p class="warn float-warn" id="crop-float-warn"></p>
-		<button class="update" id="c_init" onclick="crop_init()"> ↑ </button>
+		<button class="update" onclick="crop_init()"> ⭮ </button>
 		
 		<button id="c_enable_shortcuts" onclick="crop_enable_shortcuts()"> Enable Shortcuts </button>
 		<div id="c_shortcuts" style="display:none">
@@ -88,9 +88,9 @@
 			<img style="width: 50%;" src="assets/crop-shortcuts.png"> 
 		</div>
 		<hr>
-		<button style="font-size:25px" id="c_save" onclick="crop_json_save()" title="Save information to dataset.json without exporting images"> Save </button>
-		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." > Apply Crop</button>
-		<button style="font-size:25px" id="c_revert" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)"> Revert Changes </button>
+		<button style="font-size:25px" id="c_save" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
+		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
+		<button style="font-size:25px" id="c_revert" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
 		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
 		<pre id="c_out"></pre>
 		<pre id="c_warn" class="warn"></pre>

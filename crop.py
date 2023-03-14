@@ -14,7 +14,7 @@ def crop_info():
 	if not os.path.isfile("dataset.json"):
 		data = {
 			"crop" : {
-				"warn" : ["No images"]
+				"warn" : ["No active dataset"]
 			}
 		}
 		return data

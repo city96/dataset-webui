@@ -55,7 +55,6 @@ function dataset_hasActive(active) {
 		document.getElementById("d_update").disabled = false;
 		document.getElementById("d_name").value = active.name
 		document.getElementById("d_description").value = active.description
-		update_all()
 	} else {
 		console.log("No active dataset")
 		document.getElementById("d_name").disabled = false;
@@ -64,9 +63,8 @@ function dataset_hasActive(active) {
 		document.getElementById("d_description").value = ""
 		document.getElementById("d_new").disabled = false;
 		document.getElementById("d_update").disabled = true;
-		
-		reset_all("No active dataset") // other scripts
 	}
+	update_all() // other scripts
 }
 
 function dataset_json_parse() { // Parse dataset metadata from page

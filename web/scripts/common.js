@@ -15,30 +15,31 @@ function update_all() {
 	lock_update(false)
 }
 
-// Disable/deinitialize all fields (eg. on dataset save)
-function reset_all(message=null) {
-	lock_update()
-	status_disable(message)
-	crop_reset(message)
-	sort_cat_disable(message)
-}
-
 var locked = false
+var disabled = []
 // Lock all fields (pending edit)
-function lock_all(whitelist=[]) {
+function lock_all(whitelist=[],message=null) {
 	if (locked) {
 		return
 	}
+
 	const divs = ["dataset-div","dataset-current-div","status-div","crop-div","sort-cat-div","sort-div","tag-div"]
 	for (const id of divs) {
 		let div = document.getElementById(id)
 		if (whitelist.includes(id)) {
 			div.classList.remove("locked"); // shouldn't happen
-			let warn = div.getElementsByClassName("warn")[0]
-			warn.style.display = "block"
-			warn.innerHTML = "You have unsaved changes"
+			// let warn = div.getElementsByClassName("warn")[0]
+			// warn.style.display = "block"
+			// warn.innerHTML = "You have unsaved changes"
 		} else {
 			div.classList.add("locked");
+		}
+		if (message && !disabled.includes(id)) {
+			let warn = div.getElementsByClassName("warn")[0]
+			if (warn) {
+				warn.style.display = "block"
+				warn.innerHTML = message
+			}
 		}
 	}
 	locked = true
@@ -46,12 +47,13 @@ function lock_all(whitelist=[]) {
 }
 
 // Unlock all fields (on save)
-function unlock_all() {
+function unlock_all(){
 	if (!locked) {
 		return
 	}
 	const divs = ["dataset-div","dataset-current-div","status-div","crop-div","sort-cat-div","sort-div","tag-div"]
 	for (const id of divs) {
+		if (disabled.includes(id)) { continue }
 		let div = document.getElementById(id)
 		div.classList.remove("locked");
 		let warn = div.getElementsByClassName("warn")[0]
