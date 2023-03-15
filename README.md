@@ -6,14 +6,14 @@ This project aims to help with the creation and management of LoRa training data
 *Pull requests are welcome. Currently everything is just cobbled together*
 
 Roadmap:
-- Implement sorting
-- Fix category management / assignment
 - Fix orphaned images
+- Refractor tag management
+- Add single-image tag overrides
+- Add autotagging/autosorting support
 
 Known issues:
 - No files/folders are ever deleted, leading to clutter/orphaned images
 - Webui scrolls by random amount on first button click
-- Folder dropdowns are placeholders
 
 ## Getting started
 (optional) create a venv first:
@@ -42,8 +42,11 @@ Add these to `start.bat` or use them when calling `webserver.py` directly.
 
 ### download-dependencies.py
 Running this script is recommended to get all features of the webui.
+
+**using start.bat already downloads all dependencies by default**
+
 It will gives you the option to download the following files:
-- `danbooru-tags.json` and `gelbooru-tags.json` from catbox.moe.
+- `danbooru-tags.json` and `gelbooru-tags.json` from github gist or catbox.moe.
 	- You also have the option to scrape the tags from the site directly.
 - `cropper.js` and `cropper.css` from Cloudflare/cdnjs.
 
