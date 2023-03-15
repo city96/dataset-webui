@@ -42,12 +42,11 @@ function folder_rule_add(folder, action, target) {
 	var s = document.createElement("select")
 	s.id = "t_folder_rule_target"
 
-	var categories = ["temp","test","invalid"]
-	for(const key in categories) {
+	for(const cat of tag_categories) {
 		var o = document.createElement("option")
-		o.value = categories[key]
-		o.text = categories[key]
-		if (categories[key] == folder) {
+		o.value = cat
+		o.text = cat
+		if (cat == folder) {
 			o.selected = true
 		}
 		s.appendChild(o);
@@ -423,6 +422,15 @@ function tag_json_load(data) {
 	return
 }
 
+var tag_categories
+async function tag_update() {
+	let data = await fetch("/api/tags/info");
+	data = await data.json()
+	console.log(data)
+	tag_categories = data["tags"]["categories"]
+	tag_json_load(data["tags"])
+}
+
 async function save_tag_json() {
 	console.log("Save tag/json")
 	document.getElementById("t_save").disabled = true;
@@ -443,7 +451,7 @@ async function save_tag_json() {
 	document.getElementById("t_save").disabled = false;
 	document.getElementById("t_load").disabled = false;
 	document.getElementById("t_fix").disabled = false;
-	update_status(true)
+	unlock_all()
 }
 
 async function fix_tags() {
@@ -457,6 +465,4 @@ async function fix_tags() {
 	document.getElementById("t_warn").innerHTML = data["tags"]["warn"];
 	console.log(data["tags"]["popular"])
 	popular_tags(data["tags"]["popular"])
-
-	update_status(true)
 }

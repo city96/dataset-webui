@@ -162,4 +162,3 @@ def sort_write():
 		if os.path.isdir(d):
 			if len(os.listdir(d)) == 0:
 				os.rmdir(d)
-sort_write()

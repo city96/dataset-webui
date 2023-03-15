@@ -142,6 +142,7 @@ async function sort_cat_json_save() {
 		body: JSON.stringify({"sort" : data})
 	})
 	sort_cat_update()
+	sort_update()
 	disk = null
 }
 

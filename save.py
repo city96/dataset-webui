@@ -10,7 +10,7 @@ def save_json(new):
 		print(" meta")
 		data["meta"] = new["meta"]
 
-	if "crop" in new.keys() and new["new"]:
+	if "crop" in new.keys() and new["crop"]:
 		print(" crop")
 		new["crop"].pop('disk', None)
 		new["crop"].pop('warn', None)

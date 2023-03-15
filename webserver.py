@@ -13,7 +13,7 @@ from category import category_info
 from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
-from fix_tags import run
+from fix_tags import tag_info, tag_run
 
 app = web.Application()
 
@@ -128,9 +128,12 @@ async def api_sort(request):
 		data = sort_info()
 	return web.json_response(data)
 
-# async def api_fix_tags(request):
-	# status = run(True,True)
-	# return web.json_response(status)
+async def api_tags(request):
+	if request.match_info['command'] == "run":
+		data = tag_run(True,True)
+	else:
+		data = tag_info()
+	return web.json_response(data)
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
@@ -145,7 +148,7 @@ app.add_routes([web.get('/', index),
 				web.get('/api/category/{command}', api_category),
 				web.get('/api/sort/{command}', api_sort),
 				web.post('/api/json/save', api_json_save),
-				# web.get('/api/tags/run', api_fix_tags),
+				web.get('/api/tags/{command}', api_tags),
 				])
 
 if __name__ == '__main__':

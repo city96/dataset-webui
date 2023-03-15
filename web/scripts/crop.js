@@ -115,7 +115,9 @@ async function crop_json_load() {
 
 async function crop_json_save() {
 	console.log("Save crop/json")
-	document.getElementById("c_save").disabled = true;
+	document.getElementById("c_save").disabled = true
+	document.getElementById("c_apply").disabled = true
+	document.getElementById("c_revert").disabled = true
 	let data = {}
 	data["crop"] = crop_data
 
@@ -127,7 +129,7 @@ async function crop_json_save() {
 		body: JSON.stringify(data)
 	})
 	crop_json_load() // verify
-	document.getElementById("c_save").disabled = false;
+	document.getElementById("c_apply").disabled = false
 	unlock_all()
 }
 
