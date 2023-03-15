@@ -586,8 +586,28 @@ def save(images, save_tags, save_images):
 		if save_images or input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
 			copy_images(images)
 
+def tag_info():
+	if not os.path.isfile("dataset.json"):
+		data = {
+			"tags" : {
+				"warn" : ["No images"]
+			}
+		}
+		return data
+
+	with open("dataset.json") as f:
+		json_data = json.load(f)
+
+	data = {}
+	data = json_data["tags"] if "tags" in json_data.keys() else None
+	data["categories"] = []
+	d_in = json_data["tags"]["folder_input"] if  "tags" in json_data.keys() and "folder_input" in json_data["tags"].keys() else "3 - tagged"
+	for cat in os.listdir(d_in):
+		data["categories"].append(cat)
+	return {"tags": data}
+
 # default logic
-def run(save_tags=False,save_images=False):
+def tag_run(save_tags=False,save_images=False):
 	global whitelist
 	global status
 	global warn
@@ -629,7 +649,7 @@ def run(save_tags=False,save_images=False):
 	# whitelist += str_to_taglist(c["triggerword_extra"])
 
 	# popular-only filter
-	tag_file = os.path.join("other",f'{c["booru"]["type"]}-tags.json')
+	tag_file = os.path.join("external",f'{c["booru"]["type"]}-tags.json')
 	if os.path.isfile(tag_file):
 		images = popular_only(images,tag_file,int(c["booru"]["popular_only"]),c["booru"]["general_only"])
 	else:
@@ -671,5 +691,6 @@ def run(save_tags=False,save_images=False):
 	return data
 
 if __name__ == "__main__":
-	debug = True
-	run()
+	# debug = True
+	# run()
+	print(json.dumps(tag_info(),indent=2))

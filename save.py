@@ -6,17 +6,30 @@ def save_json(new):
 	with open("dataset.json") as f:
 		data = json.load(f)
 
-	if "meta" in new.keys():
+	if "meta" in new.keys() and new["meta"]:
 		print(" meta")
 		data["meta"] = new["meta"]
 
-	if "tags" in new.keys():
+	if "crop" in new.keys() and new["crop"]:
+		print(" crop")
+		new["crop"].pop('disk', None)
+		new["crop"].pop('warn', None)
+		data["crop"] = new["crop"]
+
+	if "sort" in new.keys() and new["sort"]:
+		print(" sort")
+		if "sort" not in data.keys():
+			data["sort"] = {}
+		if "categories" in new["sort"].keys() and new["sort"]["categories"]:
+			print("  cat")
+			data["sort"]["categories"] = new["sort"]["categories"]
+		if "images" in new["sort"].keys() and new["sort"]["images"]:
+			print("  img")
+			data["sort"]["images"] = new["sort"]["images"]
+
+	if "tags" in new.keys() and new["tags"]:
 		print(" tags")
 		data["tags"] = new["tags"]
-
-	if "crop" in new.keys():
-		print(" crop")
-		data["crop"] = new["crop"]
 
 	for key in new.keys():
 		if key not in data.keys():

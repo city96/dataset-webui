@@ -66,6 +66,11 @@ def load_dataset(dataset):
 		new_path = os.path.join(dataset.save_path,folder)
 		os.rename(new_path,folder)
 	os.rename(os.path.join(dataset.save_path,"dataset.json"),"dataset.json")
+	
+	# remove old directory
+	if len(os.listdir(dataset.save_path)) == 0:
+		os.rmdir(dataset.save_path)
+	
 	print(f"Loaded '{dataset.name}' dataset into active folder")
 
 def create_dataset(data):

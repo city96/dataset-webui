@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # random functions that are used in multiple scripts
+import os
 
 step_list = [
 	"0 - raw",
@@ -23,6 +24,20 @@ class Image:
 		return f"{self.filename}"
 	def __repr__(self):
 		return f"{self.filename}"
+	def get_id(self):
+		uid = self.path
+		for i in step_list:
+			if uid.startswith(i):
+				uid = uid.lstrip(i)
+				uid = uid.lstrip(os.path.sep) # \\
+				break
+		return uid
+		
+	# def get_cat_id(self):
+		# if self.category:
+			# return(os.path.join(str(self.category), self.filename))
+		# else:
+			# return(self.filename)
 
 class Tag:
 	"""class to store tag attributes"""
@@ -34,6 +49,18 @@ class Tag:
 		return f"{self.name}"
 	def __lt__(self, other):
          return self.position < other.position
+
+class Category:
+	"""class to store categories"""
+	def __init__(self,name,weight=1):
+		self.name = name
+		self.weight = weight
+	def __str__(self):
+		return f"{self.weight}_{self.name}"
+	def __repr__(self):
+		return f"{self.weight}_{self.name}"
+	def __lt__(self, other):
+         return self.weight < other.weight
 
 # api cacher, "borrowed" from unknown project.
 def api_cacher(api_base, api_url):

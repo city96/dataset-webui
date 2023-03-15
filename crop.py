@@ -1,6 +1,7 @@
 import os
 from common import Image, Tag, step_list
 from status import get_step_images
+from category import mesh_image_list
 import json
 from PIL import Image as pImage
 
@@ -8,6 +9,16 @@ from PIL import Image as pImage
 warn = []
 
 def crop_info():
+	global warn
+	warn = []
+	if not os.path.isfile("dataset.json"):
+		data = {
+			"crop" : {
+				"warn" : ["No active dataset"]
+			}
+		}
+		return data
+	
 	with open("dataset.json") as f:
 		data = json.load(f)
 
@@ -19,35 +30,58 @@ def crop_info():
 		data["crop"]["missing"] = []
 	if "current" not in data["crop"].keys():
 		data["crop"]["current"] = 0
+	if "disk" not in data["crop"].keys():
+		data["crop"]["disk"] = []
+
+	data = { # filter extra data
+		"crop" : data["crop"]
+	}
 
 	images = []
 	missing = []
-	valid = get_step_images(step_list[0])
-	for i in data["crop"]["images"]:
-		if i["filename"] in [x.filename for x in valid]:
-			images.append(i)
+
+	disk = get_step_images(step_list[1])
+	
+	images, missing = mesh_image_list(data["crop"], get_step_images(step_list[0]))
+	
+	data["crop"]["disk"] = []
+	for i in disk: # also list output images [on disk]
+		data["crop"]["disk"].append(i.get_id())
+
+	nrm = [] # normalize values / remove useless keys
+	for i in images:
+		n = {}
+		n["filename"] = i["filename"]
+
+		if "crop_data" in i.keys():
+			n["status"] = "crop"
+			n["crop_data"] = i["crop_data"]
 		else:
-			missing.append(i)
-	for i in data["crop"]["missing"]:
-		if i["filename"] in [x.filename for x in valid]:
-			images.append(i)
+			n["status"] = "raw"
+
+		if "ignored" in i.keys():
+			n["ignored"] = i["ignored"]
+			if i["ignored"]:
+				n["status"] = "ignored"
+		
+		if i["filename"] in data["crop"]["disk"]:
+			n["on_disk"] = True
 		else:
-			missing.append(i)
-	for i in valid:
-		if i.filename in [x["filename"] for x in images]:
-			continue
-		if i.filename in [x["filename"] for x in missing]:
-			continue
-		images.append({
-			"filename" : i.filename,
-			"status" : "raw",
-			"size" : None,
-			"date" : None,
-		})
+			n["on_disk"] = False
+
+		nrm.append(n)
+	images = nrm
+
+	# find missing
+	disk_only = list(set(data["crop"]["disk"]) - set([x["filename"] if "crop_data" in x.keys() else None for x in images]))
+	if len(disk_only) > 0:
+		warn.append(f"you have {len(disk_only)} image(s) that were cropped externally.")
+
 	if data["crop"]["current"] > len(images):
 		data["crop"]["current"] = 0
 	data["crop"]["images"] = images
 	data["crop"]["missing"] = missing
+	data["crop"]["warn"] = warn
 	return data
 
 def crop_image(data):
@@ -57,10 +91,13 @@ def crop_image(data):
 		warn.append(f"missing {old_path}")
 		print(warn[-1])
 		return
+	if os.path.split(data["filename"])[0]:
+		cat = os.path.split(new_path)[0]
+		if not os.path.isdir(cat):
+			os.mkdir(cat)
 	if os.path.isfile(new_path):
-		pass # just overwrite for now
-		# print(f"already exists {new_path}")
-		# return
+		print(f"already exists {new_path}")
+		return
 	crop = data["crop_data"]
 	left = crop["x"]
 	top = crop["y"]
@@ -82,7 +119,7 @@ def apply_crop():
 	valid = get_step_images(step_list[0])
 	cropped = 0
 	for i in data["crop"]["images"]:
-		if i["filename"] in [x.filename for x in valid]:
+		if i["filename"] in [x.get_id() for x in valid]:
 			if "ignored" in i.keys() and i["ignored"]:
 				continue
 			if "crop_data" not in i.keys():

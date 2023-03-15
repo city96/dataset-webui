@@ -2,7 +2,7 @@
 # Return current dataset status + info from json
 import os
 import json
-from common import Image, Tag, step_list
+from common import Image, Tag, Category, step_list
 
 # global list of warnings
 warn = []
@@ -48,8 +48,10 @@ def get_folder_images(root_path, category):
 	images = []
 	for filename in os.listdir(root_path):
 		path = os.path.join(root_path,filename)
+		if '.orphaned' in path:
+			continue
 		ext = os.path.splitext(filename)[1]
-		if ext in [".png",".jpg",".webp"]:
+		if ext in [".png",".jpg",".jpeg",".webp"]:
 			image = Image()
 			image.filename = filename
 			image.path = path
@@ -79,7 +81,13 @@ def get_step_images(folder):
 
 	for category in os.listdir(folder):
 		if os.path.isdir(os.path.join(folder,category)):
-			images += get_folder_images(os.path.join(folder,category),category)
+			try:
+				weight, name = category.split("_",1)
+				weight = int(weight)
+				cat = Category(name,weight)
+			except:
+				cat = Category(category)
+			images += get_folder_images(os.path.join(folder,category),cat)
 	return images
 
 def get_step_stats(folder):
@@ -104,23 +112,18 @@ def get_status():
 	if not os.path.isfile("dataset.json"):
 		data = {
 			"status" : {
-				"image_count" : {
-					"total" : 0,
-					"uncategorized" : 0,
-				},
-				"tag_count" : {
-					"total" : 0,
-					"unique" : 0,
-				},
-				"warn": "No active dataset!"
+				"steps" : [],
+				"warn": ["No active dataset"],
 			}
 		}
 		return data
 
-	with open("dataset.json") as f:
-		data = json.load(f)
-		data["status"] = {}
+	# with open("dataset.json") as f:
+		# data = json.load(f)
+		# data["status"] = {}
 
+	data = {}
+	data["status"] = {}
 	data["status"]["steps"] = {}
 	for folder in step_list:
 		if not os.path.isdir(folder):

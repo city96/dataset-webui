@@ -10,8 +10,6 @@ datasets/
 dataset.ini
 dataset.json
 venv
-other/*-tags.json
-web/cropper.js
-web/cropper.css
+external/
 guide.md
 broken/

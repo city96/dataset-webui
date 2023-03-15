@@ -1,6 +1,5 @@
 #!/usr/bin/python3
-# get pre-made or newest taglist
-
+import argparse
 import requests
 import json
 import time
@@ -9,7 +8,7 @@ from common import api_cacher, verify_input
 
 use_cache = True
 
-# grap tags directly from danbooru api
+# grab tags directly from danbooru api
 def download_danbooru_tags(min_count=1000, max_page=10):
 	api_base = "https://danbooru.donmai.us/"
 	page = 0
@@ -36,7 +35,7 @@ def download_danbooru_tags(min_count=1000, max_page=10):
 	with open(out_file,"w") as f:
 		json.dump(tags, f)
 
-# grap tags directly from gelbooru api
+# grab tags directly from gelbooru api
 def download_gelbooru_tags(min_count=1000, max_page=100, deprecated=True):
 	api_base = "https://gelbooru.com/index.php"
 	api_key = "&api_key=anonymous"
@@ -64,27 +63,29 @@ def download_gelbooru_tags(min_count=1000, max_page=100, deprecated=True):
 	with open(out_file,"w") as f:
 		json.dump(tags, f)
 
-# grab tags from catbox
-def download_premade_tags():
+# grab tags from gist or catbox
+def download_premade_tags(args):
 	# taglist from web
 	premade = {
 		"danbooru" : {
-			"url" : "https://files.catbox.moe/w5duuj.json",
-			"url_alt" : "https://anonfiles.com/n6H1c3Ydy1/danbooru-tags_json",
-			"filename" : os.path.join("other","danbooru-tags.json"),
+			"url" : "https://gist.githubusercontent.com/city96/86451816d65636103393e380400abaa3/raw/edaaa37c931240add974e006b72b63b8fc217167/danbooru-tags.json",
+			"url_alt" : "https://files.catbox.moe/w5duuj.json",
+			"filename" : os.path.join("external","danbooru-tags.json"),
 		},
 		"gelbooru" : {
-			"url" : "https://files.catbox.moe/ipp6k7.json",
-			"url_alt" : "https://anonfiles.com/ydHdcbY0y3/gelbooru-tags_json",
-			"filename" : os.path.join("other","gelbooru-tags.json"),
+			"url" : "https://gist.githubusercontent.com/city96/86451816d65636103393e380400abaa3/raw/edaaa37c931240add974e006b72b63b8fc217167/gelbooru-tags.json",
+			"url_alt" : "https://files.catbox.moe/ipp6k7.json",
+			"filename" : os.path.join("external","gelbooru-tags.json"),
 		},
 	}
-	print("Downloading tags from catbox.moe")
-
 	try:
 		for name, i in premade.items():
-			print(' downloading', i["url"])
-			data = requests.get(i["url"])
+			if not args.tag_catbox:
+				print(' downloading', i["url"])
+				data = requests.get(i["url"])
+			else:
+				print(' downloading', i["url_alt"])
+				data = requests.get(i["url_alt"])
 			data.raise_for_status()
 			data = data.content
 			with open(i["filename"], 'wb') as f:
@@ -92,42 +93,58 @@ def download_premade_tags():
 			time.sleep(1) # rate limit
 	except:
 		print(" couldn't download files!")
-	print("\nif any files are missing, download them manually!")
-	[print(f" {i['url']} => {i['filename']}") for i in premade.values()]
-	print("alternative links:")
-	[print(f" {i['url_alt']} => {i['filename']}") for i in premade.values()]
+
+def verify_tags(verify_content = True):
+	for file in ["danbooru-tags.json","gelbooru-tags.json"]:
+		path = os.path.join("external",file)
+		if not os.path.isfile(path):
+			return False
+
+		if not verify_content:
+			return True
+
+		with open(path, 'r') as f:
+			try:
+				raw_tags = json.load(f)
+			except:
+				print(f"Error parsing '{path}'")
+				return False
+			if len(raw_tags) < 9000:
+				print(f"Json at path '{path}' only has {len(raw_tags)} tags. expected 9000+")
+				return False
+	return True
 
 # tag download
-def download_tags(auto=False):
-	print("\n\nDownloading Tags")
-	if os.path.isfile(os.path.join("other","gelbooru-tags.json")) and os.path.isfile(os.path.join("other","danbooru-tags.json")):
-		print("All tags already downloaded!")
-		print("Delete 'danbooru-tags.json' and 'gelbooru-tags.json' to re-download.")
+def download_tags(args):
+	if verify_tags(args.verify) and not args.overwrite:
+		print("Tags already downloaded")
 		return
 
-	print("Do you want to download the pre-made json files or scrape the tags yourself?")
-	print(" It is recommended to download the pre-made ones as scraping takes")
-	print(" a long time and places extra load on the servers.\n")
+	if (args.auto or verify_input(f"Download tags? [y/n] ",'y','n')):
+		print(f"Downloading tags from {'GitHub Gist' if not args.tag_catbox else 'catbox.moe'}")
+		if (args.tag_scrape and args.auto or not args.auto and verify_input(f"Scrape tags (not recommended)? [y/n] ",'y','n')):
+			print("Starting scrape")
+			# scrape
+			download_danbooru_tags()
+			download_gelbooru_tags()
+		else: # Download
+			download_premade_tags(args)
 
-	if verify_input(f"Download premade or Scrape? [d/s] ",'d','s'):
-		print("\nStarting download...")
-		download_premade_tags()
-	else:
-		# scrape
-		download_danbooru_tags()
-		download_gelbooru_tags()
+	print("Tag download complete")
+	if not verify_tags():
+		input("VERIFICATION FAILED! check files on disk. Ctrl+C to abort.")
 
 # from https://cdnjs.com/libraries/cropperjs
-def download_cropperjs():
-	print("\n\nDownloading cropperjs from cloudflare")
+def download_cropperjs(args):
 	files = {
-		os.path.join("web","cropper.js") : "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.js",
-		os.path.join("web","cropper.css") : "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.css",
+		os.path.join("external","cropper.js") : "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.js",
+		os.path.join("external","cropper.css") : "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.css",
 	}
-	if all([os.path.isfile(x) for x in files.keys()]):
-		print("All cropperjs files already downloaded!")
+	if all([os.path.isfile(x) for x in files.keys()]) and not args.overwrite:
+		print("Cropper.js files already downloaded!")
 		return
 	
+	print("Downloading cropperjs from cloudflare")
 	try:
 		for path, url in files.items():
 			print(' downloading', path)
@@ -139,14 +156,32 @@ def download_cropperjs():
 			time.sleep(1) # rate limit
 	except:
 		print(" couldn't download files!")
-	print("\nif any files are missing, download them manually!")
-	[print(f" {url} => other/{path}") for url,path in files.items()]
 
-# default logic + command line UI
-def cli_ui():
-	download_cropperjs()
-	download_tags()
+	if all([os.path.isfile(x) for x in files.keys()]):
+		print("Cropper.js download complete")
+	else:
+		input("VERIFICATION FAILED! check files on disk. Ctrl+C to abort.")
+		[print(f" {url} => other/{path}") for url,path in files.items()]
 
 if __name__ == "__main__":
-	cli_ui()
-	input("\nPress any key to exit...")
+	parser = argparse.ArgumentParser(description='Download/check project dependencies')
+	parser.add_argument('--auto', action=argparse.BooleanOptionalAction, default=True, help='Auto-download all dependencies, only ask user on error')
+	parser.add_argument('--verify', action=argparse.BooleanOptionalAction, default=True, help='Check if downloaded files are valid')
+	parser.add_argument('--overwrite', action=argparse.BooleanOptionalAction, default=False, help='Overwrite files, even if they exist.')
+
+	parser.add_argument('--skip-cropperjs', dest="cropper_skip", action="store_true", help='Don\'t download Cropper.js')
+	parser.add_argument('--skip-tags', dest="tag_skip", action="store_true", help='Don\'t download tag json files')
+	parser.add_argument('--force-tag-scrape', dest="tag_scrape", action="store_true", help='Use built-in scraper for tags instead of downloading')
+	parser.add_argument('--tag-catbox', dest="tag_catbox", action="store_true", help='Download tags from catbox.moe instead of GitHub Gist')
+
+	args = parser.parse_args()
+
+	if not os.path.isdir("external"):
+		os.mkdir("external")
+
+	if not args.tag_skip:
+		download_tags(args)
+	if not args.cropper_skip:
+		download_cropperjs(args)
+	if not args.auto:
+		input("\nPress any key to exit/continue...")
