@@ -65,3 +65,7 @@ function unlock_all(){
 	locked = false
 	lock_update(false)
 }
+
+document.addEventListener("DOMContentLoaded", function(){
+	dataset_update()
+});
