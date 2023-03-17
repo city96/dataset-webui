@@ -8,7 +8,7 @@ import json
 import os
 from status import get_status
 from save import save_json
-from crop import crop_info, apply_crop
+from crop import crop_info
 from category import category_info
 from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
@@ -101,11 +101,44 @@ async def api_status(request):
 	data = get_status()
 	return web.json_response(data)
 
+crop_status = {"run":False}
+async def api_crop_run():
+	"""Apply crop. run this with async!! [handled by crop.py]"""
+	global crop_status
+	from crop import crop_image
+	from status import get_step_images
+
+	with open("dataset.json") as f:
+		data = json.load(f)
+	if "crop" not in data.keys() or "images" not in data["crop"].keys():
+		return
+
+	crop_status = {"run":True,"max":len(data["crop"]["images"])}
+	valid = get_step_images(step_list[0])
+	crop_status["current"] = 0
+	history = []
+	for i in data["crop"]["images"]:
+		if i["filename"] in [x.get_id() for x in valid]:
+			await asyncio.sleep(0.001) # Context switch, don't remove
+			filename = crop_image(i, history)
+			crop_status["current"] += 1
+			if filename:
+				history.append(filename)
+	print("Crop done!")
+	crop_status = {"run":False}
+
 async def api_crop(request):
 	"""Image cropping and cropping info [handled by crop.py]"""
 	c_warn = []
 	if request.match_info['command'] == "run":
-		c_warn = apply_crop()
+		global crop_status
+		if not crop_status["run"]:
+			print("Start task")
+			crop_status = {"run":True}
+			asyncio.create_task(api_crop_run())
+		return web.json_response(crop_status)
+	elif request.match_info['command'] == "run_poll":
+		return web.json_response(crop_status)
 	data = crop_info()
 	data["crop"]["warn"] += c_warn
 	return web.json_response(data)

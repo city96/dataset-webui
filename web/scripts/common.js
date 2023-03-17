@@ -66,6 +66,14 @@ function unlock_all(){
 	lock_update(false)
 }
 
+function full_lock(state) {
+	if (state) {
+		document.body.classList.add("no-input")
+	} else {
+		document.body.classList.remove("no-input")
+	}
+}
+
 document.addEventListener("DOMContentLoaded", function(){
 	dataset_update()
 });

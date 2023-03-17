@@ -28,7 +28,7 @@ function crop_reset(message=null) {
 }
 
 function crop_slider() {
-	target = parseInt(document.getElementById("c_slider").value)
+	let target = parseInt(document.getElementById("c_slider").value)
 	if (target < 0 || target >= crop_data["images"].length) {
 		return
 	}
@@ -39,6 +39,19 @@ function crop_slider() {
 function crop_update_slider() {
 	document.getElementById("c_slider").max = crop_data["images"].length-1
 	document.getElementById("c_slider").value = crop_data["current"]
+}
+
+function crop_duplicate() {
+	let current = crop_data["images"][crop_data["current"]]
+	let target = JSON.parse(JSON.stringify(current)) // copy
+	target["duplicate"] = true
+	target["on_disk"] = false
+	target["ignored"] = false
+	delete target["crop_data"]
+	crop_data["images"].splice(crop_data["current"]+1, 0, target);
+	crop_status()
+	document.getElementById("c_status").innerHTML = "Duplicated as next image!"
+	document.getElementById("c_status").style.color = "orange"
 }
 
 function crop_enable_shortcuts() {
@@ -139,7 +152,6 @@ async function crop_json_load() {
 		crop_data["current"] = 0
 	}
 	document.getElementById("c_warn").innerHTML = data["crop"]["warn"]
-	crop_update_slider()
 	crop_status(true)
 }
 
@@ -185,7 +197,11 @@ function crop_update_status_text(target,data) {
 async function crop_update_current() {
 	let current = crop_data["images"][crop_data["current"]]
 	crop_update_status_text(document.getElementById("c_status"),current)
-	document.getElementById("c_filename").innerHTML = crop_data["images"][crop_data["current"]].filename
+	if (current.duplicate) {
+		document.getElementById("c_filename").innerHTML = "Duplicate of " + crop_data["images"][crop_data["current"]].filename
+	} else {
+		document.getElementById("c_filename").innerHTML = crop_data["images"][crop_data["current"]].filename
+	}
 
 	if (crop.image == undefined) {
 		return
@@ -197,7 +213,6 @@ async function crop_update_current() {
 		console.log("replace", crop_data["current"])
 		crop.replace(url)
 	}
-	crop_update_slider()
 	
 	if (current["crop_data"] === undefined) {
 		if (!document.getElementById("c_copy").checked) { 
@@ -285,6 +300,7 @@ function crop_status(reload=false){
 		current.innerHTML = ""
 		crop_status_current(current)
 	}
+	crop_update_slider()
 }
 
 function crop_next_image(set_crop=false, set_ignore=false) {
@@ -412,11 +428,33 @@ async function crop_init() {
 
 async function crop_apply() {
 	console.log("run")
-	crop_json_save()
+	// crop_json_save()
+	let perc = document.getElementById("c_perc")
 	let data = await fetch("/api/crop/run");
+	document.getElementById("c_warn").innerHTML = "Cropping. Don't touch anything!"
+	document.getElementById("c_apply").disabled = true
+	full_lock(true)
 	data = await data.json()
+	while (data["run"]) {
+		data = await fetch("/api/crop/run_poll");
+		data = await data.json()
+		if (data["max"]) {
+			console.log("poll update",data["current"],data["max"])
+			perc.max = data["max"]
+			perc.value = data["current"]
+		} else {
+			perc.max = 1
+			perc.value = 1
+		}
+		await new Promise(r => setTimeout(r, 500));
+	}
+	console.log("asdasd")
+	perc.max = 1
+	perc.value = 0
+	full_lock(false)
 	console.log(data);
-	document.getElementById("c_out").innerHTML = data["crop"]["warn"]
+	document.getElementById("c_warn").innerHTML = ""
+	document.getElementById("c_apply").disabled = false
 }
 
 function crop_revert() {

@@ -95,9 +95,14 @@
 		<button style="font-size:25px" id="c_save" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
 		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
 		<button style="font-size:25px" id="c_revert" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
-		<p class="tip"> Crop output will appear here (it might time out? refresh page) </p>
-		<pre id="c_out"></pre>
-		<pre id="c_warn" class="warn"></pre>
+		<br><br>
+		
+		<div id="c_crop_d">
+			<label for="c_perc">Write progress:</label>
+			<progress style="width:80%" id="c_perc" value="0" max="0"></progress>
+			<pre id="c_out"></pre>
+			<pre id="c_warn" class="warn"></pre>
+		</div>
 		<table>
 			<thead>
 				<tr>
@@ -123,6 +128,7 @@
 		<h3 id="c_file">Current Path: [<span id="c_filename">-</span>]</h3>
 		<h2>Current Image: <span id="c_status">-</span></h2>
 		<div id="cb_mask"> <!--
+			--><button style="background-image: url('assets/c_mask_dupe.png')" id="cm_dupe" onclick="crop_duplicate()"> Dupe image </button><!--
 			--><button style="background-image: url('assets/c_mask_copy.png')" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button><!--
 			--><button style="background-image: url('assets/c_mask_half.png')" id="cm_half" onclick="crop_mask_half()"> Half Mask </button><!--
 			--><button style="background-image: url('assets/c_mask_fill.png')" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button><!--

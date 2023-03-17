@@ -68,6 +68,9 @@ def crop_info():
 			n["on_disk"] = True
 		else:
 			n["on_disk"] = False
+		
+		if "duplicate" in i.keys():
+			n["duplicate"] = i["duplicate"]
 
 		nrm.append(n)
 	images = nrm
@@ -84,20 +87,35 @@ def crop_info():
 	data["crop"]["warn"] = warn
 	return data
 
-def crop_image(data):
-	old_path = os.path.join("0 - raw",data["filename"])
-	new_path = os.path.join("1 - cropped",data["filename"])
+def crop_image(data, history):
+	print("C:", data["filename"])
+	if "ignored" in data.keys() and data["ignored"]:
+		return
+	if "crop_data" not in data.keys():
+		return
+	
+	filename = data["filename"]
+	old_path = os.path.join("0 - raw",filename)
+	if filename in history:
+		# if not data["duplicate"]: # doesn't work - sort order not preserved
+			# print("file not a duplicate, but has duplicates?")
+		path, ext = os.path.splitext(data["filename"])
+		n = history.count(filename) + 1
+		new_path = os.path.join("1 - cropped",f"{path}_{n}{ext}")
+	else:
+		new_path = os.path.join("1 - cropped",filename)
+
 	if not os.path.isfile(old_path):
 		warn.append(f"missing {old_path}")
 		print(warn[-1])
 		return
-	if os.path.split(data["filename"])[0]:
+	if os.path.split(filename)[0]:
 		cat = os.path.split(new_path)[0]
 		if not os.path.isdir(cat):
 			os.mkdir(cat)
 	if os.path.isfile(new_path):
 		print(f"already exists {new_path}")
-		return
+		return filename
 	crop = data["crop_data"]
 	left = crop["x"]
 	top = crop["y"]
@@ -106,30 +124,4 @@ def crop_image(data):
 	img = pImage.open(old_path)
 	img = img.crop((left, top, right, bottom))
 	img.save(new_path)
-
-
-def apply_crop():
-	global warn
-	warn = []
-	with open("dataset.json") as f:
-		data = json.load(f)
-	if "crop" not in data.keys() or "images" not in data["crop"].keys():
-		return
-
-	valid = get_step_images(step_list[0])
-	cropped = 0
-	for i in data["crop"]["images"]:
-		if i["filename"] in [x.get_id() for x in valid]:
-			if "ignored" in i.keys() and i["ignored"]:
-				continue
-			if "crop_data" not in i.keys():
-				continue
-			print("CROPPING", i)
-			crop_image(i)
-			cropped += 1
-	if not warn:
-		warn = [f"cropped {cropped} images"]
-	return warn
-
-if __name__ == "__main__":
-	print(crop_info())
+	return filename
