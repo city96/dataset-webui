@@ -128,7 +128,8 @@ def get_folder_dataset(path):
 	if not dataset.name:
 		warn.append(f"dataset in {path} has no name/empty json")
 		print(warn[-1])
-		return
+		dataset.name = "Untitled"
+		# return
 
 	# progress aware folder count
 	for step in reversed(folder_list):
