@@ -46,6 +46,23 @@ function crop_disable_shortcuts() {
 	document.removeEventListener('keyup', crop_shortcuts, false);
 }
 
+function crop_auto_next_buttons() {
+	let state = document.getElementById("c_next").checked
+	let ignore = document.getElementById("c_ignore")
+	let crop = document.getElementById("c_crop")
+	if (state) {
+		ignore.innerHTML = "Ignore+Next"
+		crop.innerHTML = "Crop+Next"
+		ignore.style.backgroundImage = "url('assets/c_ignore_next.png')"
+		crop.style.backgroundImage = "url('assets/c_crop_next.png')"
+	} else {
+		ignore.innerHTML = "Ignore"
+		crop.innerHTML = "Set crop"
+		ignore.style.backgroundImage = "url('assets/c_ignore.png')"
+		crop.style.backgroundImage = "url('assets/c_crop.png')"
+	}
+}
+
 function crop_mask_prev() {
 	if (crop_data["current"] == 0) {
 		return
@@ -169,7 +186,22 @@ async function crop_update_current() {
 	}
 	
 	if (current["crop_data"] === undefined) {
-		console.log("no data")
+		if (!document.getElementById("c_copy").checked) { 
+			return
+		}
+		// find previous good
+		let data = null 
+		for (let i = crop_data["current"]; i >= 0; i--) {
+			data = crop_data["images"][i]["crop_data"]
+			if (data) {
+				break
+			}
+		}
+		if(!data) {
+			return
+		}
+		await new Promise(r => setTimeout(r, 50));
+		crop.setData(data)
 		return
 	}
 	await new Promise(r => setTimeout(r, 50)); // why ??
@@ -255,6 +287,11 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 		document.getElementById("c_save").disabled = false
 		document.getElementById("c_apply").disabled = true
 		document.getElementById("c_revert").disabled = false
+
+		if (!document.getElementById("c_next").checked) { // not auto next
+			crop_update_status_text(document.getElementById("c_status"),crop_data["images"][crop_data["current"]])
+			return
+		}
 	}
 
 	crop_update_status_text(document.getElementById("c_status_prev"),crop_data["images"][crop_data["current"]])

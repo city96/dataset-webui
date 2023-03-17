@@ -88,6 +88,10 @@
 			<img style="width: 50%;" src="assets/crop-shortcuts.png"> 
 		</div>
 		<hr>
+		<input type="checkbox" id="c_skip"> <a>Only show Uncropped</a><br>
+		<input type="checkbox" id="c_next" onchange="crop_auto_next_buttons()" checked> <a title="Go to next image after clicking ignore or crop">Auto next</a><br>
+		<input type="checkbox" id="c_copy"> <a title="Set the initial crop select window to the previous valid selection">Auto copy mask</a><br>
+		<hr>
 		<button style="font-size:25px" id="c_save" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
 		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
 		<button style="font-size:25px" id="c_revert" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
@@ -109,12 +113,9 @@
 			<tbody id="crop-table">
 			</tbody>
 		</table>
-		<br>
 		<h3>Prev. displayed Image: <span id="c_status_prev">-</span></h3>
 		<h3 id="c_file">Current Path: [<span id="c_filename">-</span>]</h3>
 		<h2>Current Image: <span id="c_status">-</span></h2>
-		<input type="checkbox" id="c_skip"> Only show Uncropped 
-		<br><br>
 		<div id="cb_mask"> <!--
 			--><button style="background-image: url('assets/c_mask_copy.png')" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button><!--
 			--><button style="background-image: url('assets/c_mask_half.png')" id="cm_half" onclick="crop_mask_half()"> Half Mask </button><!--
@@ -124,8 +125,8 @@
 		<div id="cb_img"> <!--
 			--><button style="background-image: url('assets/c_prev.png')" id="c_prev" onclick="crop_prev_image()" title="Go to previous image, don't save current selection"> Prev </button><!--
 			--><button style="background-image: url('assets/c_first.png')" id="c_first" onclick="crop_first_image()" title="Go to first image, don't save current selection"> First </button><!--
-			--><button style="background-image: url('assets/c_ignore.png')" id="c_ignore" onclick="crop_next_image(false,true)" title="Go to next image, mark current as ignored."> Ignore+Next </button><!--
-			--><button style="background-image: url('assets/c_crop.png')" id="c_crop" onclick="crop_next_image(true)" title="Go to next image, save current selected area"> Crop+Next </button><!--
+			--><button style="background-image: url('assets/c_ignore_next.png')" id="c_ignore" onclick="crop_next_image(false,true)" title="Go to next image, mark current as ignored."> Ignore+Next </button><!--
+			--><button style="background-image: url('assets/c_crop_next.png')" id="c_crop" onclick="crop_next_image(true)" title="Go to next image, save current selected area"> Crop+Next </button><!--
 			--><button style="background-image: url('assets/c_next.png')" id="c_next" onclick="crop_next_image()" title="Go to next, don't save current selection"> Next </button><!--
 		--></div>
 		<div id="crop-img-div">
