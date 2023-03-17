@@ -79,7 +79,7 @@ def crop_info():
 
 	if data["crop"]["current"] > len(images):
 		data["crop"]["current"] = 0
-	data["crop"]["images"] = images
+	data["crop"]["images"] = sorted(images, key=lambda x: x["filename"])
 	data["crop"]["missing"] = missing
 	data["crop"]["warn"] = warn
 	return data
@@ -130,3 +130,6 @@ def apply_crop():
 	if not warn:
 		warn = [f"cropped {cropped} images"]
 	return warn
+
+if __name__ == "__main__":
+	print(crop_info())
