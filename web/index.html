@@ -30,8 +30,9 @@
 			<label>Webui URL =</label>
 			<span><input type="text" id="sts_webui" placeholder="http://127.0.0.1:7860/"> </input></span>
 		</div>
-		<button id="sts_check" onclick="setting_webui_check()" title="Test connection to the webui"> Test </button>
-		<pre id="sts_check">Connection test result will appear here</pre>
+		<br>
+		<a>Check connection (make sure to click 'save' after testing) </a><button id="sts_check" onclick="setting_webui_check()" title="Test connection to the webui"> Check </button>
+		<pre id="sts_check_out">Connection test result will appear here</pre>
 		<div class="tip">
 		<p> The URL of the Automatic1111 webui. This is used by multiple things, including the autotagger.</p>
 		<p> Using this feature requires some modifications to your webui: </p>

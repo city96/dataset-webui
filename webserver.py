@@ -14,6 +14,7 @@ from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from fix_tags import tag_info, tag_run
+from sd_connector import sd_api_check
 
 app = web.Application()
 
@@ -58,15 +59,8 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
-async def api_settings(request):
-	"""Save/load settings (or return sane defaults)"""
-	if request.match_info['command'] == "save":
-		if request.body_exists:
-			new = await request.read()
-			new = json.loads(new)
-			with open("settings.json", "w") as f:
-				strdata = json.dumps(new, indent=2)
-				f.write(strdata)
+def get_settings():
+	"""Load saved settings (or return sane defaults)"""
 	data = {"version" : "0.1"} # might be useful later
 	if os.path.isfile("settings.json"):
 		with open("settings.json") as f:
@@ -74,7 +68,31 @@ async def api_settings(request):
 	# defaults
 	if "editor" not in data.keys(): data["editor"] = "mspaint"
 	if "webui_url" not in data.keys(): data["webui_url"] = "http://127.0.0.1:7860/"
+	return data
 
+async def api_sd_connector(request):
+	"""Abstract endpoints for A1111 webui [handled by sd_connector.py]"""
+
+	if "url" in request.rel_url.query.keys():
+		webui_url = request.rel_url.query['url']
+	else:
+		webui_url = get_settings()["webui_url"]
+
+	if request.match_info['endpoint'] == "check":
+		data = sd_api_check(webui_url)
+
+	return web.json_response(data)
+
+async def api_settings(request):
+	"""Save/load settings"""
+	if request.match_info['command'] == "save":
+		if request.body_exists:
+			new = await request.read()
+			new = json.loads(new)
+			with open("settings.json", "w") as f:
+				strdata = json.dumps(new, indent=2)
+				f.write(strdata)
+	data = get_settings()
 	return web.json_response(data)
 
 async def api_dataset(request):
@@ -193,6 +211,7 @@ app.add_routes([web.get('/', index),
 				web.get('/assets/{name}', handle),
 				web.get('/scripts/{name}', handle),
 				web.get('/img/{name:.*}', handle_image),
+				web.get('/api/sd/{endpoint}/{command}', api_sd_connector),
 				web.get('/api/settings/{command}', api_settings),
 				web.post('/api/settings/{command}', api_settings),
 				web.get('/api/dataset/{command}', api_dataset),
