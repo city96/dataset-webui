@@ -9,6 +9,7 @@ __pycache__/
 datasets/
 dataset.ini
 dataset.json
+settings.json
 venv
 external/
 guide.md

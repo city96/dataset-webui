@@ -58,6 +58,25 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
+async def api_settings(request):
+	"""Save/load settings (or return sane defaults)"""
+	if request.match_info['command'] == "save":
+		if request.body_exists:
+			new = await request.read()
+			new = json.loads(new)
+			with open("settings.json", "w") as f:
+				strdata = json.dumps(new, indent=2)
+				f.write(strdata)
+	data = {"version" : "0.1"} # might be useful later
+	if os.path.isfile("settings.json"):
+		with open("settings.json") as f:
+			data = json.load(f)
+	# defaults
+	if "editor" not in data.keys(): data["editor"] = "mspaint"
+	if "webui_url" not in data.keys(): data["webui_url"] = "http://127.0.0.1:7860/"
+
+	return web.json_response(data)
+
 async def api_dataset(request):
 	"""Dataset operations [handled by dataset_manager.py]"""
 	path = None
@@ -174,6 +193,8 @@ app.add_routes([web.get('/', index),
 				web.get('/assets/{name}', handle),
 				web.get('/scripts/{name}', handle),
 				web.get('/img/{name:.*}', handle_image),
+				web.get('/api/settings/{command}', api_settings),
+				web.post('/api/settings/{command}', api_settings),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/dataset/{command}', api_dataset),
 				web.get('/api/status', api_status),

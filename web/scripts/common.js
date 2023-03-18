@@ -9,6 +9,7 @@ function lock_update(disabled=true) {
 // Update/initialize all fields on first load
 function update_all() {
 	lock_update()
+	setting_update()
 	status_update()
 	crop_init()
 	sort_cat_update()
