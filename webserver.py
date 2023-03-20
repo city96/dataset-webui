@@ -70,8 +70,33 @@ def get_settings():
 	if "webui_url" not in data.keys(): data["webui_url"] = "http://127.0.0.1:7860/"
 	return data
 
+autotag_status = {"run":False}
+async def api_sd_autotag_run(overwrite):
+	"""Apply crop. run this with async!! [handled by crop.py]"""
+	global autotag_status
+	from sd_connector import sd_tag_image
+	from status import get_step_images
+
+	url = get_settings()["webui_url"]
+
+	autotag_status = {"run":True}
+	valid = get_step_images(step_list[2])
+	autotag_status["current"] = 0
+	autotag_status["max"] = len(valid)
+	for i in valid:
+		await asyncio.sleep(0.001) # Context switch, don't remove
+		data = sd_tag_image("http://localhost:7860/",i,overwrite)
+		autotag_status["current"] += 1
+		autotag_status["url"] = "/img/" + i.path.replace(os.sep,"/")
+		if "caption" not in data.keys():
+			continue
+		autotag_status["caption"] = data["caption"]
+		autotag_status["image"] = data["image"]
+	autotag_status = {"run":False}
+
 async def api_sd_connector(request):
 	"""Abstract endpoints for A1111 webui [handled by sd_connector.py]"""
+	data = {}
 
 	if "url" in request.rel_url.query.keys():
 		webui_url = request.rel_url.query['url']
@@ -80,6 +105,19 @@ async def api_sd_connector(request):
 
 	if request.match_info['endpoint'] == "check":
 		data = sd_api_check(webui_url)
+	elif request.match_info['endpoint'] == "autotag":
+		global autotag_status
+		if request.match_info['command'] == "run":
+			if "overwrite" in request.rel_url.query.keys():
+				overwrite = request.rel_url.query['overwrite'].lower() == "true"
+			else: overwrite = False
+			if not autotag_status["run"]:
+				print("Start task")
+				asyncio.create_task(api_sd_autotag_run(overwrite))
+				autotag_status = {"run":True}
+				return web.json_response(autotag_status)
+		elif request.match_info['command'] == "run_poll":
+			return web.json_response(autotag_status)
 
 	return web.json_response(data)
 

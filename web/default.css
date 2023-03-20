@@ -83,6 +83,9 @@ label {
 
 .tip {
 	color: var(--info);
+	word-wrap: anywhere;
+	max-width: 700px;
+	text-align: justify;
 }
 
 .warn {
@@ -302,4 +305,18 @@ img {
 #sort-buttons:hover .cat:not(:hover) {
 	background-color: #000 !important;
 	color: #666;
+}
+
+#ta_img {
+	display: inline-block;
+	width: 300px;
+	height: 300px;
+}
+
+#ta_tags {
+	width: 55%;
+	height: 300px;
+	float: right;
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
