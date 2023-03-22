@@ -48,8 +48,8 @@
 	<script src="scripts/settings.js"></script> 
 
 <!-- Dataset functions -->
-	<div class="category">
-	<h1> Datasets </h1>
+<div class="category">
+<h1> Datasets </h1>
 	<!-- all -->
 	<div id="dataset-div" class="module">
 		<h2>All datasets:</h2>
@@ -82,9 +82,9 @@
 		<button id="d_update" style="float:right" onclick="dataset_save()"> Update Dataset Metadata </button>
 		</div>
 	</div>
-	</div>
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/dataset.js"></script> 
+</div>
 
 
 <!-- Status functions -->
@@ -110,6 +110,25 @@
 
 
 <!-- Cropping -->
+<div class="category">
+<h1> Cropping </h1>
+	<!-- Crop writer -->
+	<div id="crop-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="crop-write-float-warn"></p>
+		<button style="font-size:25px" id="c_apply" onclick="lock('sort-cat-div'); crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
+		
+		<p class="tip"> This will take the images in "0 - raw", crop them based on the settings below <br> and write them to "1 - cropped" </p>
+		
+		<div id="c_crop_d">
+			<label for="c_perc">Write progress:</label>
+			<progress style="width:80%" id="c_perc" value="0" max="0"></progress>
+			<pre id="c_out"></pre>
+		</div>
+		
+	</div>
+
+	<!-- web cropping -->
 	<div id="crop-div" class="module">
 		<h2>Cropping:</h2>
 		<p class="warn float-warn" id="crop-float-warn"></p>
@@ -130,15 +149,7 @@
 		<hr>
 		<button style="font-size:25px" id="c_save" class="save unlock" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
 		<button style="font-size:25px" id="c_revert" class="revert unlock" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
-		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
 		<br><br>
-		
-		<div id="c_crop_d">
-			<label for="c_perc">Write progress:</label>
-			<progress style="width:80%" id="c_perc" value="0" max="0"></progress>
-			<pre id="c_out"></pre>
-			<pre id="c_warn" class="warn"></pre>
-		</div>
 		<table>
 			<thead>
 				<tr>
@@ -154,6 +165,7 @@
 			<tbody id="crop-table">
 			</tbody>
 		</table>
+		<pre id="c_warn" class="warn"></pre>
 		<hr>
 		<div>
 			<input id="c_slider" type="range" min=0 max=1 style="width: 80%; display: inline-block">
@@ -182,11 +194,19 @@
 	</div>
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/crop.js"></script>
-
+</div>
 
 <!-- Sorting functions -->
-	<div class="category">
-	<h1> Sorting </h1>
+<div class="category">
+<h1> Sorting </h1>
+	<!-- Sort writer -->
+	<div id="sort-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="sort-write-float-warn"></p>
+		<button style="font-size:25px" id="sw_apply" onclick="sort_apply()" disabled> Apply Sort </button>
+		<p class="tip"> This will take the images in "1 - cropped" and <br> copy them into "2 - sorted based on the categories set below. </p>
+		<pre id="s_out"></pre>
+	</div>
 
 	<!-- Category -->
 	<div id="sort-cat-div" class="module">
@@ -194,8 +214,8 @@
 		<p class="warn float-warn" id="sort-cat-float-warn"></p>
 		<button class="update" onclick="sort_cat_update()"> ⭮ </button>
 		
-		<button style="font-size:25px" id="sc_save" class="save unlock" onclick="sort_cat_json_save();unlock()" disabled> Save </button>
-		<button style="font-size:25px" id="sc_revert" class="revert unlock" onclick="sort_cat_update();unlock()" disabled> Revert Changes </button>
+		<button style="font-size:25px" id="sc_save" class="save unlock" onclick="sort_cat_json_save()" disabled> Save </button>
+		<button style="font-size:25px" id="sc_revert" class="revert unlock" onclick="sort_cat_update()" disabled> Revert Changes </button>
 		<br><br>
 
 		<table>
@@ -230,8 +250,8 @@
 		<p class="warn float-warn" id="sort-float-warn"></p>
 		<button class="update" onclick="sort_update()"> ⭮ </button>
 		
-		<button style="font-size:25px" id="s_save" class="save unlock" onclick="sort_json_save();unlock()" disabled> Save </button>
-		<button style="font-size:25px" id="s_revert" class="revert unlock" onclick="sort_update();unlock()" disabled> Revert Changes </button>
+		<button style="font-size:25px" id="s_save" class="save unlock" onclick="sort_json_save()" disabled> Save </button>
+		<button style="font-size:25px" id="s_revert" class="revert unlock" onclick="sort_update()" disabled> Revert Changes </button>
 		<br><br>
 		
 		<a style="font-size: 20px"> Current: <label id="sort_tcat" class="tcat"> - </label></a>
@@ -265,16 +285,7 @@
 	</div>
 	<!-- LOAD SCRIPT -->
 	<!-- <script src="scripts/asort.js"></script> -->
-	
-	<!-- Sort writer -->
-	<div id="sort-write" class="module">
-		<h2>Write to disk:</h2>
-		<p class="warn float-warn" id="sort-write-float-warn"></p>
-		<button style="font-size:25px" id="sw_apply" onclick="sort_apply()" disabled> Apply Sort </button>
-		<p class="tip"> This will take the images in "1 - cropped" and <br> copy them into "2 - sorted based on the categories set above. </p>
-		<pre id="s_out"></pre>
-	</div>
-	</div>
+</div>
 
 
 <!-- Tags -->

@@ -137,11 +137,14 @@ async function sort_update() {
 		document.getElementById("sort-img-grid").innerHTML = ""
 		document.getElementById("sw_apply").disabled = true
 		
+		document.getElementById("sw_apply").disabled = true
 		disable_module("sort-div", "Nothing to load from disk")
+		disable_module("sort-write", "Nothing to load from disk")
 		return
 	} else {
 		document.getElementById("sw_apply").disabled = false
 		enable_module("sort-div")
+		enable_module("sort-write")
 	}
 	sort_data = data.sort
 	if (!sort_tcat) {
@@ -149,6 +152,7 @@ async function sort_update() {
 	}
 	sort_buttons()
 	sort_img_table()
+	unlock()
 }
 
 async function sort_json_save() {
@@ -173,6 +177,7 @@ async function sort_json_save() {
 
 async function sort_apply() {
 	// global lock
+	document.getElementById("sw_apply").disabled = true
 	lock('sort-write')
 	save_lock()
 
@@ -185,10 +190,16 @@ async function sort_apply() {
 		document.getElementById("s_out").innerHTML = ""
 	}
 	// global lock
-	unlock()
 	save_lock(false)
+	unlock()
+	document.getElementById("sw_apply").disabled = false
+
+	// update
 	sort_update()
 	sort_cat_update()
+
+	// propagate
+	update_all()
 }
 
 function s_prev() {

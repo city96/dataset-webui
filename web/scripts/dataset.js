@@ -76,11 +76,11 @@ function dataset_json_parse() { // Parse dataset metadata from page
 
 async function dataset_update() { // Get active+current dataset metadata
 	console.log("Update datasets")
-	lock_update()
+	save_lock()
 	let data = await fetch("/api/dataset/info");
 	data = await data.json()
 	dataset_updateTable(data["datasets"])
-	lock_update(false)
+	save_lock(false)
 }
 
 async function dataset_store(path) { // Move current dataset to datasets folder

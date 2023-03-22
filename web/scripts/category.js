@@ -108,6 +108,7 @@ async function sort_cat_update(new_cat = null) {
 	}
 	if (new_cat) { data["sort"]["categories"].push(new_cat) }
 	sort_cat_updateTable(data["sort"]["categories"])
+	if (!new_cat) {unlock()}
 }
 
 async function sort_cat_json_save() {

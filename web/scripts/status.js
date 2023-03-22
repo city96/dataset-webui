@@ -44,26 +44,25 @@ function status_updateTable(steps) {
 
 async function status_update(){
 	console.log("Update page/json")
-	lock_update()
+	save_lock()
 	let data = await fetch("/api/status");
 	data = await data.json()
 	
 	if (data == undefined || data.status == undefined || data.status.steps.length == 0) {
 		if (data.status.warn.length > 0) {
-			status_disable(data.status.warn)
+			disable_module("status-div", data.status.warn)
 		} else {
-			status_disable("Nothing to load from disk")
+			disable_module("status-div", "Nothing to load from disk")
 		}
-		lock_update(false)
+		save_lock(false)
+		document.getElementById("status-table").innerHTML = "";
 		return
 	} else {
-		document.getElementById("status-div").classList.remove("locked");
-		document.getElementById("status-float-warn").style.display = "none"; 
-		disabled = disabled.filter(function(i){return (i!=="status-div")})
+		enable_module("status-div")
 	}
 	
 	status_updateTable(data["status"]["steps"])
-	lock_update(false)
+	save_lock(false)
 }
 
 function status_disable(message=null) {
