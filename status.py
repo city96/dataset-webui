@@ -2,7 +2,7 @@
 # Return current dataset status + info from json
 import os
 import json
-from common import Image, Tag, Category, step_list
+from common import Image, Tag, Category, step_list, rating_list
 
 # global list of warnings
 warn = []
@@ -41,33 +41,41 @@ def get_tags_from_json(path):
 			t = Tag()
 			t.name = name
 			t.position = (confidence*10)+5
+			t.confidence = round(confidence,4)
 			tags.append(t)
 	return tags
 
 def get_image_tags(path):
 	"""returns txt file path and tags or none for image path"""
 	tags = []
-	
 	# image.txt (webui tagger)
 	file = os.path.splitext(path)[0] + ".txt"
 	if os.path.isfile(file):
 		tags = get_tags_from_file(file)
-
+		return (file, tags)
 	# image.json (builtin tagger)
 	file = os.path.splitext(path)[0] + ".json"
 	if os.path.isfile(file):
 		tags = get_tags_from_json(file)
-
+		return (file, tags)
 	# image.png.txt (gallery-dl)
 	file = path+".txt"
 	if os.path.isfile(file):
 		tags = get_tags_from_file(file)
+		return (file, tags)
+	# None
+	return (None, [])
 
-	return (file, tags)
+def get_image_rating(tags):
+	"""split ratings from regular tags"""
+	rating = {}
+	new_tags = [x for x in tags if x.name not in rating_list]
+	rating = {x.name : x.confidence for x in tags if x.name in rating_list}
+	return (rating, new_tags)
 
-def get_folder_images(root_path, category, tag_only=False):
+def get_folder_images(root_path, category, tag_folder=None):
 	"""returns list of image objects from a folder, set category"""
-	if not os.path.isdir(root_path):
+	if not os.path.isdir(root_path):	
 		return
 	images = []
 	for filename in os.listdir(root_path):
@@ -75,13 +83,16 @@ def get_folder_images(root_path, category, tag_only=False):
 		if '.orphaned' in path:
 			continue
 		ext = os.path.splitext(filename)[1]
-		if ext in [".png",".jpg",".jpeg",".webp"] or ext in [".txt",".json"] and tag_only:
+		if ext in [".png",".jpg",".jpeg",".webp"]:
 			image = Image()
 			image.filename = filename
 			image.path = path
 			image.category = category
-			image.txt, image.tags = get_image_tags(path)
-			images.append(image)
+			tag_path = os.path.join(tag_folder,filename) if tag_folder else path
+			image.txt, image.tags = get_image_tags(tag_path)
+			image.rating, image.tags = get_image_rating(image.tags)
+			if tag_folder and image.tags or not tag_folder:
+				images.append(image)
 		elif os.path.isdir(path):
 			if not category:
 				continue
@@ -96,10 +107,10 @@ def get_folder_images(root_path, category, tag_only=False):
 			continue
 	return images
 
-def get_step_images(folder,tag_only=False):
+def get_step_images(folder,tag_folder=None):
 	"""returns list of image objects for a given step (folder name)"""
 	images = []
-	images += get_folder_images(folder,None,tag_only) # uncategorized
+	images += get_folder_images(folder,None,tag_folder) # uncategorized
 
 	for category in os.listdir(folder):
 		if os.path.isdir(os.path.join(folder,category)):
@@ -109,7 +120,8 @@ def get_step_images(folder,tag_only=False):
 				cat = Category(name,weight)
 			except:
 				cat = Category(category)
-			images += get_folder_images(os.path.join(folder,category),cat,tag_only)
+			tag_path = os.path.join(tag_folder,category) if tag_folder else None
+			images += get_folder_images(os.path.join(folder,category),cat,tag_path)
 	return images
 
 def get_step_stats(folder):
@@ -118,7 +130,10 @@ def get_step_stats(folder):
 		"image_count" : {},
 		"tag_count" : {},
 	}
-	images = get_step_images(folder,True)
+	if folder in step_list[3:5]:
+		images = get_step_images(step_list[2],folder)
+	else:
+		images = get_step_images(folder)
 	data["image_count"]["total"] = len(images)
 	data["image_count"]["uncategorized"] = sum([x.category == None for x in images])
 	tags = []
@@ -157,3 +172,4 @@ def get_status():
 
 if __name__ == "__main__":
 	print(json.dumps(get_status(),indent=2))
+	# json.dumps(get_status(),indent=2)

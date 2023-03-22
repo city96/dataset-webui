@@ -11,6 +11,13 @@ step_list = [
 	"5 - out",
 ]
 
+rating_list = [
+	"general",
+	"sensitive",
+	"questionable",
+	"explicit",
+]
+
 class Image:
 	"""class to store image attributes"""
 	category = None
@@ -18,6 +25,7 @@ class Image:
 	path = None # full path to file
 	txt = None # full path to file
 	tags = []
+	rating = None
 	def __int__(self):
 		return len(self.tags)
 	def __str__(self):
@@ -43,6 +51,7 @@ class Tag:
 	"""class to store tag attributes"""
 	name = None
 	position = 10
+	confidence = 1.0
 	def __str__(self):
 		return f"{self.name}"
 	def __repr__(self):
