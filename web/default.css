@@ -119,6 +119,10 @@ label {
 	user-select: auto;
 }
 
+.save, .revert {
+	font-size:25px
+}
+
 /* Table */
 table {
 	font-family: arial, sans-serif;
