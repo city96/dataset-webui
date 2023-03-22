@@ -12,8 +12,8 @@
 <!-- Settings -->
 	<div id="dataset-div" class="module">
 		<h2> Settings </h2>
-		<button style="font-size:25px" id="sts_save" onclick="setting_save()" disabled> Save </button>
-		<button style="font-size:25px" id="sts_revert" onclick="setting_update()" disabled> Revert changes</button>
+		<button style="font-size:25px" class="save unlock" id="sts_save" onclick="setting_save()" disabled> Save </button>
+		<button style="font-size:25px" class="revert unlock" id="sts_revert" onclick="setting_update()" disabled> Revert changes</button>
 		<hr>
 		<!-- Editor - NOT IMPLEMENTED YET -->
 		<div style="display: none"> 
@@ -128,9 +128,9 @@
 		<input type="checkbox" id="c_next" onchange="crop_auto_next_buttons()" checked> <a title="Go to next image after clicking ignore or crop">Auto next</a><br>
 		<input type="checkbox" id="c_copy"> <a title="Set the initial crop select window to the previous valid selection">Auto copy mask</a><br>
 		<hr>
-		<button style="font-size:25px" id="c_save" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
+		<button style="font-size:25px" id="c_save" class="save unlock" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
+		<button style="font-size:25px" id="c_revert" class="revert unlock" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
 		<button style="font-size:25px" id="c_apply" onclick="crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
-		<button style="font-size:25px" id="c_revert" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
 		<br><br>
 		
 		<div id="c_crop_d">
@@ -194,8 +194,8 @@
 		<p class="warn float-warn" id="sort-cat-float-warn"></p>
 		<button class="update" onclick="sort_cat_update()"> ⭮ </button>
 		
-		<button style="font-size:25px" id="sc_save" onclick="sort_cat_json_save(); sort_cat_lock(false)" disabled> Save </button>
-		<button style="font-size:25px" id="sc_revert" onclick="sort_cat_update(); sort_cat_lock(false)" disabled> Revert Changes </button>
+		<button style="font-size:25px" id="sc_save" class="save unlock" onclick="sort_cat_json_save();unlock()" disabled> Save </button>
+		<button style="font-size:25px" id="sc_revert" class="revert unlock" onclick="sort_cat_update();unlock()" disabled> Revert Changes </button>
 		<br><br>
 
 		<table>
@@ -211,15 +211,15 @@
 			<tbody id="sort-cat-table">
 			</tbody>
 		</table>
-		<br>
+		<br>+
 		<label>Add new category:</label>
 		<span><input type="text" id="sc_new_name" placeholder="category name"> </input></span>
-		<button id="sc_new_add" onclick="sort_cat_add()"> Add category </button>
+		<button id="sc_new_add" onclick="lock('sort-cat-div');sort_cat_add()"> Add category </button>
 
 		<pre class="tip">To remove an existing category, assign all items in that category to another one.</pre>
 		<pre class="tip">Categories with "keep" checked will never be removed.</pre>
 		
-		<label>Try to load data from output (dangerous):</label> <button id="sc_load" onclick="sort_cat_disk(); sort_cat_lock()" disabled> Load from output </button>
+		<label>Try to load data from output (dangerous):</label> <button id="sc_load" onclick="lock('sort-cat-div');sort_cat_disk()" disabled> Load from output </button>
 	</div>
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/category.js"></script>
@@ -230,12 +230,9 @@
 		<p class="warn float-warn" id="sort-float-warn"></p>
 		<button class="update" onclick="sort_update()"> ⭮ </button>
 		
-		<button style="font-size:25px" id="s_save" onclick="sort_json_save(); sort_lock(false)" disabled> Save </button>
-		<button style="font-size:25px" id="s_apply" onclick="sort_apply()" disabled> Apply Sort </button>
-		<button style="font-size:25px" id="s_revert" onclick="sort_update()" disabled> Revert Changes </button>
+		<button style="font-size:25px" id="s_save" class="save unlock" onclick="sort_json_save();unlock()" disabled> Save </button>
+		<button style="font-size:25px" id="s_revert" class="revert unlock" onclick="sort_update();unlock()" disabled> Revert Changes </button>
 		<br><br>
-		
-		<pre id="s_out"></pre>
 		
 		<a style="font-size: 20px"> Current: <label id="sort_tcat" class="tcat"> - </label></a>
 		<br><br>
@@ -249,7 +246,6 @@
 			<tbody id="sort-img-grid">
 			</tbody>
 		</table>
-	</div>
 	</div>
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/sort.js"></script>
@@ -267,9 +263,18 @@
 		<img id="sa_img" style="display: none" src="/assets/placeholder.png"></img>
 		<canvas id="sa_canvas" style="width: 250px"></canvas>
 	</div>
-	</div>
 	<!-- LOAD SCRIPT -->
 	<!-- <script src="scripts/asort.js"></script> -->
+	
+	<!-- Sort writer -->
+	<div id="sort-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="sort-write-float-warn"></p>
+		<button style="font-size:25px" id="sw_apply" onclick="sort_apply()" disabled> Apply Sort </button>
+		<p class="tip"> This will take the images in "1 - cropped" and <br> copy them into "2 - sorted based on the categories set above. </p>
+		<pre id="s_out"></pre>
+	</div>
+	</div>
 
 
 <!-- Tags -->
@@ -297,7 +302,7 @@
 		<img id="ta_img" src="/assets/placeholder.png"></img>
 		<div id="ta_tags">
 			<div>
-			<h3> Output (not realtime) </h3>
+			<h3> Output (updated every .5 sec) </h3>
 				<table>
 				<thead>
 					<tr>

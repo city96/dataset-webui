@@ -17,13 +17,14 @@ function tag_auto_poll_table(tags) {
 
 async function tag_auto_run() {
 	console.log("run")
+	// global lock
+	lock('tag-auto-div');
+	save_lock()
+	
 	let perc = document.getElementById("ta_perc")
 	let ow = document.getElementById("ta_ow").checked
 	let data = await fetch("/api/sd/autotag/run?overwrite="+ow);
 	document.getElementById("ta_run").disabled = true
-	document.getElementById("ta_conf").disabled = true
-	document.getElementById("ta_ow").disabled = true
-	full_lock(true)
 	data = await data.json()
 	while (data["run"]) {
 		data = await fetch("/api/sd/autotag/run_poll");
@@ -50,10 +51,11 @@ async function tag_auto_run() {
 	}
 	perc.max = 1
 	perc.value = 0
-	full_lock(false)
 	document.getElementById("ta_img").src = "/assets/placeholder.png"
 	document.getElementById("ta_table").innerHTML = "";
 	document.getElementById("ta_run").disabled = false
-	document.getElementById("ta_conf").disabled = false
-	document.getElementById("ta_ow").disabled = false
+	
+	// global lock
+	unlock()
+	save_lock(false)
 }

@@ -35,7 +35,7 @@ function sort_buttons() {
 }
 
 function sort_img_set_cat(index) {
-	sort_lock()
+	lock("sort-div")
 	let image = sort_data.images[index]
 	image.category = sort_tcat
 	sort_img_table()
@@ -135,15 +135,13 @@ async function sort_update() {
 	if (!data || !data.sort || !data.sort.categories || !data.sort.images || data.sort.images.length == 0) {
 		document.getElementById("sort-buttons").innerHTML = ""
 		document.getElementById("sort-img-grid").innerHTML = ""
-		document.getElementById("sort-float-warn").style.display = "block"; 
-		document.getElementById("sort-float-warn").innerHTML = "Nothing to load from disk"
-		document.getElementById("sort-div").classList.add("locked");
-		if (!disabled.includes("sort-div")) { disabled.push("sort-div") }
+		document.getElementById("sw_apply").disabled = true
+		
+		disable_module("sort-div", "Nothing to load from disk")
 		return
 	} else {
-		document.getElementById("sort-div").classList.remove("locked");
-		document.getElementById("sort-float-warn").style.display = "none";
-		disabled = disabled.filter(function(i){return (i!=="sort-div")})
+		document.getElementById("sw_apply").disabled = false
+		enable_module("sort-div")
 	}
 	sort_data = data.sort
 	if (!sort_tcat) {
@@ -151,14 +149,11 @@ async function sort_update() {
 	}
 	sort_buttons()
 	sort_img_table()
-	sort_lock(false)
 }
 
 async function sort_json_save() {
 	console.log("Save sort/json")
-	document.getElementById("s_save").disabled = true;
-	document.getElementById("s_apply").disabled = true;
-	document.getElementById("s_revert").disabled = true;
+	save_lock()
 	
 	let data = sort_data
 	data["categories"] = null; // don't update
@@ -170,16 +165,16 @@ async function sort_json_save() {
 		},
 		body: JSON.stringify({"sort" : data})
 	})
+	save_lock(false)
 	sort_update()
 	sort_cat_update()
 	disk = null
 }
 
 async function sort_apply() {
-	document.getElementById("s_save").disabled = true;
-	document.getElementById("s_apply").disabled = true;
-	document.getElementById("s_revert").disabled = true;
-	lock_all(["sort-div"],"You have unsaved changes")
+	// global lock
+	lock('sort-write')
+	save_lock()
 
 	let data = await fetch("/api/sort/write");
 	data = await data.json()
@@ -189,10 +184,11 @@ async function sort_apply() {
 	} else {
 		document.getElementById("s_out").innerHTML = ""
 	}
-
+	// global lock
+	unlock()
+	save_lock(false)
 	sort_update()
 	sort_cat_update()
-	unlock_all()
 }
 
 function s_prev() {
@@ -209,14 +205,4 @@ function s_next() {
 	}
 	sort_current = sort_current + (sort_grid*sort_grid)
 	sort_img_table()
-}
-
-function sort_lock(state=true) { // unsaved changes
-	if (locked != state) {
-		if (state) { lock_all(["sort-div"],"You have unsaved changes") }
-		else { unlock_all() }
-	}
-	document.getElementById("s_save").disabled = !state;
-	document.getElementById("s_apply").disabled = state;
-	document.getElementById("s_revert").disabled = !state;
 }
