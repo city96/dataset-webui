@@ -13,7 +13,7 @@ from category import category_info
 from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
-from fix_tags import tag_info, tag_run
+from tags import tag_fix
 from sd_connector import sd_api_check
 
 app = web.Application()
@@ -238,9 +238,9 @@ async def api_sort(request):
 
 async def api_tags(request):
 	if request.match_info['command'] == "run":
-		data = tag_run(True,True)
+		data = tag_fix(True)
 	else:
-		data = tag_info()
+		data = tag_fix()
 	return web.json_response(data)
 
 app.add_routes([web.get('/', index),

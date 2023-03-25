@@ -40,12 +40,25 @@ class Image:
 				uid = uid.lstrip(os.path.sep) # \\
 				break
 		return uid
-		
-	# def get_cat_id(self):
-		# if self.category:
-			# return(os.path.join(str(self.category), self.filename))
-		# else:
-			# return(self.filename)
+	def get_step_path(self, step):
+		if step in step_list:
+			folder = step
+		elif type(step) == int and step < len(step_list):
+			folder = step_list[step]
+		else:
+			print(f"external path '{step}'")
+			folder = step
+	
+		old = self.path
+		new = None
+		for i in step_list:
+			if old.startswith(i):
+				new = old.lstrip(i)
+				new = new.lstrip(os.path.sep) # \\
+				break
+		if not new: return None
+		path = os.path.join(folder,new)
+		return path
 
 class Tag:
 	"""class to store tag attributes"""

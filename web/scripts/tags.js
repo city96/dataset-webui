@@ -204,38 +204,6 @@ function image_filter_rule_del() {
 	}
 }
 
-function image_category_rule_add(category, tags) {
-	var table = document.getElementById("t_image_category_rules")
-	r = table.insertRow();
-
-	var c = r.insertCell(0)
-	c.innerHTML = "Image category rule"
-
-	var c = r.insertCell(1)
-	var i = document.createElement("input")
-	i.placeholder = "lum"
-	if (category) {
-		i.value = category
-	}
-	c.appendChild(i)
-
-	var c = r.insertCell(2)
-	var i = document.createElement("input")
-	i.placeholder = "1girl, aqua hair, oni horns"
-	if (tags) {
-		i.value = tags
-	}
-	c.appendChild(i)
-}
-
-function image_category_rule_del() {
-	var table = document.getElementById("t_image_category_rules")
-	let lastRow = table.rows.length-1
-	if (lastRow >= 0) {
-		table.removeChild(table.rows[lastRow])
-	}
-}
-
 function tags_disabled(state) {
 	if (state) {
 		document.getElementById("tag-div").style.color = "#888"
@@ -272,7 +240,7 @@ function tags_disabled(state) {
 	document.getElementById("t_image_category_rule_add").disabled = state;
 	document.getElementById("t_image_category_rule_del").disabled = state;
 	
-	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules', 't_image_category_rules'].forEach(function(id){
+	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules'].forEach(function(id){
 		var table = document.getElementById(id)
 		let lastRow = table.rows.length-1
 		while (lastRow >= 0) {
@@ -298,7 +266,7 @@ function tag_json_clear() {
 	document.getElementById("t_norm_hair_style").value = "";
 	document.getElementById("t_image_blacklist").value = "";
 	
-	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules', 't_image_category_rules'].forEach(function(id){
+	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules'].forEach(function(id){
 		var table = document.getElementById(id)
 		let lastRow = table.rows.length-1
 		while (lastRow >= 0) {
@@ -363,15 +331,6 @@ function tag_json_get() {
 		var a = {}
 		a["target"] = r.cells[1].getElementsByTagName('input')[0].value
 		data["filter_rules"].push(a)
-	}
-
-	data["category_rules"] = [];
-	var t = document.getElementById("t_image_category_rules");
-	for (var i = 0, r; r = t.rows[i]; i++) {
-		var a = {}
-		a["category"] = r.cells[1].getElementsByTagName('input')[0].value
-		a["target"] = r.cells[2].getElementsByTagName('input')[0].value
-		data["category_rules"].push(a)
 	}
 
 	return data
@@ -452,6 +411,19 @@ async function save_tag_json() {
 	document.getElementById("t_load").disabled = false;
 	document.getElementById("t_fix").disabled = false;
 	unlock_all()
+}
+
+async function test_tags() {
+	save_tag_json()
+	console.log("run")
+	let data = await fetch("/api/tags/test");
+	data = await data.json()
+	console.log(data);
+	
+	document.getElementById("t_output").innerHTML = data["tags"]["status"];
+	document.getElementById("t_warn").innerHTML = data["tags"]["warn"];
+	console.log(data["tags"]["popular"])
+	popular_tags(data["tags"]["popular"])
 }
 
 async function fix_tags() {

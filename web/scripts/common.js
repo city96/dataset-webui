@@ -6,6 +6,7 @@ function update_all() {
 	crop_init()
 	sort_cat_update()
 	sort_update()
+	tag_update()
 	save_lock(false)
 }
 

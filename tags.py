@@ -1,72 +1,14 @@
 #!/usr/bin/python3
 # script to fix and filter tags using the rules in 'dataset.json'
-# don't use common.py, this has to remain completely standalone!
 import os
-import random
 import json
+import random
+from common import step_list, rating_list
+from status import get_step_images, str_to_tag_list
 
-c = None
-whitelist = []
+debug = False
 
-# show removed tags at each step
-debug = False #c["Debug"].lower() == "true"
-
-# status for webui
-status = []
-warn = []
-
-# image defjsontion. do NOT edit __str__ and __repr__!
-class Image:
-	filename = None
-	category = None
-	img_path = None
-	tag_path = None
-	tags = []
-	def get_new_img_path(self):
-		new_img_path = os.path.join(c["folder_output"],os.path.join(self.category,self.filename))
-		return new_img_path 
-	def get_new_tag_path(self):
-		name, ext = os.path.splitext(self.filename)
-		new_tag_path = os.path.join(c["folder_output"],os.path.join(self.category,name+".txt"))
-		return new_tag_path
-	def __int__(self):
-		return len(self.tags)
-	def __str__(self):
-		return ", ".join([t.name for t in sorted(self.tags)])
-	def __repr__(self):
-		return ", ".join([t.name for t in sorted(self.tags)])
-
-# tag defjsontion. do NOT edit __str__ and __repr__!
-class Tag:
-	name = None
-	position = 10
-	def __str__(self):
-		return f"{self.name}"
-	def __repr__(self):
-		return f"{self.name}"
-	def __lt__(self, other):
-         return self.position < other.position
-
-# comma separated string to tag list
-def str_to_taglist(string):
-	taglist = []
-	tags = string.replace('\n', ',').split(",")
-	tags = [a.strip() for a in tags]
-	for t in tags:
-		if t:
-			tag = Tag()
-			tag.name = t
-			taglist.append(tag)
-	return taglist
-
-# read tags from file, return list
-def file_to_taglist(file):
-	with open(file) as f:
-		c = f.read()
-	if not c:
-		return
-	return(str_to_taglist(c))
-
+# fix underscores in tags
 def underscore_fix(images):
 	fixed = 0
 	for i in images:
@@ -93,7 +35,7 @@ def image_filter(images, img_blacklist, img_filters):
 	for k in removed: images.remove(k)
 	for i in images:
 		for f in img_filters:
-			if all([t in [x.name for x in i.tags] for t in [x.name for x in str_to_taglist(f["target"])]]):
+			if all([t in [x.name for x in i.tags] for t in [x.name for x in str_to_tag_list(f["target"])]]):
 				filtered.append(i)
 	for k in filtered: images.remove(k)
 
@@ -105,34 +47,6 @@ def image_filter(images, img_blacklist, img_filters):
 	if debug: print("REM:",[x.filename for x in filtered])
 	status.append(f" Images: {len(images)}")
 	print(status[-1])
-	return images
-
-# load all images in folder
-def image_loader(folder, output):
-	images = []
-	for cat in os.listdir(folder):
-		if os.path.isdir(os.path.join(folder,cat)):
-			for k in os.listdir(os.path.join(folder,cat)):
-				name, ext = os.path.splitext(k)
-				if ext in [".png",".jpg"]: #img
-					i = Image()
-					i.filename = k
-					i.category = cat
-					i.img_path = os.path.join(folder,os.path.join(cat,k))
-					i.tag_path = os.path.join(folder,os.path.join(cat,name+".txt"))
-					if os.path.isfile(i.tag_path):
-						i.tags = file_to_taglist(i.tag_path)
-						images.append(i)
-						continue
-					i.tag_path = os.path.join(folder,os.path.join(cat,k+".txt"))
-					if os.path.isfile(i.tag_path):
-						i.tags = file_to_taglist(i.tag_path)
-						images.append(i)
-						continue
-					warn.append(f" warning! image {i.filename} has no input tags.")
-					print(warn[-1])
-					i.tags = str_to_taglist("")
-					images.append(i)
 	return images
 
 # load a list of `limit` popular tags, remove tags that aren't in this list
@@ -317,7 +231,7 @@ def folder_rules(images, tag_rules):
 		return images
 	# add rules
 	for rule in tag_rules:
-		tags = str_to_taglist(rule["target"])
+		tags = str_to_tag_list(rule["target"])
 		folder = rule["folder"]
 		if rule["action"] == "add":
 			added = 0
@@ -353,10 +267,10 @@ def transitive_rules(images, custom_rules):
 		if rule["type"] != "add":
 			continue
 		added = 0
-		source = str_to_taglist(rule["source"])
+		source = str_to_tag_list(rule["source"])
 		for i in images:
 			if any([t.name in [x.name for x in source] for t in i.tags]):
-				for t in str_to_taglist(rule["target"]):
+				for t in str_to_tag_list(rule["target"]):
 					if t.name not in [x.name for x in i.tags]:
 						i.tags.append(t)
 						added += 1
@@ -372,7 +286,7 @@ def replace_rules(images, custom_rules):
 	for rule in custom_rules:
 		if rule["type"] != "replace":
 			continue
-		source = str_to_taglist(rule["source"])
+		source = str_to_tag_list(rule["source"])
 		added = 0
 		removed = []
 		for i in images:
@@ -385,7 +299,7 @@ def replace_rules(images, custom_rules):
 				else:
 					new.append(t)
 			i.tags = new
-			for t in str_to_taglist(rule["target"]):
+			for t in str_to_tag_list(rule["target"]):
 				if tagged and t.name not in [x.name for x in i.tags]:
 					i.tags.append(t)
 					added += 1
@@ -408,7 +322,7 @@ def spice_rules(images, spice_rules):
 		added = 0
 		added_perc = 0
 		for i in images:
-			for t in str_to_taglist(rule["target"]):
+			for t in str_to_tag_list(rule["target"]):
 				total += 1
 				if perc > random.random():
 					i.tags.append(t)
@@ -422,7 +336,7 @@ def spice_rules(images, spice_rules):
 		if rule["type"] != "remove":
 			continue
 		perc = float(rule["percent"])/100
-		target = str_to_taglist(rule["target"])
+		target = str_to_tag_list(rule["target"])
 		total = 1
 		removed = []
 		removed_perc = 0
@@ -493,22 +407,6 @@ def raise_tags(images, to_raise):
 		print(status[-1])
 	return images
 
-# change output category based on tags
-def recategorize_images(images,sort_tags):
-	if not sort_tags:
-		return images
-	categorized = 0
-	for i in images:
-		for t in sort_tags:
-			target = str_to_taglist(t["target"])
-			if all(x.name in [x.name for x in i.tags] for x in target):
-				i.category = f"1_{t['category']}"
-				categorized += 1
-	if categorized:
-		status.append(f"Sorted ~{categorized} images into {len(sort_tags)} new categories")
-		print(status[-1])
-	return images
-
 # remove duplicates, final pass
 def dedupe_tags(images):
 	duplicates = []
@@ -541,27 +439,20 @@ def popular_tags(images):
 def write_tags(images, folder):
 	print(f"Writing tags to folder '{folder}'")
 	for i in images:
-		cat = os.path.join(folder,i.category)
+		dst = i.get_step_path(folder)
+		cat = os.path.split(dst)[0]
 		if not os.path.isdir(cat):
 			os.mkdir(cat)
-		with open(i.get_new_tag_path(),"w") as f:
-			f.write(str(i))
+		write_tag_txt(i.tags, dst)
 
-# copy images to the output folder
-def copy_images(images):
-	print(" Copying images to output folder...")
-	import shutil
-	for i in images:
-		if i.img_path == i.get_new_img_path(): # don't copy to itself
-			continue
-		elif os.path.isfile(i.get_new_img_path()) and os.path.getsize(i.img_path) == os.path.getsize(i.get_new_img_path()): # probably the same
-			continue
-		elif os.path.isfile(i.get_new_img_path()):
-			print(f" image exists but is different from source: {i.get_new_img_path()}")
-			continue
-		else:
-			shutil.copyfile(i.img_path, i.get_new_img_path())
-	print(" done!")
+# write list of tags to path, replacing extension
+def write_tag_txt(tags, path):
+	if len(tags) == 0:
+		print(f"target '{path}' has no tags!")
+		return
+	txt = os.path.splitext(path)[0]+".txt"
+	with open(txt,"w") as f:
+		f.write(", ".join([str(x) for x in sorted(tags)]))
 
 # read only status of tag count
 def img_status(images,verbose=False):
@@ -577,37 +468,8 @@ def img_status(images,verbose=False):
 	print(status[-1])
 	# print("\nDEBUG: tags left:",images[1])
 
-# save logic
-def save(images, save_tags, save_images):
-	if debug or (not save_tags and input("\nDo you want to write the new tags to disk? [y/N]? ").lower() != "y"):
-		return
-	write_tags(images,c["folder_output"])
-	if not all([os.path.isfile(x.get_new_img_path()) for x in images]):
-		if save_images or input("\nDo you want to copy the images to the output folder [y/N]? ").lower() == "y":
-			copy_images(images)
-
-def tag_info():
-	if not os.path.isfile("dataset.json"):
-		data = {
-			"tags" : {
-				"warn" : ["No images"]
-			}
-		}
-		return data
-
-	with open("dataset.json") as f:
-		json_data = json.load(f)
-
-	data = {}
-	data = json_data["tags"] if "tags" in json_data.keys() else None
-	data["categories"] = []
-	d_in = json_data["tags"]["folder_input"] if  "tags" in json_data.keys() and "folder_input" in json_data["tags"].keys() else "3 - tagged"
-	for cat in os.listdir(d_in):
-		data["categories"].append(cat)
-	return {"tags": data}
-
 # default logic
-def tag_run(save_tags=False,save_images=False):
+def tag_fix(save=False):
 	global whitelist
 	global status
 	global warn
@@ -622,7 +484,7 @@ def tag_run(save_tags=False,save_images=False):
 		with open("dataset.json") as f:
 			data = json.load(f)
 			if "tags" not in data.keys():
-				warn.append("no tags")
+				warn.append("no tags or rules")
 				print(warn[-1])
 				return
 			c = data["tags"]
@@ -632,7 +494,12 @@ def tag_run(save_tags=False,save_images=False):
 		return
 
 	# load images
-	images = image_loader(c["folder_input"],c["folder_output"])
+	images = get_step_images(step_list[2],step_list[3])
+	if len(images) == 0:
+		warn.append("no tags")
+		print(warn[-1])
+		return
+		
 	# stats
 	img_status(images,True)
 
@@ -641,12 +508,12 @@ def tag_run(save_tags=False,save_images=False):
 
 	# filter input images
 	print(c["image_blacklist"])
-	images = image_filter(images,str_to_taglist(c["image_blacklist"]),c["filter_rules"])
+	images = image_filter(images,str_to_tag_list(c["image_blacklist"]),c["filter_rules"])
 
 	# load whitelist
-	whitelist = str_to_taglist(c["whitelist"])
-	whitelist += str_to_taglist(c["triggerword"])
-	# whitelist += str_to_taglist(c["triggerword_extra"])
+	whitelist = str_to_tag_list(c["whitelist"])
+	whitelist += str_to_tag_list(c["triggerword"])
+	# whitelist += str_to_tag_list(c["triggerword_extra"])
 
 	# popular-only filter
 	tag_file = os.path.join("external",f'{c["booru"]["type"]}-tags.json')
@@ -657,9 +524,9 @@ def tag_run(save_tags=False,save_images=False):
 		print(warn[-1])
 
 	# apply filters
-	images = normalize_eye_color(images,str_to_taglist(c["normalize"]["eye_color"]))
-	images = normalize_hair_color(images,str_to_taglist(c["normalize"]["hair_color"]))
-	images = normalize_hair_style(images,str_to_taglist(c["normalize"]["hair_style"]))
+	images = normalize_eye_color(images,str_to_tag_list(c["normalize"]["eye_color"]))
+	images = normalize_hair_color(images,str_to_tag_list(c["normalize"]["hair_color"]))
+	images = normalize_hair_style(images,str_to_tag_list(c["normalize"]["hair_style"]))
 	images = frequent_only(images,int(c["frequent_only"]))
 
 	# rulesets
@@ -671,18 +538,17 @@ def tag_run(save_tags=False,save_images=False):
 	images = spice_rules(images,c["spice_rules"])
 
 	# post-filters
-	images = add_triggerword(images,str_to_taglist(c["triggerword"]))
-	images = raise_tags(images,str_to_taglist(c["triggerword_extra"]))
-	images = blacklist(images,str_to_taglist(c["blacklist"]))
-	images = recategorize_images(images,c["category_rules"])
+	images = add_triggerword(images,str_to_tag_list(c["triggerword"]))
+	images = raise_tags(images,str_to_tag_list(c["triggerword_extra"]))
+	images = blacklist(images,str_to_tag_list(c["blacklist"]))
 	images = dedupe_tags(images)
 
 	status.append("\nFinal:")
 	print(status[-1])
 	img_status(images,True)
 	
-	# save to disk
-	save(images, save_tags, save_images)
+	if save:
+		write_tags(images,step_list[4])
 	
 	# return data
 	data["tags"]["popular"] = popular_tags(images)
@@ -693,4 +559,5 @@ def tag_run(save_tags=False,save_images=False):
 if __name__ == "__main__":
 	# debug = True
 	# run()
-	print(json.dumps(tag_info(),indent=2))
+	# print(json.dumps(tag_fix(),indent=2))
+	tag_fix(True)

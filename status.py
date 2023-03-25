@@ -40,7 +40,7 @@ def get_tags_from_json(path):
 		for name, confidence in data["caption"].items():
 			t = Tag()
 			t.name = name
-			t.position = (confidence*10)+5
+			t.position = 20-(confidence*10)
 			t.confidence = round(confidence,4)
 			tags.append(t)
 	return tags

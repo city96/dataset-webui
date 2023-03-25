@@ -339,15 +339,17 @@
 		<!-- START TAG SETTING LIST -->
 		<h2>Tag filters:</h2>
 		<a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
-		<button id="t_save" onclick="save_tag_json()"> Save changes </button>
-		<button id="t_load" onclick="update_status()"> Discard changes </button>
-		<!-- <button id="t_test" onclick="test_tags()"> Test filters </button> -->
-		<button id="t_fix" onclick="fix_tags()"> Apply filters [save output] </button>
+		<button id="t_save" class="save unlock" onclick="save_tag_json()"> Save changes </button>
+		<button id="t_load" class="save unlock" onclick="tag_update()"> Discard changes </button>
+		<button id="t_fix" class="save" onclick="test_tags()"> Test rules </button>
+		<button id="t_run" class="save" onclick="fix_tags()"> Apply rules </button>
+		
 		<br>
 		<p> Script output will appear here: </p>
 		<pre id="t_warn"></pre>
 		<pre class="tip" id="t_output">idle</pre>
 		<hr>
+		
 		<!-- popular_tags -->
 		<div id="t_pop">
 			<p> Popular tags: </p>
@@ -370,32 +372,7 @@
 		Some of these options can be used multiple times, use the buttons to add/remove more rules.<br>
 		Don't use underscores, these will be converted to spaces when loading the taglist.
 		</p>
-		<hr>
-
-		<!-- output_folder -->
-		<div class="input">
-			<label>Input folder =</label>
-			<select id="t_input_folder">
-				<option value="3 - tagged" default>3 - tagged</option>
-				<option value="2 - sorted">2 - sorted</option>
-				<option value="1 - cropped">1 - cropped</option>
-				<option value="0 - raw">0 - raw</option>
-			</select>
-		</div>
-		<p class="tip">This is where your images and txt files containing tags should be.</p>
-
-		<!-- input_folder -->
-		<div class="input">
-			<label>Output folder =</label>
-			<select id="t_output_folder">
-				<option value="4 - fixed" default>4 - fixed</option>
-				<option value="5 - out">5 - out</option>
-			</select>
-		</div>
-		<p class="tip">
-		This is where the script will save the modified txt files.<br>
-		You also have the option to copy your images here in the final step.
-		</p>
+		<p style="color:aqua"> Hover over the setting names for an explanation </p>
 		<hr>
 
 		<!-- triggerword -->
@@ -404,7 +381,7 @@
 			<span><input type="text" id="t_triggerword" placeholder="htfam"> </input></span>
 		</div>
 		<p class="tip">
-		Your LoRa triggerword - this is what the model will respond to.<br>
+		Your LoRA triggerword - this is what the model will respond to.<br>
 		It will be added to all images in position 1.<br>
 		Leave empty to not add a triggerword.
 		</p>
@@ -643,39 +620,6 @@
 		This is a pre-filter, meaning all images with this tag are removed *before* any tags are updated/removed. It's also not affected by the whitelist.
 		</p>
 		<hr>
-
-		<!-- image_category -->
-		<!-- MOVE TO AUTO-CATEGORY -->
-		<!-- <p> Image category rules = </p> -->
-		<!-- <table> -->
-			<!-- <thead> -->
-				<!-- <tr> -->
-					<!-- <td> Rule type </td> -->
-					<!-- <td> Category name </td> -->
-					<!-- <td> Source tags </td> -->
-				<!-- </tr> -->
-			<!-- </thead> -->
-			<!-- <tbody id="t_image_category_rules"> -->
-			<!-- </tbody> -->
-		<!-- </table> -->
-
-		<!-- <br> -->
-		<!-- <button id="t_image_category_rule_add" onclick="image_category_rule_add()"> Add rule </button> -->
-		<!-- <button id="t_image_category_rule_del" onclick="image_category_rule_del()"> Delete last rule </button> -->
-		<!-- <pre class="tip"> -->
-		<!-- Categorize images by tags. [supports multiple rules] -->
-		<!-- This will create extra folders in your OutputFolder for each tag you list here. -->
-		<!-- One image can only belong to one category, so the first match will be used. -->
-		<!-- This is useful if you have multiple characters/concepts tagged but not sorted. -->
-		<!-- You might be able to get away with sorting your characters by hair color. -->
-		<!-- Anything not matches by this filter will still go in the same category as the input. -->
-		<!-- "repeats" will be set to 1 for your new folder, change this as needed! -->
-
-		<!-- note: If you do use this, make sure to remove all files in your output folder. -->
-		<!-- To avoid data loss, this script will NEVER delete anything. -->
-		<!-- You might end up with duplicate images/categories if you don't delete them. -->
-		<!-- </pre> -->
-
 		<!-- END TAG SETTING LIST -->
 		</div>
 	</div>
