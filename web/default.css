@@ -153,6 +153,10 @@ input, button {
 	color: revert;
 	background-color: revert;
 }
+.input {
+	margin: 5px 0;
+}
+
 .input label {
     float: left;
     padding: 0 8px 0 0;
@@ -323,4 +327,24 @@ img {
 	float: right;
 	overflow-y: scroll;
 	overflow-x: hidden;
+}
+
+.tt {
+	position: relative;
+}
+.tt-text {
+	position: absolute;
+	z-index: 1;
+	visibility: hidden;
+	font-size: 15px;
+	color: var(--main);
+	background-color: var(--acnt);
+	padding: 5px;
+	margin: 0px;
+	top: -5px;
+	left: 105%;
+	width: 400px;
+}
+.tt:hover .tt-text {
+	visibility: visible
 }

@@ -301,10 +301,10 @@
 		<!-- START TAG SETTING LIST -->
 		<h2>Tag filters:</h2>
 		<a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
-		<button id="t_save" class="save unlock" onclick="save_tag_json()"> Save changes </button>
-		<button id="t_load" class="save unlock" onclick="tag_update()"> Discard changes </button>
-		<button id="t_fix" class="save" onclick="test_tags()"> Test rules </button>
-		<button id="t_run" class="save" onclick="fix_tags()"> Apply rules </button>
+		<button id="t_save" class="save unlock" onclick="save_tag_json()" disabled> Save changes </button>
+		<button id="t_load" class="save unlock" onclick="tag_update()" disabled> Discard changes </button>
+		<button id="t_fix" class="save req-save" onclick="test_tags()"> Test rules </button>
+		<button id="t_run" class="save req-save" onclick="fix_tags()"> Apply rules </button>
 		
 		<br>
 		<p> Script output will appear here: </p>
@@ -338,249 +338,257 @@
 		<hr>
 
 		<!-- triggerword -->
-		<div class="input">
+		<div class="input tt">
 			<label>Triggerword =</label>
-			<span><input type="text" id="t_triggerword" placeholder="htfam"> </input></span>
+			<span><input type="text" id="t_triggerword" placeholder="htfam" onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text">
+			Your LoRA triggerword - this is what the model will respond to.<br>
+			It will be added to all images in position 1.<br>
+			Leave empty to not add a triggerword.
+			</p>
 		</div>
-		<p class="tip">
-		Your LoRA triggerword - this is what the model will respond to.<br>
-		It will be added to all images in position 1.<br>
-		Leave empty to not add a triggerword.
-		</p>
 
 		<!-- secondary_triggerword -->
-		<div class="input">
+		<div class="input tt">
 			<label>Secondary triggerword(s) =</label>
-			<span><input type="text" id="t_triggerword_extra" placeholder="MikoStyle2019, office lady"> </input></span>
+			<span><input type="text" id="t_triggerword_extra" placeholder="MikoStyle2019, office lady" onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text">
+			Move these tags to the front of the tag list.<br>
+			Useful for "shuffle_tokens" and "keep_tokens" training options.<br>
+			If you have an outfit tag or second triggerword you can add it here to make sure it doesn't get shuffled.
+			Don't add your main Triggerword here, it is already the first tag by default.<br>
+			These don't get added automatically to any images, unless you add them with another rule.<br>
+			</p>
 		</div>
-		<p class="tip">
-		Move these tags to the front of the tag list.<br>
-		Useful for "shuffle_tokens" and "keep_tokens" training options.<br>
-		If you have an outfit tag or second triggerword you can add it here to make sure it doesn't get shuffled.
-		Don't add your main Triggerword here, it is already the first tag by default.<br>
-		These don't get added automatically to any images, unless you add them with another rule.<br>
-		</p>
 		<hr>
 
 		<!-- whitelist -->
-		<div class="input">
+		<div class="input tt">
 			<label>Whitelist =</label>
-			<span><input type="text" id="t_whitelist" placeholder="headband, big ears"> </input></span>
+			<span><input type="text" id="t_whitelist" placeholder="headband, big ears" onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text"> These tags will never be removed by any of the filters. </p>
 		</div>
-		<p class="tip"> These tags will never be removed by any of the filters. </p>
 
 		<!-- blacklist -->
-		<div class="input">
+		<div class="input tt">
 			<label>Blacklist =</label>
-			<span><textarea id="t_blacklist" rows="3" placeholder="blurry, motion blur, chromatic aberration"></textarea></span>
+			<span><textarea id="t_blacklist" rows="3" placeholder="blurry, motion blur, chromatic aberration" onchange="lock('tag-div')"></textarea></span>
+			<p class="tip tt-text">	Always remove these tags from all images </p>
 		</div>
-		<p class="tip">	Always remove these tags from all images </p>
 		<hr>
 
 		<!-- booru -->
-		<div class="input">
+		<div class="input tt">
 			<label>Tag source =</label>
-			<select id="t_booru_type">
+			<select id="t_booru_type" onchange="lock('tag-div')">
 				<option value="danbooru" default>Danbooru</option>
 				<option value="gelbooru">Gelbooru</option>
 			</select>
+			<p class="tip tt-text"> Tag source. They should be similar enough. </p>
 		</div>
-		<p class="tip"> Tag source. They should be similar enough. </p>
 
 		<!-- booru_general_only -->
-		<div class="input">
+		<div class="input tt">
 			<label>General Tags Only </label>
-			<input type="checkbox" id="t_booru_general_only" checked>
+			<input type="checkbox" id="t_booru_general_only" onchange="lock('tag-div')" checked>
+			<p class="tip tt-text">
+			Remove artist / character / copyright / meta tags - only keep general tags.<br>
+			This is recommended as the autotagger often adds irrelevant series/character names.<br>
+			If you don't use it, increase the limit for PopularOnly in the next menu.
+			</p>
 		</div>
-		<p class="tip">
-		Remove artist / character / copyright / meta tags - only keep general tags.<br>
-		This is recommended as the autotagger often adds irrelevant series/character names.<br>
-		If you don't use it, increase the limit for PopularOnly in the next menu.
-		</p>
 
 		<!-- booru_popular_only -->
-		<div class="input">
+		<div class="input tt">
 			<label>Popular only =</label>
-			<input type="number" id="t_booru_popular_only" value="2500"> </input>
+			<input type="number" id="t_booru_popular_only" value="2500" onchange="lock('tag-div')"> </input>
+			<p class="tip tt-text">
+			Only keep the most popular tags, removing the more obscure ones.<br>
+			Anything less popular (unless whitelisted) will be removed.<br>
+			Setting this to 500 would only keep the 500 most popular tags.<br>
+			Setting this to 10000 would keep a total of 10000 tags.<br>
+			Increase to ~10000 when using GeneralTagsOnly = False.
+			</p>
 		</div>
-		<p class="tip">
-		Only keep the most popular tags, removing the more obscure ones.<br>
-		Anything less popular (unless whitelisted) will be removed.<br>
-		Setting this to 500 would only keep the 500 most popular tags.<br>
-		Setting this to 10000 would keep a total of 10000 tags.<br>
-		Increase to ~10000 when using GeneralTagsOnly = False.
-		</p>
 		<hr>
 
 		<!-- frequent_only -->
-		<div class="input">
+		<div class="input tt">
 			<label>Frequent only =</label>
-			<input type="number" id="t_frequent_only" value="2"> </input>
+			<input type="number" id="t_frequent_only" value="2" onchange="lock('tag-div')"> </input>
+			<p class="tip tt-text">
+			Only keep tags that appear at least on N of the tagged images.<br>
+			If a tag appears less than the number specified here, it gets removed.<br>
+			This can be useful to filter out random junk from the autotagger.<br>
+			Settings this to 5 would cause the tag "jungle" that only appears <br>
+			on 3 images to be removed from all 3 images.
+			</p>
 		</div>
-		<p class="tip">
-		Only keep tags that appear at least on N of the tagged images.<br>
-		If a tag appears less than the number specified here, it gets removed.<br>
-		This can be useful to filter out random junk from the autotagger.<br>
-		Settings this to 5 would cause the tag "jungle" that only appears <br>
-		on 3 images to be removed from all 3 images.
-		</p>
 		<hr>
 
 		<!-- norm_eye_color -->
-		<div class="input">
+		<div class="input tt">
 			<label>Eye color =</label>
-			<span><input type="text" id="t_norm_eye_color" placeholder="heterochromia, green eyes, blue eyes,"> </input></span>
+			<span><input type="text" id="t_norm_eye_color" placeholder="heterochromia, green eyes, blue eyes," onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text">
+			Normalize eye color.
+			This replaces all existing eye color tags with your given tag(s).<br>
+			If at least one eye color tag is present, your list of tags will be added.<br>
+			This is usually safe to use. It only applies to color tags.
+			</p>
 		</div>
-		<p class="tip">
-		Normalize eye color.
-		This replaces all existing eye color tags with your given tag(s).<br>
-		If at least one eye color tag is present, your list of tags will be added.<br>
-		This is usually safe to use. It only applies to color tags.
-		</p>
 
 
 		<!-- norm_hair_color -->
-		<div class="input">
+		<div class="input tt">
 			<label>Hair color =</label>
-			<span><input type="text" id="t_norm_hair_color" placeholder="black hair"> </input></span>
+			<span><input type="text" id="t_norm_hair_color" placeholder="black hair" onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text">
+			Normalize hair color.<br>
+			This replaces all hair color tags with your given tag(s).<br>
+			This is usually safe to use, but might cause issues with 'streaked hair' or 'multicolored hair' etc. unless also specified
+			</p>
 		</div>
-		<p class="tip">
-		Normalize hair color.<br>
-		This replaces all hair color tags with your given tag(s).<br>
-		This is usually safe to use, but might cause issues with 'streaked hair' or 'multicolored hair' etc. unless also specified
-		</p>
 
 		<!-- norm_hair_style -->
-		<div class="input">
+		<div class="input tt">
 			<label>Hair style =</label>
-			<span><input type="text" id="t_norm_hair_style" placeholder="long hair, single braid, hair ornament"> </input></span>
+			<span><input type="text" id="t_norm_hair_style" placeholder="long hair, single braid, hair ornament" onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text">
+			Normalize hair length/style.<br>
+			This replaces all other hair tags with your given tag(s).<br>
+			This can cause issues if your characters hairstyle appears to "change" based <br>
+			on the viewing angle (eg. can't see single braid in portrait photo).
+			</p>
 		</div>
-		<p class="tip">
-		Normalize hair length/style.<br>
-		This replaces all other hair tags with your given tag(s).<br>
-		This can cause issues if your characters hairstyle appears to "change" based <br>
-		on the viewing angle (eg. can't see single braid in portrait photo).
-		</p>
 		<hr>
 
 		<!-- folder_rules -->
-		<p> Folder rules = </p>
-		<table>
-			<thead>
-				<tr>
-					<td> Rule type </td>
-					<td> Folder </td>
-					<td> Tag Action </td>
-					<td> Target tags </td>
-				</tr>
-			</thead>
-			<tbody id="t_folder_rules">
-			</tbody>
-		</table>
+		<div class="tt">
+			<p> Folder rules = </p>
+			<table>
+				<thead>
+					<tr>
+						<td> Rule type </td>
+						<td> Folder </td>
+						<td> Tag Action </td>
+						<td> Target tags </td>
+					</tr>
+				</thead>
+				<tbody id="t_folder_rules">
+				</tbody>
+			</table>
 
-		<br>
-		<button id="t_folder_rule_add" onclick="folder_rule_add()"> Add rule </button>
-		<button id="t_folder_rule_del" onclick="folder_rule_del()"> Delete last rule </button>
+			<br>
+			<button id="t_folder_rule_add" onclick="folder_rule_add(),lock('tag-div')"> Add rule </button>
+			<button id="t_folder_rule_del" onclick="folder_rule_del(),lock('tag-div')"> Delete last rule </button>
 
-		<p class="tip">
-		Folder tags
-		Add or remove tags based on the folder name.<br>
-		This is useful if you have sorted your images by outfit<br>
-		The first value is your folder name, put your tag(s) after it. <br>
-		If you're using it to add more triggerwords, make sure to add them to the RaisedTags function as well.
-		</p>
+			<p class="tip tt-text">
+			Folder tags
+			Add or remove tags based on the folder name.<br>
+			This is useful if you have sorted your images by outfit<br>
+			The first value is your folder name, put your tag(s) after it. <br>
+			If you're using it to add more triggerwords, make sure to add them to the RaisedTags function as well.
+			</p>
+		</div>
 		<hr>
 
 		<!-- custom_rules -->
-		<p> Transitivity and Replacement rules = </p>
-		<table>
-			<thead>
-				<tr>
-					<td> Rule type </td>
-					<td> Source tag(s) </td>
-					<td> Target tags </td>
-				</tr>
-			</thead>
-			<tbody id="t_custom_rules">
-			</tbody>
-		</table>
+		<div class="tt">
+			<p> Transitivity and Replacement rules = </p>
+			<table>
+				<thead>
+					<tr>
+						<td> Rule type </td>
+						<td> Source tag(s) </td>
+						<td> Target tags </td>
+					</tr>
+				</thead>
+				<tbody id="t_custom_rules">
+				</tbody>
+			</table>
 
-		<br>
-		<button id="t_custom_rule_add" onclick="custom_rule_add()"> Add rule </button>
-		<button id="t_custom_rule_del" onclick="custom_rule_del()"> Delete last rule </button>
+			<br>
+			<button id="t_custom_rule_add" onclick="custom_rule_add(),lock('tag-div')"> Add rule </button>
+			<button id="t_custom_rule_del" onclick="custom_rule_del(),lock('tag-div')"> Delete last rule </button>
 
-		<p class="tip">
-		Transitivity rule:<br>
-		Any image that has the [Source tag] will also get the [Target tags] added.<br>
-		If you have multiple [Source tags], then it looks for all of them<br>
-		([Source tag:miko] would add [Target tag:red hakama,hakama skirt] to all images tagged with miko)<br>
-		<br>
-		Replacement rule:<br>
-		Replace all tags in the [Source tag] list with the [Target tags]<br>
-		([Source tags:jingle bell,neck bell] would replace those two tags with [Target tag:bell])
-		</p>
+			<p class="tip tt-text">
+			Transitivity rule:<br>
+			Any image that has the [Source tag] will also get the [Target tags] added.<br>
+			If you have multiple [Source tags], then it looks for all of them<br>
+			([Source tag:miko] would add [Target tag:red hakama,hakama skirt] to all images tagged with miko)<br>
+			<br>
+			Replacement rule:<br>
+			Replace all tags in the [Source tag] list with the [Target tags]<br>
+			([Source tags:jingle bell,neck bell] would replace those two tags with [Target tag:bell])
+			</p>
+		</div>
 		<hr>
 
 		<!-- spice_rules -->
-		<p> Spice rules = </p>
-		<table>
-			<thead>
-				<tr>
-					<td> Rule type </td>
-					<td> % of tags to affect </td>
-					<td> Target tags </td>
-				</tr>
-			</thead>
-			<tbody id="t_spice_rules">
-			</tbody>
-		</table>
+		<div class="tt">
+			<p> Spice rules = </p>
+			<table>
+				<thead>
+					<tr>
+						<td> Rule type </td>
+						<td> % of tags to affect </td>
+						<td> Target tags </td>
+					</tr>
+				</thead>
+				<tbody id="t_spice_rules">
+				</tbody>
+			</table>
 
-		<br>
-		<button id="t_spice_rule_add" onclick="spice_rule_add()"> Add rule </button>
-		<button id="t_spice_rule_del" onclick="spice_rule_del()"> Delete last rule </button>
+			<br>
+			<button id="t_spice_rule_add" onclick="spice_rule_add(),lock('tag-div')"> Add rule </button>
+			<button id="t_spice_rule_del" onclick="spice_rule_del(),lock('tag-div')"> Delete last rule </button>
 
-		<p class="tip">
-		Add/Remove tags randomly<br>
-		This feature is experimental!<br>
-		The tags in the list will be randomly added to/removed from your images.<br>
-		It is only useful for huge datasets.<br>
-		You can use it to de-emphasize some frequent tags like solo or to mix some physical attributes like hair colors;
-		</p>
+			<p class="tip tt-text">
+			Add/Remove tags randomly<br>
+			This feature is experimental!<br>
+			The tags in the list will be randomly added to/removed from your images.<br>
+			It is only useful for huge datasets.<br>
+			You can use it to de-emphasize some frequent tags like solo or to mix some physical attributes like hair colors;
+			</p>
+		</div>
 		<hr>
 
 		<!-- image_filter -->
-		<div class="input">
+		<div class="input tt">
 			<label>Image Blacklist =</label>
-			<span><input type="text" id="t_image_blacklist" placeholder="head out of frame, close-up, multiple girls,"> </input></span>
+			<span><input type="text" id="t_image_blacklist" placeholder="head out of frame, close-up, multiple girls," onchange="lock('tag-div')"> </input></span>
+			<p class="tip tt-text">
+			Remove images by tag.<br>
+			If an image has ANY of the tags in this list, it won't be saved to the OutputFolder.<br>
+			This is a pre-filter, meaning all images with this tag are removed<br>
+			*before* any tags are updated/removed. It's also not affected by the whitelist.<br>
+			</p>
 		</div>
-		<p class="tip">
-		Remove images by tag.<br>
-		If an image has ANY of the tags in this list, it won't be saved to the OutputFolder.<br>
-		This is a pre-filter, meaning all images with this tag are removed<br>
-		*before* any tags are updated/removed. It's also not affected by the whitelist.<br>
-		</p>
 
-		<p> Image filter rules = </p>
-		<table>
-			<thead>
-				<tr>
-					<td> Rule type </td>
-					<td> Filter tags </td>
-				</tr>
-			</thead>
-			<tbody id="t_image_filter_rules">
-			</tbody>
-		</table>
+		<div class="tt">
+			<p> Image filter rules = </p>
+			<table>
+				<thead>
+					<tr>
+						<td> Rule type </td>
+						<td> Filter tags </td>
+					</tr>
+				</thead>
+				<tbody id="t_image_filter_rules">
+				</tbody>
+			</table>
 
-		<br>
-		<button id="t_image_filter_rule_add" onclick="image_filter_rule_add()"> Add rule </button>
-		<button id="t_image_filter_rule_del" onclick="image_filter_rule_del()"> Delete last rule </button>
+			<br>
+			<button id="t_image_filter_rule_add" onclick="image_filter_rule_add(),lock('tag-div')"> Add rule </button>
+			<button id="t_image_filter_rule_del" onclick="image_filter_rule_del(),lock('tag-div')"> Delete last rule </button>
 
-		<p class="tip">
-		Remove images by tag combination.<br>
-		If an image has ALL of the tags in this list, it WON'T be saved to the OutputFolder.<br>
-		This is a pre-filter, meaning all images with this tag are removed *before* any tags are updated/removed. It's also not affected by the whitelist.
-		</p>
+			<p class="tip tt-text">
+			Remove images by tag combination.<br>
+			If an image has ALL of the tags in this list, it WON'T be saved to the OutputFolder.<br>
+			This is a pre-filter, meaning all images with this tag are removed *before* any tags are updated/removed. It's also not affected by the whitelist.
+			</p>
+		</div>
 		<hr>
 		<!-- END TAG SETTING LIST -->
 		</div>

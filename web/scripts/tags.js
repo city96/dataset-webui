@@ -11,27 +11,6 @@ function tag_add_to_blacklist(tag) {
 	element.value = blacklist
 }
 
-function popular_tags(tags) {
-	var table = document.getElementById("t_pop_table")
-	table.innerHTML = "";
-
-	for(const key in tags) {
-		r = table.insertRow();
-		let c0 = r.insertCell(0)
-		c0.innerHTML = tags[key]
-		
-		let c1 = r.insertCell(1)
-		c1.innerHTML = key
-		
-		let c2 = r.insertCell(2)
-		b = document.createElement('button');
-		c2.appendChild(b)
-		b.innerHTML = "+"
-		b.setAttribute('onclick','this.disabled=true; tag_add_to_blacklist("'+key+'")')
-	}
-}
-
-
 function folder_rule_add(folder, action, target) {
 	var table = document.getElementById("t_folder_rules")
 	r = table.insertRow();
@@ -373,20 +352,48 @@ function tag_json_load(data) {
 	return
 }
 
+function popular_tags(tags) {
+	var table = document.getElementById("t_pop_table")
+	table.innerHTML = "";
+
+	for(const key in tags) {
+		r = table.insertRow();
+		let c0 = r.insertCell(0)
+		c0.innerHTML = tags[key]
+		
+		let c1 = r.insertCell(1)
+		c1.innerHTML = key
+		
+		let c2 = r.insertCell(2)
+		b = document.createElement('button');
+		c2.appendChild(b)
+		b.innerHTML = "+"
+		b.setAttribute('onclick','this.disabled=true; tag_add_to_blacklist("'+key+'")')
+	}
+}
+
 var tag_categories
 async function tag_update() {
 	let data = await fetch("/api/tags/info");
 	data = await data.json()
+	
+	if (!data || !data.tags) {
+		disable_module("tag-div", "Nothing to load from disk")
+		return
+	} else {
+		enable_module("tag-div")
+	}
 	console.log(data)
 	tag_categories = data["tags"]["categories"]
 	tag_json_load(data["tags"])
+	unlock()
+	test_tags()
 }
 
 async function save_tag_json() {
 	console.log("Save tag/json")
-	document.getElementById("t_save").disabled = true;
-	document.getElementById("t_load").disabled = true;
-	document.getElementById("t_fix").disabled = true;
+	save_lock()
+
 	let data = {}
 	data["tags"] = tag_json_get()
 
@@ -397,17 +404,12 @@ async function save_tag_json() {
 		},
 		body: JSON.stringify(data)
 	})
-	console.log(data)
 
-	document.getElementById("t_save").disabled = false;
-	document.getElementById("t_load").disabled = false;
-	document.getElementById("t_fix").disabled = false;
-	unlock_all()
+	save_lock(false)
+	tag_update()
 }
 
 async function test_tags() {
-	save_tag_json()
-	console.log("run")
 	let data = await fetch("/api/tags/test");
 	data = await data.json()
 	console.log(data);
@@ -419,8 +421,6 @@ async function test_tags() {
 }
 
 async function fix_tags() {
-	save_tag_json()
-	console.log("run")
 	let data = await fetch("/api/tags/run");
 	data = await data.json()
 	console.log(data);

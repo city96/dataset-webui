@@ -139,8 +139,11 @@ async def api_tagger(request):
 			return web.json_response(autotag_status)
 	elif request.match_info['command'] == "run_poll":
 		return web.json_response(autotag_status)
-	# elif request.match_info['command'] == "single":
-		
+	elif request.match_info['command'] == "status":
+		if not os.path.isfile("dataset.json"):
+			return web.json_response({"tagger_enabled":False})
+		return web.json_response({"tagger_enabled":tagger_enabled})
+
 	return web.json_response(data)
 
 async def api_dataset(request):

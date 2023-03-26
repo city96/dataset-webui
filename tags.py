@@ -98,7 +98,7 @@ def popular_only(images, tag_file, limit, general_only):
 # remove tags that only appear on `freq` images or less
 def frequent_only(images,freq):
 	if not freq:
-		return
+		return images
 	status.append(f"\nfiltering infrequent tags (min {freq})")
 	print(status[-1])
 	tags = {}
@@ -551,6 +551,7 @@ def tag_fix(save=False):
 		write_tags(images,step_list[4])
 	
 	# return data
+	data["tags"]["categories"] = list(set([str(x.category) for x in images]))
 	data["tags"]["popular"] = popular_tags(images)
 	data["tags"]["status"] = "\n".join(status)
 	data["tags"]["warn"] = "\n".join(warn)

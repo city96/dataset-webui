@@ -59,3 +59,13 @@ async function tag_auto_run() {
 	unlock()
 	save_lock(false)
 }
+
+async function tag_auto_check() {
+	let data = await fetch("/api/tagger/status");
+	data = await data.json()
+	if (!data || !data.tagger_enabled || data.tagger_enabled == false) {
+		disable_module("tag-auto-div", "Tagger disabled")
+	} else {
+		enable_module("tag-auto-div")
+	}
+}

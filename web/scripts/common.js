@@ -6,6 +6,7 @@ function update_all() {
 	sort_cat_update()
 	sort_update()
 	tag_update()
+	tag_auto_check()
 	save_lock(false)
 }
 
@@ -36,6 +37,9 @@ function lock(module, message="You have unsaved changes") { // module is source 
 	for (const i of document.getElementsByClassName("update")) {
 		i.disabled = true
 	}
+	for (const i of document.getElementsByClassName("req-save")) {
+		i.disabled = true
+	}
 	lock_unsaved = true
 }
 
@@ -60,6 +64,9 @@ function unlock() {
 	}
 	for (const i of document.getElementsByClassName("unlock")) {
 		i.disabled = true
+	}
+	for (const i of document.getElementsByClassName("req-save")) {
+		i.disabled = false
 	}
 	lock_unsaved = false
 }
@@ -102,8 +109,9 @@ function save_lock(state=true) { // lock entire page for save/write operations
 	}
 }
 
-function add_modification_triggers() {
-	for (const i of document.getElementsByTagName("input")) {
+function add_modification_triggers(target) {
+	if (!target) { return }
+	for (const i of target.getElementsByTagName("input")) {
 		let module = i.closest(".module").id
 		if ((i.type == "text" || i.type == "number") && !i.getAttribute("oninput")) {
 			i.setAttribute("oninput",`lock('${module}')`)
@@ -112,7 +120,7 @@ function add_modification_triggers() {
 			i.setAttribute("onchange",`lock('${module}')`)
 		}
 	}
-	for (const i of document.getElementsByTagName("select")) {
+	for (const i of target.getElementsByTagName("select")) {
 		let module = i.closest(".module").id
 		if (!i.getAttribute("onchange")) {
 			i.setAttribute("onchange",`lock('${module}')`)
