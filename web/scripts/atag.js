@@ -23,7 +23,8 @@ async function tag_auto_run() {
 	
 	let perc = document.getElementById("ta_perc")
 	let ow = document.getElementById("ta_ow").checked
-	let data = await fetch("/api/tagger/run?overwrite="+ow);
+	let conf = document.getElementById("ta_conf").value
+	let data = await fetch("/api/tagger/run?overwrite="+ow+"&confidence="+conf);
 	document.getElementById("ta_run").disabled = true
 	data = await data.json()
 	while (data["run"]) {
@@ -58,6 +59,9 @@ async function tag_auto_run() {
 	// global lock
 	unlock()
 	save_lock(false)
+	
+	// update stats
+	tag_update()
 }
 
 async function tag_auto_check() {

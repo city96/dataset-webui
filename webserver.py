@@ -59,7 +59,7 @@ async def api_json_save(request):
 	return web.json_response({})
 
 autotag_status = {"run":False}
-def sd_tag_image(image, overwrite=False):
+def sd_tag_image(image, overwrite=False, confidence=0.35):
 	"""obsolete but needed since the webui was written for the http tagger api"""
 	from tagger import get_image_tags
 	from base64 import b64encode
@@ -92,7 +92,7 @@ def sd_tag_image(image, overwrite=False):
 		return(data)
 
 	data_json = {}
-	data_json["caption"] = get_image_tags(image.path)
+	data_json["caption"] = get_image_tags(image.path,confidence)
 	data_json["caption"] = dict(sorted(data_json["caption"].items(), key=lambda item: item[1], reverse=True))
 	with open(json_file, "w") as f:
 		strdata = json.dumps(data_json, indent=2)
@@ -100,7 +100,7 @@ def sd_tag_image(image, overwrite=False):
 	data_json["image"] = b64image
 	return data_json
 
-async def api_tagger_auto_run(overwrite):
+async def api_tagger_auto_run(overwrite,confidence):
 	"""Autotagger [handled by tagger.py]"""
 	global autotag_status
 	from status import get_step_images
@@ -111,7 +111,7 @@ async def api_tagger_auto_run(overwrite):
 	autotag_status["max"] = len(valid)
 	for i in valid:
 		await asyncio.sleep(0.001) # Context switch, don't remove
-		data = sd_tag_image(i,overwrite)
+		data = sd_tag_image(i,overwrite,confidence)
 		autotag_status["current"] += 1
 		autotag_status["url"] = "/img/" + i.path.replace(os.sep,"/")
 		if "caption" not in data.keys():
@@ -132,9 +132,15 @@ async def api_tagger(request):
 		overwrite = False
 		if "overwrite" in request.rel_url.query.keys():
 			overwrite = request.rel_url.query['overwrite'].lower() == "true"
+		if "confidence" in request.rel_url.query.keys():
+			try:
+				confidence = request.rel_url.query['confidence']
+				confidence = float(confidence)
+			except:
+				confidence = 0.35
 		if not autotag_status["run"]:
 			print("Start task")
-			asyncio.create_task(api_tagger_auto_run(overwrite))
+			asyncio.create_task(api_tagger_auto_run(overwrite,confidence))
 			autotag_status = {"run":True}
 			return web.json_response(autotag_status)
 	elif request.match_info['command'] == "run_poll":
