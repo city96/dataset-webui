@@ -1,7 +1,6 @@
 // Update/initialize all fields on first load
 function update_all() {
 	save_lock(true)
-	setting_update()
 	status_update()
 	crop_init()
 	sort_cat_update()

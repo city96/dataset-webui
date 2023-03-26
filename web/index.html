@@ -9,43 +9,6 @@
 </head>
 <body>
 	<h1>LoRA Dataset Script Webui</h1>
-<!-- Settings -->
-	<div id="dataset-div" class="module">
-		<h2> Settings </h2>
-		<button class="save unlock" id="sts_save" onclick="setting_save()" disabled> Save </button>
-		<button class="revert unlock" id="sts_revert" onclick="setting_update()" disabled> Revert changes</button>
-		<hr>
-		<!-- Editor - NOT IMPLEMENTED YET -->
-		<div style="display: none"> 
-		<div class="input">
-			<label>External editor =</label>
-			<span><input type="text" id="sts_editor" placeholder="mspaint"> </input></span>
-		</div>
-		<p class="tip"> This is the editor that will be used to open your image when you click "edit" in the cropping step.</p>
-		<hr>
-		</div>
-		
-		<!-- Webui URL -->
-		<div class="input">
-			<label>Webui URL =</label>
-			<span><input type="text" id="sts_webui" placeholder="http://127.0.0.1:7860/"> </input></span>
-		</div>
-		<br>
-		<a>Check connection (make sure to click 'save' after testing) </a><button id="sts_check" onclick="setting_webui_check()" title="Test connection to the webui"> Check </button>
-		<pre id="sts_check_out">Connection test result will appear here</pre>
-		<div class="tip">
-		<p> The URL of the Automatic1111 webui. This is used by multiple things, including the autotagger.</p>
-		<p> Using this feature requires some modifications to your webui: </p>
-		<ul>
-			<li> Install the <a href="https://github.com/toriato/stable-diffusion-webui-wd14-tagger" target="_blank" rel="noopener noreferrer">tagger extension</a>. Make sure to test it at least once manually!</li>
-			<li> Add the following argument to your webui-user.bat: <br>--api --cors-allow-origins=<script>document.write(document.URL)</script></li>
-			<li> if your webui is running somewhere else, </li>
-			<li> Start your webui (only has to be running when you intend to use the features that require it) </li>
-		</ul>
-		</div>
-	</div>
-	<!-- LOAD SCRIPT -->
-	<script src="scripts/settings.js"></script> 
 
 <!-- Dataset functions -->
 <div class="category">
@@ -292,10 +255,9 @@
 	<div class="category">
 	<h1> Tags </h1>
 	<!-- Auto tag -->
-	<div id="tag-auto-div" class="module">
+	<div id="tag-auto-div" class="module" style="min-width:800px">
 		<h2>Generate tags / autotagger:</h2>
 		<p class="warn float-warn" id="tag-auto-float-warn"></p>
-		<p class="warn"> This requires the webui to be running, as well as the URL to be set in the settings at the top of the page </p>
 		<button id="ta_run" onclick="tag_auto_run()"> Run </button>
 		<hr>
 		<div>

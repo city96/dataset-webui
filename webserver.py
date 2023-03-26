@@ -14,7 +14,6 @@ from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from tags import tag_fix
-from sd_connector import sd_api_check
 
 app = web.Application()
 
@@ -59,25 +58,52 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
-def get_settings():
-	"""Load saved settings (or return sane defaults)"""
-	data = {"version" : "0.1"} # might be useful later
-	if os.path.isfile("settings.json"):
-		with open("settings.json") as f:
-			data = json.load(f)
-	# defaults
-	if "editor" not in data.keys(): data["editor"] = "mspaint"
-	if "webui_url" not in data.keys(): data["webui_url"] = "http://127.0.0.1:7860/"
-	return data
-
 autotag_status = {"run":False}
-async def api_sd_autotag_run(overwrite):
-	"""Apply crop. run this with async!! [handled by crop.py]"""
-	global autotag_status
-	from sd_connector import sd_tag_image
-	from status import get_step_images
+def sd_tag_image(image, overwrite=False):
+	"""obsolete but needed since the webui was written for the http tagger api"""
+	from tagger import get_image_tags
+	from base64 import b64encode
 
-	url = get_settings()["webui_url"]
+	if not os.path.isdir(step_list[2]):
+		os.mkdir(step_list[2])
+	
+	dst = image.get_step_path(3)
+	cat = os.path.split(dst)[0]
+	if not os.path.isdir(cat):
+		os.mkdir(cat)
+	
+	# this is only required for the webui, remove later
+	with open(image.path, mode='rb') as f:
+		base64 = b64encode(f.read()).decode("utf-8") 
+	
+	name, ext = os.path.splitext(image.get_id())
+	b64image = f"data:image/{ext[1:]};base64,{base64}"
+	
+	json_file = os.path.join(step_list[3],name+".json")
+	if os.path.isfile(json_file) and not overwrite:
+		print(" already tagged")
+		with open(json_file) as f:
+			data = json.load(f)
+		if "caption" not in data.keys():
+			return( {"caption" : {"Empty captio",1.0}, "image": image} )
+		data["caption"]["Already tagged"] = 1.0
+		data["image"] = b64image
+		data["caption"] = dict(sorted(data["caption"].items(), key=lambda item: item[1], reverse=True))
+		return(data)
+
+	data_json = {}
+	data_json["caption"] = get_image_tags(image.path)
+	data_json["caption"] = dict(sorted(data_json["caption"].items(), key=lambda item: item[1], reverse=True))
+	with open(json_file, "w") as f:
+		strdata = json.dumps(data_json, indent=2)
+		f.write(strdata)
+	data_json["image"] = b64image
+	return data_json
+
+async def api_tagger_auto_run(overwrite):
+	"""Autotagger [handled by tagger.py]"""
+	global autotag_status
+	from status import get_step_images
 
 	autotag_status = {"run":True}
 	valid = get_step_images(step_list[2])
@@ -85,7 +111,7 @@ async def api_sd_autotag_run(overwrite):
 	autotag_status["max"] = len(valid)
 	for i in valid:
 		await asyncio.sleep(0.001) # Context switch, don't remove
-		data = sd_tag_image("http://localhost:7860/",i,overwrite)
+		data = sd_tag_image(i,overwrite)
 		autotag_status["current"] += 1
 		autotag_status["url"] = "/img/" + i.path.replace(os.sep,"/")
 		if "caption" not in data.keys():
@@ -94,43 +120,27 @@ async def api_sd_autotag_run(overwrite):
 		autotag_status["image"] = data["image"]
 	autotag_status = {"run":False}
 
-async def api_sd_connector(request):
-	"""Abstract endpoints for A1111 webui [handled by sd_connector.py]"""
+async def api_tagger(request):
+	"""Image tagging [handled by tagger.py]"""
 	data = {}
+	from tagger import tagger_enabled
+	if not tagger_enabled:
+		return web.json_response({"tagger":{"enabled":False}})
 
-	if "url" in request.rel_url.query.keys():
-		webui_url = request.rel_url.query['url']
-	else:
-		webui_url = get_settings()["webui_url"]
-
-	if request.match_info['endpoint'] == "check":
-		data = sd_api_check(webui_url)
-	elif request.match_info['endpoint'] == "autotag":
-		global autotag_status
-		if request.match_info['command'] == "run":
-			if "overwrite" in request.rel_url.query.keys():
-				overwrite = request.rel_url.query['overwrite'].lower() == "true"
-			else: overwrite = False
-			if not autotag_status["run"]:
-				print("Start task")
-				asyncio.create_task(api_sd_autotag_run(overwrite))
-				autotag_status = {"run":True}
-				return web.json_response(autotag_status)
-		elif request.match_info['command'] == "run_poll":
+	global autotag_status
+	if request.match_info['command'] == "run":
+		overwrite = False
+		if "overwrite" in request.rel_url.query.keys():
+			overwrite = request.rel_url.query['overwrite'].lower() == "true"
+		if not autotag_status["run"]:
+			print("Start task")
+			asyncio.create_task(api_tagger_auto_run(overwrite))
+			autotag_status = {"run":True}
 			return web.json_response(autotag_status)
-
-	return web.json_response(data)
-
-async def api_settings(request):
-	"""Save/load settings"""
-	if request.match_info['command'] == "save":
-		if request.body_exists:
-			new = await request.read()
-			new = json.loads(new)
-			with open("settings.json", "w") as f:
-				strdata = json.dumps(new, indent=2)
-				f.write(strdata)
-	data = get_settings()
+	elif request.match_info['command'] == "run_poll":
+		return web.json_response(autotag_status)
+	# elif request.match_info['command'] == "single":
+		
 	return web.json_response(data)
 
 async def api_dataset(request):
@@ -249,9 +259,7 @@ app.add_routes([web.get('/', index),
 				web.get('/assets/{name}', handle),
 				web.get('/scripts/{name}', handle),
 				web.get('/img/{name:.*}', handle_image),
-				web.get('/api/sd/{endpoint}/{command}', api_sd_connector),
-				web.get('/api/settings/{command}', api_settings),
-				web.post('/api/settings/{command}', api_settings),
+				web.get('/api/tagger/{command}', api_tagger),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/dataset/{command}', api_dataset),
 				web.get('/api/status', api_status),

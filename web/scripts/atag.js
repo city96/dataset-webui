@@ -23,11 +23,11 @@ async function tag_auto_run() {
 	
 	let perc = document.getElementById("ta_perc")
 	let ow = document.getElementById("ta_ow").checked
-	let data = await fetch("/api/sd/autotag/run?overwrite="+ow);
+	let data = await fetch("/api/tagger/run?overwrite="+ow);
 	document.getElementById("ta_run").disabled = true
 	data = await data.json()
 	while (data["run"]) {
-		data = await fetch("/api/sd/autotag/run_poll");
+		data = await fetch("/api/tagger/run_poll");
 		data = await data.json()
 		if (data["url"]) {
 			document.getElementById("ta_img").src = data["image"]

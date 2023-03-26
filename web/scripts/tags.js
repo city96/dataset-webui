@@ -215,8 +215,6 @@ function tags_disabled(state) {
 	document.getElementById("t_load").disabled = state;
 	document.getElementById("t_fix").disabled = state;
 
-	document.getElementById("t_input_folder").disabled = state;
-	document.getElementById("t_output_folder").disabled = state;
 	document.getElementById("t_triggerword").disabled = state;
 	document.getElementById("t_triggerword_extra").disabled = state;
 	document.getElementById("t_whitelist").disabled = state;
@@ -251,8 +249,6 @@ function tags_disabled(state) {
 }
 
 function tag_json_clear() {
-	document.getElementById("t_input_folder").value = "3 - tagged";
-	document.getElementById("t_output_folder").value = "4 - fixed";
 	document.getElementById("t_triggerword").value = "";
 	document.getElementById("t_triggerword_extra").value = "";
 	document.getElementById("t_whitelist").value = "";
@@ -278,8 +274,6 @@ function tag_json_clear() {
 
 function tag_json_get() {
 	data = {}
-	data["folder_input"] = document.getElementById("t_input_folder").value;
-	data["folder_output"] = document.getElementById("t_output_folder").value;
 	data["triggerword"] = document.getElementById("t_triggerword").value;
 	data["triggerword_extra"] = document.getElementById("t_triggerword_extra").value;
 	data["whitelist"] = document.getElementById("t_whitelist").value;
@@ -339,8 +333,6 @@ function tag_json_get() {
 function tag_json_load(data) {
 	tag_json_clear();
 	if(!data){ return }
-	if(data["folder_input"]){ document.getElementById("t_input_folder").value = data["folder_input"]; };
-	if(data["folder_output"]){ document.getElementById("t_output_folder").value = data["folder_output"]; };
 	if(data["triggerword"]){ document.getElementById("t_triggerword").value = data["triggerword"]; };
 	if(data["triggerword_extra"]) { document.getElementById("t_triggerword_extra").value = data["triggerword_extra"]; };
 	if(data["whitelist"]){ document.getElementById("t_whitelist").value = data["whitelist"]; };
