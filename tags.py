@@ -468,6 +468,30 @@ def img_status(images,verbose=False):
 	print(status[-1])
 	# print("\nDEBUG: tags left:",images[1])
 
+# default rules 
+default_tag_rules =  {
+    "triggerword": "",
+    "triggerword_extra": "",
+    "whitelist": "",
+    "blacklist": "",
+    "booru": {
+      "type": "danbooru",
+      "general_only": True,
+      "popular_only": "2500"
+    },
+    "frequent_only": "0",
+    "normalize": {
+      "eye_color": "",
+      "hair_color": "",
+      "hair_style": ""
+    },
+    "image_blacklist": "",
+    "folder_rules": [],
+    "custom_rules": [],
+    "spice_rules": [],
+    "filter_rules": []
+  }
+
 # default logic
 def tag_fix(save=False):
 	global whitelist
@@ -484,9 +508,9 @@ def tag_fix(save=False):
 		with open("dataset.json") as f:
 			data = json.load(f)
 			if "tags" not in data.keys():
-				warn.append("no tags or rules")
-				print(warn[-1])
-				return
+				# warn.append("no tags or rules")
+				# print(warn[-1])
+				data["tags"] = default_tag_rules
 			c = data["tags"]
 	else:
 		warn.append("Missing 'dataset.json' config")

@@ -62,6 +62,7 @@ async function tag_auto_run() {
 	
 	// update stats
 	tag_update()
+	page_update(false)
 }
 
 async function tag_auto_check() {

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dataset Scripts</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
+	<link rel="icon" type="image/png" href="favicon.ico">
+	<link rel="stylesheet" href="default.css">
+</head>
+<body>
+<h1>LoRA Dataset Script Webui</h1>
+<!-- Step menu -->
+<div id="navbar" class="module">
+	<p class="warn float-warn" id="navbar-float-warn"></p>
+	<button class="update" onclick="page_update()"> ⭮ </button>
+
+	<div class="navbar-element" id="nb-dataset-div">
+		<button onclick="window.location.replace('/')"> Datasets </button><br>
+		<label> Load/Save/New </label><br>
+		<label class="tip"> All folders / dataset.json </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-status-div">
+		<button onclick="window.location.replace('/status.html')"> Status </button><br>
+		<label> Step overview </label><br>
+		<label class="tip"> All folders </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-crop-div">
+		<button onclick="window.location.replace('/crop.html')" disabled> Cropping </button><br>
+		<label> Crop images </label><br>
+		<label class="tip"> 1 - cropped </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-sort-div">
+		<button onclick="window.location.replace('/sort.html')"> Sorting </button><br>
+		<label> Categorize images </label><br>
+		<label class="tip"> 2 - sorted </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-tag-div">
+		<button onclick="window.location.replace('/tag.html')"> Tagging </button><br>
+		<label> Edit tags </label><br>
+		<label class="tip"> 3 - tagged / 4 - fixed </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-out-div">
+		<button onclick="window.location.replace('/out.html')"> Output </button><br>
+		<label> Finalize images/tags </label><br>
+		<label class="tip"> 5 - out </label><br>
+		<label class="nfo"> </label>
+	</div>
+</div>
+
+<!-- Cropping -->
+<div class="category">
+<h1> Cropping </h1>
+	<!-- Crop writer -->
+	<div id="crop-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="crop-write-float-warn"></p>
+		<button id="c_apply" class="apply" onclick="lock('sort-cat-div'); crop_apply()" title="Crop all images and save them in the '1 - cropped' folder." disabled> Apply Crop</button>
+		
+		<p class="tip"> This will take the images in "0 - raw", crop them based on the settings below <br> and write them to "1 - cropped" </p>
+		
+		<div id="c_crop_d">
+			<label for="c_perc">Write progress:</label>
+			<progress style="width:80%" id="c_perc" value="0" max="0"></progress>
+			<pre id="c_out"></pre>
+		</div>
+		
+	</div>
+
+	<!-- web cropping -->
+	<div id="crop-div" class="module">
+		<h2>Cropping:</h2>
+		<p class="warn float-warn" id="crop-float-warn"></p>
+		<button class="update" onclick="crop_init()"> ⭮ </button>
+		
+		<button id="c_enable_shortcuts" onclick="crop_enable_shortcuts()"> Enable Shortcuts </button>
+		<div id="c_shortcuts" style="display:none">
+			<p class="tip"> Shortcuts registered! </p>
+			<p style="color:red"> Disable shortcuts after you're done with the cropping phase! </p>
+			<button id="c_disable_shortcuts" onclick="crop_disable_shortcuts()"> Disable Shortcuts </button>
+			<h3> Shortcuts </h3>
+			<img style="width: 50%;" src="assets/crop-shortcuts.png"> 
+		</div>
+		<hr>
+		<input type="checkbox" id="c_skip"> <a>Only show Uncropped</a><br>
+		<input type="checkbox" id="c_next" onchange="crop_auto_next_buttons()" checked> <a title="Go to next image after clicking ignore or crop">Auto next</a><br>
+		<input type="checkbox" id="c_copy"> <a title="Set the initial crop select window to the previous valid selection">Auto copy mask</a><br>
+		<hr>
+		<button id="c_save" class="save unlock" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
+		<button id="c_revert" class="revert unlock" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
+		<br><br>
+		<table>
+			<thead>
+				<tr>
+					<td>  </td>
+					<td> Total </td>
+					<td> Missing </td>
+					<td> Unknown </td>
+					<td> Ignored </td>
+					<td> Cropped </td>
+					<td> On-disk </td>
+				</tr>
+			</thead>
+			<tbody id="crop-table">
+			</tbody>
+		</table>
+		<pre id="c_warn" class="warn"></pre>
+		<hr>
+		<div>
+			<input id="c_slider" type="range" min=0 max=1 style="width: 80%; display: inline-block">
+			<button style="width: 15%; display: inline" onclick="crop_slider()"> Go to image set on slider </button>
+		</div>
+		<hr>
+		<h3>Prev. displayed Image: <span id="c_status_prev">-</span></h3>
+		<h3 id="c_file">Current Path: [<span id="c_filename">-</span>]</h3>
+		<h2>Current Image: <span id="c_status">-</span></h2>
+		<div id="cb_mask"> <!--
+			--><button style="background-image: url('assets/c_mask_dupe.png')" id="cm_dupe" onclick="crop_duplicate()"> Dupe image </button><!--
+			--><button style="background-image: url('assets/c_mask_copy.png')" id="cm_prev" onclick="crop_mask_prev()"> Copy Mask </button><!--
+			--><button style="background-image: url('assets/c_mask_half.png')" id="cm_half" onclick="crop_mask_half()"> Half Mask </button><!--
+			--><button style="background-image: url('assets/c_mask_fill.png')" id="cm_fill" onclick="crop_mask_fill()"> Fill mask </button><!--
+		--></div>
+		<br>
+		<div id="cb_img"> <!--
+			--><button style="background-image: url('assets/c_prev.png')" id="c_prev" onclick="crop_prev_image()" title="Go to previous image, don't save current selection"> Prev </button><!--
+			--><button style="background-image: url('assets/c_first.png')" id="c_first" onclick="crop_first_image()" title="Go to first image, don't save current selection"> First </button><!--
+			--><button style="background-image: url('assets/c_ignore_next.png')" id="c_ignore" onclick="crop_next_image(false,true)" title="Go to next image, mark current as ignored."> Ignore+Next </button><!--
+			--><button style="background-image: url('assets/c_crop_next.png')" id="c_crop" onclick="crop_next_image(true)" title="Go to next image, save current selected area"> Crop+Next </button><!--
+			--><button style="background-image: url('assets/c_next.png')" id="c_next" onclick="crop_next_image()" title="Go to next, don't save current selection"> Next </button><!--
+		--></div>
+		<div id="crop-img-div">
+		</div>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/crop.js"></script>
+</div>
+
+<!-- COMMON -->
+<script src="scripts/common.js"></script>	
+</body>
+</html>

@@ -33,6 +33,24 @@ label {
 	display: inline-block;
 }
 
+/* navbar */
+#navbar {
+	max-width: 80%;
+	width: 80%;
+}
+
+.navbar-element {
+	width: 16%;
+	display: inline-block;
+	vertical-align: top;
+	text-align: center;
+}
+
+.navbar-element button {
+	width: 100%;
+	font-size: 30px;
+}
+
 /* Elements */
 
 .module {

@@ -64,7 +64,7 @@ function dataset_hasActive(active) {
 		document.getElementById("d_new").disabled = false;
 		document.getElementById("d_update").disabled = true;
 	}
-	update_all() // other scripts
+	page_update(false) // other scripts
 }
 
 function dataset_json_parse() { // Parse dataset metadata from page

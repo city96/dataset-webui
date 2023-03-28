@@ -199,7 +199,7 @@ async function sort_apply() {
 	sort_cat_update()
 
 	// propagate
-	update_all()
+	page_update(false)
 }
 
 function s_prev() {

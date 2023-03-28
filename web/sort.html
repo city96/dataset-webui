@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dataset Scripts</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
+	<link rel="icon" type="image/png" href="favicon.ico">
+	<link rel="stylesheet" href="default.css">
+</head>
+<body>
+<h1>LoRA Dataset Script Webui</h1>
+<!-- Step menu -->
+<div id="navbar" class="module">
+	<p class="warn float-warn" id="navbar-float-warn"></p>
+	<button class="update" onclick="page_update()"> ⭮ </button>
+
+	<div class="navbar-element" id="nb-dataset-div">
+		<button onclick="window.location.replace('/')"> Datasets </button><br>
+		<label> Load/Save/New </label><br>
+		<label class="tip"> All folders / dataset.json </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-status-div">
+		<button onclick="window.location.replace('/status.html')"> Status </button><br>
+		<label> Step overview </label><br>
+		<label class="tip"> All folders </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-crop-div">
+		<button onclick="window.location.replace('/crop.html')" disabled> Cropping </button><br>
+		<label> Crop images </label><br>
+		<label class="tip"> 1 - cropped </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-sort-div">
+		<button onclick="window.location.replace('/sort.html')"> Sorting </button><br>
+		<label> Categorize images </label><br>
+		<label class="tip"> 2 - sorted </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-tag-div">
+		<button onclick="window.location.replace('/tag.html')"> Tagging </button><br>
+		<label> Edit tags </label><br>
+		<label class="tip"> 3 - tagged / 4 - fixed </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-out-div">
+		<button onclick="window.location.replace('/out.html')"> Output </button><br>
+		<label> Finalize images/tags </label><br>
+		<label class="tip"> 5 - out </label><br>
+		<label class="nfo"> </label>
+	</div>
+</div>
+
+<!-- Sorting functions -->
+<div class="category">
+<h1> Sorting </h1>
+	<!-- Sort writer -->
+	<div id="sort-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="sort-write-float-warn"></p>
+		<button id="sw_apply" class="apply" onclick="sort_apply()" disabled> Apply Sort </button>
+		<p class="tip"> This will take the images in "1 - cropped" and <br> copy them into "2 - sorted based on the categories set below. </p>
+		<pre id="s_out"></pre>
+	</div>
+
+	<!-- Category -->
+	<div id="sort-cat-div" class="module">
+		<h2>Categories:</h2>
+		<p class="warn float-warn" id="sort-cat-float-warn"></p>
+		<button class="update" onclick="sort_cat_update()">  ⭮  </button>
+		
+		<button id="sc_save" class="save unlock" onclick="sort_cat_json_save()" disabled> Save </button>
+		<button id="sc_revert" class="revert unlock" onclick="sort_cat_update()" disabled> Revert Changes </button>
+		<br><br>
+
+		<table>
+			<thead>
+				<tr>
+					<td> Category name </td>
+					<td> Weight </td>
+					<td> Color </td>
+					<td> Keep </td>
+					<td> Images </td>
+				</tr>
+			</thead>
+			<tbody id="sort-cat-table">
+			</tbody>
+		</table>
+		<br>+
+		<label>Add new category:</label>
+		<span><input type="text" id="sc_new_name" placeholder="category name"> </input></span>
+		<button id="sc_new_add" onclick="lock('sort-cat-div');sort_cat_add()"> Add category </button>
+
+		<pre class="tip">To remove an existing category, assign all items in that category to another one.</pre>
+		<pre class="tip">Categories with "keep" checked will never be removed.</pre>
+		
+		<label>Try to load data from output (dangerous):</label> <button id="sc_load" onclick="lock('sort-cat-div');sort_cat_disk()" disabled> Load from output </button>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/category.js"></script>
+
+	<!-- Sort -->
+	<div id="sort-div" class="module">
+		<h2>Sorting:</h2>
+		<p class="warn float-warn" id="sort-float-warn"></p>
+		<button class="update" onclick="sort_update()"> ⭮ </button>
+		
+		<button id="s_save" class="save unlock" onclick="sort_json_save()" disabled> Save </button>
+		<button id="s_revert" class="revert unlock" onclick="sort_update()" disabled> Revert Changes </button>
+		<br><br>
+		
+		<a style="font-size: 20px"> Current: <label id="sort_tcat" class="tcat"> - </label></a>
+		<br><br>
+		<div id="sort-buttons"></div>
+		<br>
+		
+		<button id="s_prev" onclick="s_prev()"> Prev </button>
+		<button id="s_next" onclick="s_next()"> Next </button>
+		
+		<table>
+			<tbody id="sort-img-grid">
+			</tbody>
+		</table>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/sort.js"></script>
+	
+	<!-- Auto sort -->
+	<div id="sort-auto-div" class="module" style="display: none">
+		<h2>Sorting:</h2>
+		<p class="warn float-warn" id="sort-auto-float-warn"></p>
+		<!-- <button class="update" onclick="sort_update()"> ⭮ </button> -->
+		<button id="sa_run" onclick="sort_auto_run()"> Run </button>
+		<br><br>
+		<a> This module uses the sorting module above for output/saving. Use the save button there. </a>
+		<br>
+		<!-- <img id="sa_img" style="display: none" src="/assets/placeholder.png"></img> -->
+		<img id="sa_img" style="display: none" src="/assets/placeholder.png"></img>
+		<canvas id="sa_canvas" style="width: 250px"></canvas>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<!-- <script src="scripts/asort.js"></script> -->
+</div>
+
+<!-- COMMON -->
+<script src="scripts/common.js"></script>	
+</body>
+</html>

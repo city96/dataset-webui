@@ -150,6 +150,7 @@ def get_status():
 		data = {
 			"status" : {
 				"steps" : [],
+				"active" : False,
 				"warn": ["No active dataset"],
 			}
 		}
@@ -168,6 +169,7 @@ def get_status():
 		data["status"]["steps"][folder] = get_step_stats(folder)
 
 	data["status"]["warn"] = warn
+	data["status"]["active"] = True
 	return data
 
 if __name__ == "__main__":

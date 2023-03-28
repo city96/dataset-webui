@@ -450,7 +450,7 @@ async function crop_apply() {
 	document.getElementById("c_apply").disabled = false
 	
 	// propagate
-	update_all()
+	page_update(false)
 }
 
 function crop_revert() {
