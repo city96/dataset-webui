@@ -1,3 +1,8 @@
+# Webui
 requests
 aiohttp
 Pillow
+# Tagger (optional)
+numpy
+onnxruntime # replace with onnxruntime-gpu if CPU tagging is taking too long
+huggingface_hub
