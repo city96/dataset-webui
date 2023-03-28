@@ -64,7 +64,7 @@ function dataset_hasActive(active) {
 		document.getElementById("d_new").disabled = false;
 		document.getElementById("d_update").disabled = true;
 	}
-	update_all() // other scripts
+	page_update(false) // other scripts
 }
 
 function dataset_json_parse() { // Parse dataset metadata from page
@@ -76,11 +76,11 @@ function dataset_json_parse() { // Parse dataset metadata from page
 
 async function dataset_update() { // Get active+current dataset metadata
 	console.log("Update datasets")
-	lock_update()
+	save_lock()
 	let data = await fetch("/api/dataset/info");
 	data = await data.json()
 	dataset_updateTable(data["datasets"])
-	lock_update(false)
+	save_lock(false)
 }
 
 async function dataset_store(path) { // Move current dataset to datasets folder

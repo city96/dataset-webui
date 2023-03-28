@@ -1,4 +1,4 @@
-function crop_reset(message=null) {
+function crop_reset() {
 	if (crop) {
 		crop.destroy()
 	}
@@ -10,21 +10,11 @@ function crop_reset(message=null) {
 	let div = document.getElementById("crop-div")
 	div.classList.add("locked");
 
-	document.getElementById("c_save").disabled = true
-	document.getElementById("c_apply").disabled = true
-	document.getElementById("c_revert").disabled = true
-
 	document.getElementById("c_warn").innerHTML = ""
 	document.getElementById("c_status").innerHTML = ""
 	document.getElementById("c_filename").innerHTML = ""
 	document.getElementById("c_status_prev").innerHTML = ""
-
-	if (message) {
-		document.getElementById("crop-float-warn").style.display = "block"; 
-		document.getElementById("crop-float-warn").innerHTML = message
-	} else {
-		document.getElementById("crop-float-warn").style.display = "none"; 
-	}
+	document.getElementById("crop-table").innerHTML = ""
 }
 
 function crop_slider() {
@@ -42,6 +32,7 @@ function crop_update_slider() {
 }
 
 function crop_duplicate() {
+	lock("crop-div")
 	let current = crop_data["images"][crop_data["current"]]
 	let target = JSON.parse(JSON.stringify(current)) // copy
 	target["duplicate"] = true
@@ -146,6 +137,9 @@ async function crop_json_load() {
 	data = await data.json()
 	crop_data = data["crop"]
 	if (crop_data === undefined || crop_data.images === undefined || crop_data.images.length == 0) {
+		disable_module("crop-div", "Nothing to load from disk")
+		disable_module("crop-write", "Nothing to load from disk")
+		unlock()
 		return
 	}
 	if (crop_data["current"] === undefined) {
@@ -153,13 +147,13 @@ async function crop_json_load() {
 	}
 	document.getElementById("c_warn").innerHTML = data["crop"]["warn"]
 	crop_status(true)
+	unlock()
 }
 
 async function crop_json_save() {
 	console.log("Save crop/json")
-	document.getElementById("c_save").disabled = true
-	document.getElementById("c_apply").disabled = true
-	document.getElementById("c_revert").disabled = true
+	save_lock()
+
 	let data = {}
 	data["crop"] = crop_data
 
@@ -170,9 +164,8 @@ async function crop_json_save() {
 		},
 		body: JSON.stringify(data)
 	})
+	save_lock(false)
 	crop_json_load() // verify
-	document.getElementById("c_apply").disabled = false
-	unlock_all()
 }
 
 function crop_update_status_text(target,data) {
@@ -313,11 +306,7 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 	}
 
 	if (set_crop || set_ignore) { // unsaved changes
-		lock_all(["crop-div"],"You have unsaved changes")
-		document.getElementById("c_save").disabled = false
-		document.getElementById("c_apply").disabled = true
-		document.getElementById("c_revert").disabled = false
-
+		lock("crop-div")
 		if (!document.getElementById("c_next").checked) { // not auto next
 			crop_update_status_text(document.getElementById("c_status"),crop_data["images"][crop_data["current"]])
 			return
@@ -380,25 +369,25 @@ var crop_index
 async function crop_init() {
 	await crop_json_load()
 	if (!crop_data || !crop_data.images || crop_data.images.length == 0) {
-		document.getElementById("crop-div").classList.add("locked");
-		if (!disabled.includes("crop-div")) { disabled.push("crop-div") }
-		let warn = "Nothing to load from disk"
-		if(crop_data.warn) { warn = crop_data.warn }
-		crop_reset(warn)
+		document.getElementById("c_apply").disabled = true
+		if(crop_data.warn) {
+			disable_module("crop-div", crop_data.warn)
+			disable_module("crop-write", crop_data.warn)	
+		} else {
+			disable_module("crop-div", "Nothing to load from disk")
+			disable_module("crop-write", "Nothing to load from disk")
+		}
+		crop_reset()
 		return
+	} else {
+		document.getElementById("c_apply").disabled = false
+		enable_module("crop-div")
+		enable_module("crop-write")
 	}
 	if (crop) { // already init
 		return 
 	}
-	let buttons = document.getElementById("crop-div").getElementsByTagName("Button")
 
-	document.getElementById("c_save").disabled = true
-	document.getElementById("c_apply").disabled = false
-	document.getElementById("c_revert").disabled = true
-
-	document.getElementById("crop-div").classList.remove("locked");
-	document.getElementById("crop-float-warn").style.display = "none";
-	disabled = disabled.filter(function(i){return (i!=="crop-div")})
 	crop_disable_shortcuts()
 
 	let link = document.createElement( "link" )
@@ -428,12 +417,14 @@ async function crop_init() {
 
 async function crop_apply() {
 	console.log("run")
-	// crop_json_save()
+	// lock
+	document.getElementById("c_apply").disabled = true
+	lock('crop-write')
+	save_lock()
+	
 	let perc = document.getElementById("c_perc")
 	let data = await fetch("/api/crop/run");
-	document.getElementById("c_warn").innerHTML = "Cropping. Don't touch anything!"
-	document.getElementById("c_apply").disabled = true
-	full_lock(true)
+
 	data = await data.json()
 	while (data["run"]) {
 		data = await fetch("/api/crop/run_poll");
@@ -451,10 +442,15 @@ async function crop_apply() {
 	console.log("asdasd")
 	perc.max = 1
 	perc.value = 0
-	full_lock(false)
 	console.log(data);
-	document.getElementById("c_warn").innerHTML = ""
+	
+	// lock
+	save_lock(false)
+	unlock()
 	document.getElementById("c_apply").disabled = false
+	
+	// propagate
+	page_update(false)
 }
 
 function crop_revert() {
@@ -462,5 +458,4 @@ function crop_revert() {
 	if (!c) { return };
 	crop_reset()
 	crop_init()
-	unlock_all()
 }

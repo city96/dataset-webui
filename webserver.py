@@ -13,7 +13,7 @@ from category import category_info
 from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
-from fix_tags import tag_info, tag_run
+from tags import tag_fix
 
 app = web.Application()
 
@@ -57,6 +57,109 @@ async def api_json_save(request):
 	else:
 		print("no data")
 	return web.json_response({})
+
+autotag_status = {"run":False}
+def sd_tag_image(image, overwrite=False, confidence=0.35):
+	"""obsolete but needed since the webui was written for the http tagger api"""
+	from tagger import get_image_tags
+	from base64 import b64encode
+
+	if not os.path.isdir(step_list[2]):
+		os.mkdir(step_list[2])
+	
+	dst = image.get_step_path(3)
+	cat = os.path.split(dst)[0]
+	if not os.path.isdir(cat):
+		os.mkdir(cat)
+	
+	# this is only required for the webui, remove later
+	with open(image.path, mode='rb') as f:
+		base64 = b64encode(f.read()).decode("utf-8") 
+	
+	name, ext = os.path.splitext(image.get_id())
+	b64image = f"data:image/{ext[1:]};base64,{base64}"
+	
+	json_file = os.path.join(step_list[3],name+".json")
+	if os.path.isfile(json_file) and not overwrite:
+		print(" already tagged")
+		with open(json_file) as f:
+			data = json.load(f)
+		if "caption" not in data.keys():
+			return( {"caption" : {"Empty captio",1.0}, "image": image} )
+		data["caption"]["Already tagged"] = 1.0
+		data["image"] = b64image
+		data["caption"] = dict(sorted(data["caption"].items(), key=lambda item: item[1], reverse=True))
+		return(data)
+
+	data_json = {}
+	data_json["caption"] = get_image_tags(image.path,confidence)
+	data_json["caption"] = dict(sorted(data_json["caption"].items(), key=lambda item: item[1], reverse=True))
+	with open(json_file, "w") as f:
+		strdata = json.dumps(data_json, indent=2)
+		f.write(strdata)
+	data_json["image"] = b64image
+	return data_json
+
+async def api_tagger_auto_run(overwrite,confidence):
+	"""Autotagger [handled by tagger.py]"""
+	global autotag_status
+	from status import get_step_images
+
+	autotag_status = {"run":True}
+	valid = get_step_images(step_list[2])
+	autotag_status["current"] = 0
+	autotag_status["max"] = len(valid)
+	for i in valid:
+		await asyncio.sleep(0.001) # Context switch, don't remove
+		data = sd_tag_image(i,overwrite,confidence)
+		autotag_status["current"] += 1
+		autotag_status["url"] = "/img/" + i.path.replace(os.sep,"/")
+		if "caption" not in data.keys():
+			continue
+		autotag_status["caption"] = data["caption"]
+		autotag_status["image"] = data["image"]
+	autotag_status = {"run":False}
+
+async def api_tagger(request):
+	"""Image tagging [handled by tagger.py]"""
+	data = {}
+	from tagger import tagger_enabled
+	if not tagger_enabled:
+		return web.json_response({"tagger":{"enabled":False}})
+
+	confidence = 0.35
+	if "confidence" in request.rel_url.query.keys():
+		try:
+			confidence = request.rel_url.query['confidence']
+			confidence = float(confidence)
+		except:
+			confidence = 0.35
+
+	global autotag_status
+	if request.match_info['command'] == "run":
+		overwrite = False
+		if "overwrite" in request.rel_url.query.keys():
+			overwrite = request.rel_url.query['overwrite'].lower() == "true"
+		if not autotag_status["run"]:
+			print("Start task")
+			asyncio.create_task(api_tagger_auto_run(overwrite,confidence))
+			autotag_status = {"run":True}
+			return web.json_response(autotag_status)
+	elif request.match_info['command'] == "run_poll":
+		return web.json_response(autotag_status)
+	elif request.match_info['command'] == "single":
+		from tagger import get_image_tags
+		if "path" in request.rel_url.query.keys():
+			path = request.rel_url.query['path']
+			if os.path.isfile(path):
+				data = get_image_tags(path,confidence)
+		return web.json_response(data)
+	elif request.match_info['command'] == "status":
+		if not os.path.isfile("dataset.json"):
+			return web.json_response({"tagger_enabled":False})
+		return web.json_response({"tagger_enabled":tagger_enabled})
+
+	return web.json_response(data)
 
 async def api_dataset(request):
 	"""Dataset operations [handled by dataset_manager.py]"""
@@ -162,11 +265,54 @@ async def api_sort(request):
 	return web.json_response(data)
 
 async def api_tags(request):
+	"""Image tag pruning - tags [handled by tag.py]"""
 	if request.match_info['command'] == "run":
-		data = tag_run(True,True)
+		data = tag_fix(True)
 	else:
-		data = tag_info()
+		data = tag_fix()
 	return web.json_response(data)
+
+out_status = {"run":False}
+async def api_out_run(extension,overwrite,resolution):
+	"""Process all output images"""
+	global out_status
+	from out import finalize_image
+	from status import get_step_images
+
+	images = get_step_images(step_list[2],step_list[4])
+	out_status = {"run":True,"max":len(images)}
+
+	out_status["current"] = 0
+	for i in images:
+		finalize_image(i, extension, resolution, overwrite)
+		await asyncio.sleep(0.001)
+		out_status["current"] += 1
+	out_status = {"run":False}
+
+async def api_out(request):
+	"""write all output images to disk"""
+	global out_status
+	if request.match_info['command'] == "run":
+		extension = ".png"
+		if "extension" in request.rel_url.query.keys():
+			ext = request.rel_url.query['extension']
+			extension = ext if ext in [".png",".jpg"] else ".png"
+		overwrite = False
+		if "overwrite" in request.rel_url.query.keys():
+			overwrite = request.rel_url.query['overwrite'].lower() == "true"
+		resolution = 768
+		if "resolution" in request.rel_url.query.keys():
+			try:
+				resolution = int(request.rel_url.query['resolution'])
+			except:
+				resolution = 768
+
+		if not out_status["run"]:
+			out_status = {"run":True}
+			asyncio.create_task(api_out_run(extension,overwrite,resolution))
+		return web.json_response(out_status)
+	elif request.match_info['command'] == "run_poll":
+		return web.json_response(out_status)
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
@@ -174,6 +320,7 @@ app.add_routes([web.get('/', index),
 				web.get('/assets/{name}', handle),
 				web.get('/scripts/{name}', handle),
 				web.get('/img/{name:.*}', handle_image),
+				web.get('/api/tagger/{command}', api_tagger),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/dataset/{command}', api_dataset),
 				web.get('/api/status', api_status),
@@ -182,6 +329,7 @@ app.add_routes([web.get('/', index),
 				web.get('/api/sort/{command}', api_sort),
 				web.post('/api/json/save', api_json_save),
 				web.get('/api/tags/{command}', api_tags),
+				web.get('/api/out/{command}', api_out),
 				])
 
 if __name__ == '__main__':

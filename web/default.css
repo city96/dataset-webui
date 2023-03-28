@@ -33,6 +33,24 @@ label {
 	display: inline-block;
 }
 
+/* navbar */
+#navbar {
+	max-width: 80%;
+	width: 80%;
+}
+
+.navbar-element {
+	width: 16%;
+	display: inline-block;
+	vertical-align: top;
+	text-align: center;
+}
+
+.navbar-element button {
+	width: 100%;
+	font-size: 30px;
+}
+
 /* Elements */
 
 .module {
@@ -83,6 +101,9 @@ label {
 
 .tip {
 	color: var(--info);
+	word-wrap: anywhere;
+	max-width: 700px;
+	text-align: justify;
 }
 
 .warn {
@@ -116,6 +137,10 @@ label {
 	user-select: auto;
 }
 
+.save, .revert {
+	font-size:25px
+}
+
 /* Table */
 table {
 	font-family: arial, sans-serif;
@@ -146,6 +171,10 @@ input, button {
 	color: revert;
 	background-color: revert;
 }
+.input {
+	margin: 5px 0;
+}
+
 .input label {
     float: left;
     padding: 0 8px 0 0;
@@ -302,4 +331,38 @@ img {
 #sort-buttons:hover .cat:not(:hover) {
 	background-color: #000 !important;
 	color: #666;
+}
+
+#ta_img {
+	display: inline-block;
+	width: 300px;
+	height: 300px;
+}
+
+#ta_tags {
+	width: 55%;
+	height: 300px;
+	float: right;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.tt {
+	position: relative;
+}
+.tt-text {
+	position: absolute;
+	z-index: 1;
+	visibility: hidden;
+	font-size: 15px;
+	color: var(--main);
+	background-color: var(--acnt);
+	padding: 5px;
+	margin: 0px;
+	top: -5px;
+	left: 105%;
+	width: 400px;
+}
+.tt:hover .tt-text {
+	visibility: visible
 }

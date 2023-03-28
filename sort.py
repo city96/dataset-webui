@@ -37,6 +37,7 @@ def sort_info():
 			continue
 		data["categories"][c.name] = {
 			"color" : c.color,
+			"tags" : [x.name for x in c.tags],
 			"count" : count,
 		}
 
@@ -45,6 +46,7 @@ def sort_info():
 			"name" : "default",
 			"weight" : "1",
 			"color" : "#555555",
+			"tags" : [],
 			"count" : sum([x["category"] == "default" for x in images])
 		}
 

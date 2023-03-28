@@ -12,10 +12,10 @@
 <!-- Step menu -->
 <div id="navbar" class="module">
 	<p class="warn float-warn" id="navbar-float-warn"></p>
-	<button class="update" onclick="page_update()"> ⭮ </button>
+	<button class="update" onclick="page_update()"> тно </button>
 
 	<div class="navbar-element" id="nb-dataset-div">
-		<button onclick="window.location.replace('/')" disabled> Datasets </button><br>
+		<button onclick="window.location.replace('/')"> Datasets </button><br>
 		<label> Load/Save/New </label><br>
 		<label class="tip"> All folders / dataset.json </label><br>
 		<label class="nfo"> </label>
@@ -50,52 +50,54 @@
 	</div>
 
 	<div class="navbar-element" id="nb-out-div">
-		<button onclick="window.location.replace('/out.html')"> Output </button><br>
+		<button onclick="window.location.replace('/out.html')" disabled> Output </button><br>
 		<label> Finalize images/tags </label><br>
 		<label class="tip"> 5 - out </label><br>
 		<label class="nfo"> </label>
 	</div>
 </div>
 
-<!-- Dataset functions -->
+<!-- Out -->
 <div class="category">
-<h1> Datasets </h1>
-	<!-- all -->
-	<div id="dataset-div" class="module">
-		<h2>All datasets:</h2>
-		<button class="update" onclick="dataset_update()"> ⭮ </button>
-		<table>
-			<thead>
-				<tr>
-					<td> Name </td>
-					<td> Folder </td>
-					<td> Images </td>
-					<td> Move </td>
-				</tr>
-			</thead>
-			<tbody id="dataset-table">
-			</tbody>
-		</table>
+<h1> Output </h1>
+	<!-- Auto tag -->
+	<div id="out-write-div" class="module" style="min-width:800px">
+		<h2>Write output:</h2>
+		<p class="warn float-warn" id="tag-auto-float-warn"></p>
+		<button id="ow_run" class="save" onclick="out_write_run()"> Run </button>
+		<hr>
+		<div>
+			<label for="ow_perc">Output write/scale progress:</label>
+			<progress style="width:70%" id="ow_perc" value="0" max="0"></progress>
+			<pre id="ow_out"></pre>
+			<pre id="ow_warn" class="warn"></pre>
+		</div>
+		<hr>
+
+		<a>Resolution: </a>
+		<select id="ow_res">
+			<option value="512">512x512</option>
+			<option value="768" selected>768x768</option>
+			<option value="960">960x960</option>
+			<!-- <option value="original">As input</option> -->
+		</select>
+		<br>
+
+		<a>Extension: </a>
+		<select id="ow_ext">
+			<option value=".png" selected>PNG</option>
+			<option value=".jpg">JPEG</option>
+			<!-- <option value="original">As input</option> -->
+		</select>
+		<br>
+		
+		<a>Overwrite: </a><input id="ow_ow" type="checkbox" ></input>
 	</div>
-	<!-- Current -->
-	<div id="dataset-current-div" class="module">
-		<h2>Current:</h2>
-		<p class="warn float-warn" id="dataset-current-float-warn"></p>
-		<div class="input">
-			<label>Dataset Name =</label>
-			<span><input id="d_name" type="text" placeholder="dataset name"></input></span>
-		</div>
-		<div class="input">
-			<label>Dataset Description =</label>
-			<span><textarea id="d_description" rows="1" placeholder="dataset description"></textarea></span>
-		<button id="d_new" style="float:right" onclick="dataset_new()"> Create New Dataset </button>
-		<button id="d_update" style="float:right" onclick="dataset_save()"> Update Dataset Metadata </button>
-		</div>
 	</div>
 	<!-- LOAD SCRIPT -->
-	<script src="scripts/dataset.js"></script> 
+	<script src="scripts/out.js"></script>
 </div>
-	
+
 <!-- COMMON -->
 <script src="scripts/common.js"></script>	
 </body>

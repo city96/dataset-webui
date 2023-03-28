@@ -11,27 +11,6 @@ function tag_add_to_blacklist(tag) {
 	element.value = blacklist
 }
 
-function popular_tags(tags) {
-	var table = document.getElementById("t_pop_table")
-	table.innerHTML = "";
-
-	for(const key in tags) {
-		r = table.insertRow();
-		let c0 = r.insertCell(0)
-		c0.innerHTML = tags[key]
-		
-		let c1 = r.insertCell(1)
-		c1.innerHTML = key
-		
-		let c2 = r.insertCell(2)
-		b = document.createElement('button');
-		c2.appendChild(b)
-		b.innerHTML = "+"
-		b.setAttribute('onclick','this.disabled=true; tag_add_to_blacklist("'+key+'")')
-	}
-}
-
-
 function folder_rule_add(folder, action, target) {
 	var table = document.getElementById("t_folder_rules")
 	r = table.insertRow();
@@ -204,38 +183,6 @@ function image_filter_rule_del() {
 	}
 }
 
-function image_category_rule_add(category, tags) {
-	var table = document.getElementById("t_image_category_rules")
-	r = table.insertRow();
-
-	var c = r.insertCell(0)
-	c.innerHTML = "Image category rule"
-
-	var c = r.insertCell(1)
-	var i = document.createElement("input")
-	i.placeholder = "lum"
-	if (category) {
-		i.value = category
-	}
-	c.appendChild(i)
-
-	var c = r.insertCell(2)
-	var i = document.createElement("input")
-	i.placeholder = "1girl, aqua hair, oni horns"
-	if (tags) {
-		i.value = tags
-	}
-	c.appendChild(i)
-}
-
-function image_category_rule_del() {
-	var table = document.getElementById("t_image_category_rules")
-	let lastRow = table.rows.length-1
-	if (lastRow >= 0) {
-		table.removeChild(table.rows[lastRow])
-	}
-}
-
 function tags_disabled(state) {
 	if (state) {
 		document.getElementById("tag-div").style.color = "#888"
@@ -247,8 +194,6 @@ function tags_disabled(state) {
 	document.getElementById("t_load").disabled = state;
 	document.getElementById("t_fix").disabled = state;
 
-	document.getElementById("t_input_folder").disabled = state;
-	document.getElementById("t_output_folder").disabled = state;
 	document.getElementById("t_triggerword").disabled = state;
 	document.getElementById("t_triggerword_extra").disabled = state;
 	document.getElementById("t_whitelist").disabled = state;
@@ -272,7 +217,7 @@ function tags_disabled(state) {
 	document.getElementById("t_image_category_rule_add").disabled = state;
 	document.getElementById("t_image_category_rule_del").disabled = state;
 	
-	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules', 't_image_category_rules'].forEach(function(id){
+	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules'].forEach(function(id){
 		var table = document.getElementById(id)
 		let lastRow = table.rows.length-1
 		while (lastRow >= 0) {
@@ -283,8 +228,6 @@ function tags_disabled(state) {
 }
 
 function tag_json_clear() {
-	document.getElementById("t_input_folder").value = "3 - tagged";
-	document.getElementById("t_output_folder").value = "4 - fixed";
 	document.getElementById("t_triggerword").value = "";
 	document.getElementById("t_triggerword_extra").value = "";
 	document.getElementById("t_whitelist").value = "";
@@ -298,7 +241,7 @@ function tag_json_clear() {
 	document.getElementById("t_norm_hair_style").value = "";
 	document.getElementById("t_image_blacklist").value = "";
 	
-	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules', 't_image_category_rules'].forEach(function(id){
+	['t_folder_rules', 't_custom_rules', 't_spice_rules', 't_image_filter_rules'].forEach(function(id){
 		var table = document.getElementById(id)
 		let lastRow = table.rows.length-1
 		while (lastRow >= 0) {
@@ -310,8 +253,6 @@ function tag_json_clear() {
 
 function tag_json_get() {
 	data = {}
-	data["folder_input"] = document.getElementById("t_input_folder").value;
-	data["folder_output"] = document.getElementById("t_output_folder").value;
 	data["triggerword"] = document.getElementById("t_triggerword").value;
 	data["triggerword_extra"] = document.getElementById("t_triggerword_extra").value;
 	data["whitelist"] = document.getElementById("t_whitelist").value;
@@ -365,23 +306,12 @@ function tag_json_get() {
 		data["filter_rules"].push(a)
 	}
 
-	data["category_rules"] = [];
-	var t = document.getElementById("t_image_category_rules");
-	for (var i = 0, r; r = t.rows[i]; i++) {
-		var a = {}
-		a["category"] = r.cells[1].getElementsByTagName('input')[0].value
-		a["target"] = r.cells[2].getElementsByTagName('input')[0].value
-		data["category_rules"].push(a)
-	}
-
 	return data
 }
 
 function tag_json_load(data) {
 	tag_json_clear();
 	if(!data){ return }
-	if(data["folder_input"]){ document.getElementById("t_input_folder").value = data["folder_input"]; };
-	if(data["folder_output"]){ document.getElementById("t_output_folder").value = data["folder_output"]; };
 	if(data["triggerword"]){ document.getElementById("t_triggerword").value = data["triggerword"]; };
 	if(data["triggerword_extra"]) { document.getElementById("t_triggerword_extra").value = data["triggerword_extra"]; };
 	if(data["whitelist"]){ document.getElementById("t_whitelist").value = data["whitelist"]; };
@@ -422,20 +352,48 @@ function tag_json_load(data) {
 	return
 }
 
+function popular_tags(tags) {
+	var table = document.getElementById("t_pop_table")
+	table.innerHTML = "";
+
+	for(const key in tags) {
+		r = table.insertRow();
+		let c0 = r.insertCell(0)
+		c0.innerHTML = tags[key]
+		
+		let c1 = r.insertCell(1)
+		c1.innerHTML = key
+		
+		let c2 = r.insertCell(2)
+		b = document.createElement('button');
+		c2.appendChild(b)
+		b.innerHTML = "+"
+		b.setAttribute('onclick','this.disabled=true; tag_add_to_blacklist("'+key+'")')
+	}
+}
+
 var tag_categories
 async function tag_update() {
 	let data = await fetch("/api/tags/info");
 	data = await data.json()
+	
+	if (!data || !data.tags) {
+		disable_module("tag-div", "Nothing to load from disk")
+		return
+	} else {
+		enable_module("tag-div")
+	}
 	console.log(data)
 	tag_categories = data["tags"]["categories"]
 	tag_json_load(data["tags"])
+	unlock()
+	test_tags()
 }
 
 async function save_tag_json() {
 	console.log("Save tag/json")
-	document.getElementById("t_save").disabled = true;
-	document.getElementById("t_load").disabled = true;
-	document.getElementById("t_fix").disabled = true;
+	save_lock()
+
 	let data = {}
 	data["tags"] = tag_json_get()
 
@@ -446,17 +404,23 @@ async function save_tag_json() {
 		},
 		body: JSON.stringify(data)
 	})
-	console.log(data)
 
-	document.getElementById("t_save").disabled = false;
-	document.getElementById("t_load").disabled = false;
-	document.getElementById("t_fix").disabled = false;
-	unlock_all()
+	save_lock(false)
+	tag_update()
+}
+
+async function test_tags() {
+	let data = await fetch("/api/tags/test");
+	data = await data.json()
+	console.log(data);
+	
+	document.getElementById("t_output").innerHTML = data["tags"]["status"];
+	document.getElementById("t_warn").innerHTML = data["tags"]["warn"];
+	console.log(data["tags"]["popular"])
+	popular_tags(data["tags"]["popular"])
 }
 
 async function fix_tags() {
-	save_tag_json()
-	console.log("run")
 	let data = await fetch("/api/tags/run");
 	data = await data.json()
 	console.log(data);

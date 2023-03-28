@@ -16,7 +16,7 @@ function sort_cat_updateTable(categories) {
 		i.max = 5
 		i.value = cat.weight
 		i.setAttribute("oninput", "this.nextElementSibling.value = this.value")
-		i.setAttribute("onchange", "sort_cat_lock()")
+		i.setAttribute("onchange", "lock('sort-cat-div')")
 		i.classList.add("cat_slider")
 		c1.appendChild(i)
 
@@ -25,7 +25,7 @@ function sort_cat_updateTable(categories) {
 		ip.min = 1
 		ip.value = cat.weight
 		ip.setAttribute("oninput", "this.previousElementSibling.value = this.value")
-		ip.setAttribute("onchange", "sort_cat_lock()")
+		ip.setAttribute("onchange", "lock('sort-cat-div')")
 		ip.classList.add("cat_slide_val")
 		c1.appendChild(ip)
 		
@@ -33,7 +33,7 @@ function sort_cat_updateTable(categories) {
 		let ic = document.createElement("input")
 		ic.type = "color"
 		ic.value = cat.color
-		ic.setAttribute("onchange", "sort_cat_lock()")
+		ic.setAttribute("onchange", "lock('sort-cat-div')")
 		c2.appendChild(ic)
 
 		let c3 = r.insertCell(3)
@@ -46,12 +46,20 @@ function sort_cat_updateTable(categories) {
 		} else { 
 			ik.checked = cat.keep
 		}
-		ik.setAttribute("onchange", "sort_cat_lock()")
+		ik.setAttribute("onchange", "lock('sort-cat-div')")
 		ik.classList.add("cat_keep_check")
 		c3.appendChild(ik)
 
 		let c4 = r.insertCell(4)
-		c4.innerHTML = cat.count	
+		c4.innerHTML = cat.count
+		
+		let c5 = r.insertCell(5)
+		let it = document.createElement("input")
+		it.setAttribute("oninput", "lock('sort-cat-div')")
+		if (cat.tags) {
+			it.value = cat.tags
+		}
+		c5.appendChild(it)
 		
 		if (cat.name == "default") {
 			i.disabled = true
@@ -61,6 +69,8 @@ function sort_cat_updateTable(categories) {
 			ik.checked = true
 			ik.disabled = true
 			ik.title = "This is the default category"
+			it.value = ""
+			it.disabled = true
 		}
 	}
 }
@@ -69,8 +79,7 @@ var disk = null
 async function sort_cat_disk() {
 	let c = confirm("Are you sure want to load the data from the output folder? Only do this if you manually sorted your images (i.e. by copying them to folders in the output directory). Clicking save after loading will REPLACE ALL SORTING DATA WITH THE VALUES FROM THE OUTPUT FOLDER.");
 	if (!c) { return };
-	
-	lock_update()
+
 	let data = await fetch("/api/category/disk");
 	data = await data.json()
 	
@@ -82,12 +91,8 @@ async function sort_cat_disk() {
 		disk = data["sort"]["images"]
 	}
 	sort_cat_updateTable(data["sort"]["categories"])
-	document.getElementById("sc_save").disabled = false;
-	document.getElementById("sc_load").disabled = true;
-	document.getElementById("sc_revert").disabled = false;
 	// no add
 	document.getElementById("sc_new_name").disabled = true;
-	document.getElementById("sc_new_name").value = null
 	document.getElementById("sc_new_add").disabled = true;
 }
 
@@ -97,29 +102,28 @@ async function sort_cat_update(new_cat = null) {
 	disk = null
 	
 	if (!data || !data.sort || !data.sort.images || data.sort.images.length == 0) {
-		document.getElementById("sort-cat-float-warn").style.display = "block"; 
-		let warn = "Nothing to load from disk"
-		if (data.warn) { warn = data.warn }
-		sort_cat_disable(warn)
+		if (data.warn) { 
+			disable_module("sort-cat-div", data.warn)
+		} else {
+			disable_module("sort-cat-div", "Nothing to load from disk")
+		}
 		return
 	} else {
-		if (!new_cat) {
-			document.getElementById("sort-cat-float-warn").style.display = "none";
+		if (!new_cat) { 
+			enable_module("sort-cat-div")
+			document.getElementById("sc_new_name").disabled = false;
+			document.getElementById("sc_new_add").disabled = false;
+			document.getElementById("sc_load").disabled = false;
 		}
-		//unlock self
-		document.getElementById("sort-cat-div").classList.remove("locked");
-		disabled = disabled.filter(function(i){return (i!=="sort-cat-div")})
 	}
 	if (new_cat) { data["sort"]["categories"].push(new_cat) }
 	sort_cat_updateTable(data["sort"]["categories"])
-	if (!new_cat) { sort_cat_lock(false) }
+	if (!new_cat) {unlock()}
 }
 
 async function sort_cat_json_save() {
 	console.log("Save sort/cat/json")
-	document.getElementById("sc_save").disabled = true;
-	document.getElementById("sc_load").disabled = false;
-	document.getElementById("sc_revert").disabled = true;
+	save_lock()
 	
 	let data = {}
 	data["categories"] = [];
@@ -131,6 +135,7 @@ async function sort_cat_json_save() {
 		c["weight"] = r.cells[1].getElementsByClassName("cat_slide_val")[0].value
 		c["color"] = r.cells[2].getElementsByTagName('input')[0].value
 		c["keep"] = r.cells[3].getElementsByClassName("cat_keep_check")[0].checked
+		c["tags"] = r.cells[5].getElementsByTagName('input')[0].value
 		data["categories"].push(c)
 	}
 
@@ -141,49 +146,28 @@ async function sort_cat_json_save() {
 		},
 		body: JSON.stringify({"sort" : data})
 	})
+	save_lock(false)
 	sort_cat_update()
 	sort_update()
 	disk = null
 }
 
 function sort_cat_add() {
+	let name = document.getElementById("sc_new_name").value
+	if (name && name.length == 0) {
+		return
+	}
+	document.getElementById("sc_new_name").disabled = true;
+	document.getElementById("sc_new_add").disabled = true;
+
 	let cat = {
-		"name" : document.getElementById("sc_new_name").value,
+		"name" : name,
 		"weight" : 1,
 		"color" : "#555555",
 		"keep" : true,
 		"count" : 0,
 	}
-	sort_cat_lock()
-	sort_cat_update(cat)
-}
-
-function sort_cat_lock(state=true) { // unsaved changes
-	if (locked != state) {
-		if (state) { lock_all(["sort-cat-div"],"You have unsaved changes") }
-		else { unlock_all() }
-	}
-	document.getElementById("sc_save").disabled = !state;
-	document.getElementById("sc_load").disabled = state;
-	document.getElementById("sc_revert").disabled = !state;
-	document.getElementById("sc_new_name").disabled = state;
+	lock('sort-cat-div')
 	document.getElementById("sc_new_name").value = null
-	document.getElementById("sc_new_add").disabled = state;
-}
-
-function sort_cat_disable(message=null) {
-	document.getElementById("sort-cat-div").classList.add("locked");
-	if (!disabled.includes("sort-cat-div")) { disabled.push("sort-cat-div") }
-	document.getElementById("sc_save").disabled = true;
-	document.getElementById("sc_load").disabled = true;
-	document.getElementById("sc_revert").disabled = true;
-	document.getElementById("sort-cat-table").innerHTML = "";
-
-	if (message) {
-		document.getElementById("sort-cat-float-warn").style.display = "block"; 
-		document.getElementById("sort-cat-float-warn").innerHTML = message
-	} else {
-		document.getElementById("sort-cat-float-warn").style.display = "none"; 
-	}
-	disk = null
+	sort_cat_update(cat)
 }
