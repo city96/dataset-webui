@@ -256,11 +256,54 @@ async def api_sort(request):
 	return web.json_response(data)
 
 async def api_tags(request):
+	"""Image tag pruning - tags [handled by tag.py]"""
 	if request.match_info['command'] == "run":
 		data = tag_fix(True)
 	else:
 		data = tag_fix()
 	return web.json_response(data)
+
+out_status = {"run":False}
+async def api_out_run(extension,overwrite,resolution):
+	"""Process all output images"""
+	global out_status
+	from out import finalize_image
+	from status import get_step_images
+
+	images = get_step_images(step_list[2],step_list[4])
+	out_status = {"run":True,"max":len(images)}
+
+	out_status["current"] = 0
+	for i in images:
+		finalize_image(i, extension, resolution, overwrite)
+		await asyncio.sleep(0.001)
+		out_status["current"] += 1
+	out_status = {"run":False}
+
+async def api_out(request):
+	"""write all output images to disk"""
+	global out_status
+	if request.match_info['command'] == "run":
+		extension = ".png"
+		if "extension" in request.rel_url.query.keys():
+			ext = request.rel_url.query['extension']
+			extension = ext if ext in [".png",".jpg"] else ".png"
+		overwrite = False
+		if "overwrite" in request.rel_url.query.keys():
+			overwrite = request.rel_url.query['overwrite'].lower() == "true"
+		resolution = 768
+		if "resolution" in request.rel_url.query.keys():
+			try:
+				resolution = int(request.rel_url.query['resolution'])
+			except:
+				resolution = 768
+
+		if not out_status["run"]:
+			out_status = {"run":True}
+			asyncio.create_task(api_out_run(extension,overwrite,resolution))
+		return web.json_response(out_status)
+	elif request.match_info['command'] == "run_poll":
+		return web.json_response(out_status)
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),
@@ -277,6 +320,7 @@ app.add_routes([web.get('/', index),
 				web.get('/api/sort/{command}', api_sort),
 				web.post('/api/json/save', api_json_save),
 				web.get('/api/tags/{command}', api_tags),
+				web.get('/api/out/{command}', api_out),
 				])
 
 if __name__ == '__main__':

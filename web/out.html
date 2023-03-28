@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dataset Scripts</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
+	<link rel="icon" type="image/png" href="favicon.ico">
+	<link rel="stylesheet" href="default.css">
+</head>
+<body>
+<h1>LoRA Dataset Script Webui</h1>
+<!-- Step menu -->
+<div id="navbar" class="module">
+	<p class="warn float-warn" id="navbar-float-warn"></p>
+	<button class="update" onclick="page_update()"> тно </button>
+
+	<div class="navbar-element" id="nb-dataset-div">
+		<button onclick="window.location.replace('/')"> Datasets </button><br>
+		<label> Load/Save/New </label><br>
+		<label class="tip"> All folders / dataset.json </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-status-div">
+		<button onclick="window.location.replace('/status.html')"> Status </button><br>
+		<label> Step overview </label><br>
+		<label class="tip"> All folders </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-crop-div">
+		<button onclick="window.location.replace('/crop.html')"> Cropping </button><br>
+		<label> Crop images </label><br>
+		<label class="tip"> 1 - cropped </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-sort-div">
+		<button onclick="window.location.replace('/sort.html')"> Sorting </button><br>
+		<label> Categorize images </label><br>
+		<label class="tip"> 2 - sorted </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-tag-div">
+		<button onclick="window.location.replace('/tag.html')"> Tagging </button><br>
+		<label> Edit tags </label><br>
+		<label class="tip"> 3 - tagged / 4 - fixed </label><br>
+		<label class="nfo"> </label>
+	</div>
+
+	<div class="navbar-element" id="nb-out-div">
+		<button onclick="window.location.replace('/out.html')" disabled> Output </button><br>
+		<label> Finalize images/tags </label><br>
+		<label class="tip"> 5 - out </label><br>
+		<label class="nfo"> </label>
+	</div>
+</div>
+
+<!-- Out -->
+<div class="category">
+<h1> Output </h1>
+	<!-- Auto tag -->
+	<div id="out-write-div" class="module" style="min-width:800px">
+		<h2>Write output:</h2>
+		<p class="warn float-warn" id="tag-auto-float-warn"></p>
+		<button id="ow_run" class="save" onclick="out_write_run()"> Run </button>
+		<hr>
+		<div>
+			<label for="ow_perc">Output write/scale progress:</label>
+			<progress style="width:70%" id="ow_perc" value="0" max="0"></progress>
+			<pre id="ow_out"></pre>
+			<pre id="ow_warn" class="warn"></pre>
+		</div>
+		<hr>
+
+		<a>Resolution: </a>
+		<select id="ow_res">
+			<option value="512">512x512</option>
+			<option value="768" selected>768x768</option>
+			<option value="960">960x960</option>
+			<!-- <option value="original">As input</option> -->
+		</select>
+		<br>
+
+		<a>Extension: </a>
+		<select id="ow_ext">
+			<option value=".png" selected>PNG</option>
+			<option value=".jpg">JPEG</option>
+			<!-- <option value="original">As input</option> -->
+		</select>
+		<br>
+		
+		<a>Overwrite: </a><input id="ow_ow" type="checkbox" ></input>
+	</div>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/out.js"></script>
+</div>
+
+<!-- COMMON -->
+<script src="scripts/common.js"></script>	
+</body>
+</html>
