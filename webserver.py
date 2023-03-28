@@ -127,17 +127,19 @@ async def api_tagger(request):
 	if not tagger_enabled:
 		return web.json_response({"tagger":{"enabled":False}})
 
+	confidence = 0.35
+	if "confidence" in request.rel_url.query.keys():
+		try:
+			confidence = request.rel_url.query['confidence']
+			confidence = float(confidence)
+		except:
+			confidence = 0.35
+
 	global autotag_status
 	if request.match_info['command'] == "run":
 		overwrite = False
 		if "overwrite" in request.rel_url.query.keys():
 			overwrite = request.rel_url.query['overwrite'].lower() == "true"
-		if "confidence" in request.rel_url.query.keys():
-			try:
-				confidence = request.rel_url.query['confidence']
-				confidence = float(confidence)
-			except:
-				confidence = 0.35
 		if not autotag_status["run"]:
 			print("Start task")
 			asyncio.create_task(api_tagger_auto_run(overwrite,confidence))
@@ -145,6 +147,13 @@ async def api_tagger(request):
 			return web.json_response(autotag_status)
 	elif request.match_info['command'] == "run_poll":
 		return web.json_response(autotag_status)
+	elif request.match_info['command'] == "single":
+		from tagger import get_image_tags
+		if "path" in request.rel_url.query.keys():
+			path = request.rel_url.query['path']
+			if os.path.isfile(path):
+				data = get_image_tags(path,confidence)
+		return web.json_response(data)
 	elif request.match_info['command'] == "status":
 		if not os.path.isfile("dataset.json"):
 			return web.json_response({"tagger_enabled":False})

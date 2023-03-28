@@ -1,7 +1,7 @@
 import os
 import json
 from common import step_list, Category
-from status import get_step_images
+from status import get_step_images, str_to_tag_list
 warn = []
 
 def get_original_filename(fname, folder):
@@ -77,6 +77,7 @@ def get_sort_categories(path,data):
 			cat = Category(name,weight)
 			cat.color = i["color"] if "color" in i.keys() and i["color"] else "#555555"
 			cat.keep = i["keep"] if "keep" in i.keys() and i["keep"] else False
+			cat.tags = str_to_tag_list(i["tags"]) if "tags" in i.keys() else []
 			categories.append(cat)
 	
 	for i in get_step_images(path):
@@ -122,6 +123,7 @@ def category_info(disk_only=False):
 			"name" : c.name,
 			"weight" : c.weight,
 			"color" : c.color,
+			"tags" : [x.name for x in c.tags],
 			"keep" : c.keep,
 			"disk" : disk,
 			"count" : count,
@@ -132,6 +134,7 @@ def category_info(disk_only=False):
 			"name" : "default",
 			"weight" : "1",
 			"color" : "#555555",
+			"tags" : [],
 			"count" : sum([x["category"] == "default" for x in images])
 		})
 

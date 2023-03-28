@@ -51,7 +51,15 @@ function sort_cat_updateTable(categories) {
 		c3.appendChild(ik)
 
 		let c4 = r.insertCell(4)
-		c4.innerHTML = cat.count	
+		c4.innerHTML = cat.count
+		
+		let c5 = r.insertCell(5)
+		let it = document.createElement("input")
+		it.setAttribute("oninput", "lock('sort-cat-div')")
+		if (cat.tags) {
+			it.value = cat.tags
+		}
+		c5.appendChild(it)
 		
 		if (cat.name == "default") {
 			i.disabled = true
@@ -61,6 +69,8 @@ function sort_cat_updateTable(categories) {
 			ik.checked = true
 			ik.disabled = true
 			ik.title = "This is the default category"
+			it.value = ""
+			it.disabled = true
 		}
 	}
 }
@@ -125,6 +135,7 @@ async function sort_cat_json_save() {
 		c["weight"] = r.cells[1].getElementsByClassName("cat_slide_val")[0].value
 		c["color"] = r.cells[2].getElementsByTagName('input')[0].value
 		c["keep"] = r.cells[3].getElementsByClassName("cat_keep_check")[0].checked
+		c["tags"] = r.cells[5].getElementsByTagName('input')[0].value
 		data["categories"].push(c)
 	}
 
