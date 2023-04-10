@@ -11,7 +11,7 @@ use_cache = True
 # grab tags directly from danbooru api
 def download_danbooru_tags(min_count=1000, max_page=10):
 	api_base = "https://danbooru.donmai.us/"
-	page = 0
+	page = 1
 	tags = []
 	while True:
 		url = f"{api_base}tags.json?limit=1000&search[order]=count&page={page}"
@@ -30,7 +30,7 @@ def download_danbooru_tags(min_count=1000, max_page=10):
 			continue
 		break
 
-	out_file = os.path.join("other","danbooru-tags.json")
+	out_file = os.path.join("external","danbooru-tags.json")
 	print(f" writing to file {out_file}")
 	with open(out_file,"w") as f:
 		json.dump(tags, f)
@@ -59,7 +59,7 @@ def download_gelbooru_tags(min_count=1000, max_page=100, deprecated=True):
 			continue
 		break
 
-	out_file = os.path.join("other","gelbooru-tags.json")
+	out_file = os.path.join("external","gelbooru-tags.json")
 	with open(out_file,"w") as f:
 		json.dump(tags, f)
 
@@ -68,8 +68,8 @@ def download_premade_tags(args):
 	# taglist from web
 	premade = {
 		"danbooru" : {
-			"url" : "https://gist.githubusercontent.com/city96/86451816d65636103393e380400abaa3/raw/edaaa37c931240add974e006b72b63b8fc217167/danbooru-tags.json",
-			"url_alt" : "https://files.catbox.moe/w5duuj.json",
+			"url" : "https://gist.githubusercontent.com/city96/86451816d65636103393e380400abaa3/raw/499e07b37df12df5bccc2873a88a3e2cd24a5f85/danbooru-tags-new.json",
+			"url_alt" : "https://files.catbox.moe/poji8t.json",
 			"filename" : os.path.join("external","danbooru-tags.json"),
 		},
 		"gelbooru" : {
