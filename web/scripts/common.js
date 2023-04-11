@@ -206,6 +206,7 @@ async function page_update(update=true) {
 		navbar_set("nb-tag-div",false,"Active tab","green")
 		if (update) {
 			tag_update()
+			tag_img_update()
 			tag_auto_check()
 		}
 	} else {

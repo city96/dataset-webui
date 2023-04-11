@@ -409,6 +409,7 @@ async function save_tag_json() {
 
 	save_lock(false)
 	tag_update()
+	tag_img_update() // propagate
 }
 
 async function test_tags() {

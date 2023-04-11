@@ -14,6 +14,7 @@ from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
 from common import step_list
 from tags import tag_fix
+from imgtags import imgtag_info, imgtag_all_tags
 
 app = web.Application()
 
@@ -272,6 +273,13 @@ async def api_tags(request):
 		data = tag_fix()
 	return web.json_response(data)
 
+async def api_imgtags(request):
+	"""Individual tag editing - [handled by imgtags.py]"""
+	if request.match_info['command'] == "info":
+		return web.json_response(imgtag_info())
+	if request.match_info['command'] == "all_tags":
+		return web.json_response(imgtag_all_tags())
+
 out_status = {"run":False}
 async def api_out_run(extension,overwrite,resolution):
 	"""Process all output images"""
@@ -329,6 +337,7 @@ app.add_routes([web.get('/', index),
 				web.get('/api/sort/{command}', api_sort),
 				web.post('/api/json/save', api_json_save),
 				web.get('/api/tags/{command}', api_tags),
+				web.get('/api/imgtags/{command}', api_imgtags),
 				web.get('/api/out/{command}', api_out),
 				])
 

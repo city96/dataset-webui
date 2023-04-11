@@ -105,7 +105,6 @@
 
 		<!-- START TAG SETTING LIST -->
 		<h2>Tag filters:</h2>
-		<a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
 		<button id="t_save" class="save unlock" onclick="save_tag_json()" disabled> Save changes </button>
 		<button id="t_load" class="save unlock" onclick="tag_update()" disabled> Discard changes </button>
 		<button id="t_fix" class="save req-save" onclick="test_tags()"> Test rules </button>
@@ -399,6 +398,32 @@
 		</div>
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/tags.js"></script>
+
+	<!-- Single image tags -->
+	<div id="tag-image-div" class="module" style="min-width:1200px">
+		<h2>Tag Individual Images:</h2>
+		<p class="warn float-warn" id="tag-image-float-warn"></p>
+		<button id="ti_save" class="save unlock" onclick="tag_save_prev()" disabled> Save </button>
+		<button id="ti_revert" class="revert unlock" onclick="tag_img_update()" disabled> Revert Changes </button>
+		<button id="ti_run" class="save req-save" onclick="fix_tags()"> Apply rules </button>
+
+		<p class="tip"> The test/apply button on the Tag Filter module also applies the changes made here.</p>
+
+		<hr>
+		<div id="ti_ctrl"> <!--
+			--><button class="save" id="c_prev" onclick="tag_img_prev()"> Prev </button><!--
+			--><button class="save" id="c_ignore" onclick="crop_next_image(false,true)"> Clear current </button><!--
+			--><button class="save" id="c_next" onclick="tag_img_next()"> Next </button><!--
+		--></div>
+		<hr>
+		<img id="ti_img" src="/assets/placeholder.png"></img>
+		<div id="ti_tags">
+			<table id="ti-table">
+			</table>
+		</div>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/imgtags.js"></script>
 </div>
 
 <!-- COMMON -->

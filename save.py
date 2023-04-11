@@ -37,6 +37,8 @@ def save_json(new):
 		if "images" in new["tags"].keys() and new["tags"]["images"]:
 			print("  img")
 			data["tags"]["images"] = new["tags"]["images"]
+			if "missing" in new["tags"].keys():
+				data["tags"]["missing"] = new["tags"]["missing"]
 
 	for key in new.keys():
 		if key not in data.keys():

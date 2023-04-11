@@ -3,7 +3,7 @@
 import os
 import json
 import random
-from common import step_list, rating_list, load_dataset_json
+from common import Tag, step_list, rating_list, load_dataset_json
 from status import get_step_images, str_to_tag_list
 
 debug = False
@@ -423,6 +423,35 @@ def dedupe_tags(images):
 		print(status[-1])
 	return images
 
+# single img overrides
+def single_img_overrides(images, rules):
+	if not rules:
+		return images
+
+	added = 0
+	removed = 0
+	for i in images:
+		rule = [x for x in rules if x["filename"] == i.get_id()]
+		if not rule:
+			continue
+		else:
+			rule = rule[0]
+
+		new_tags = [x for x in i.tags if x.name not in rule["rem"]]
+		removed += len(i.tags) - len(new_tags)
+		i.tags = new_tags
+
+		for a in rule["add"]:
+			t = Tag()
+			t.name = a
+			t.position = 10
+			i.tags.append(t)
+			added += 1
+
+	status.append(f"\nSingle image overrides (+{added} | -{removed})")
+	print(status[-1])
+	return images
+
 # get popular tags
 def popular_tags(images):
 	tags = {}
@@ -492,52 +521,14 @@ default_tag_rules =  {
     "filter_rules": []
   }
 
-# default logic
-def tag_fix(save=False):
-	global whitelist
-	global status
-	global warn
-	global c
-	status = []
-	warn = []
-	status.append("Tag fixer")
-	print(status[-1])
-
-	# reload json
-	json_data = load_dataset_json()
-	if not json_data:
-		warn.append("Missing 'dataset.json' config")
-		print(warn[-1])
-		return
-
-	if "tags" in json_data.keys() and "rules" in json_data["tags"].keys():
-		c = json_data["tags"]["rules"]
-	else:
-		warn.append("no tags or rules")
-		print(warn[-1])
-		c = default_tag_rules
-
-	# load images
-	images = get_step_images(step_list[2],step_list[3])
-	if len(images) == 0:
-		warn.append("no tags")
-		print(warn[-1])
-		return
-		
-	# stats
-	img_status(images,True)
-
+# apply rules only
+def apply_tag_rules(images, c):
 	if True: #c["FixUnderscores"]:
 		images = underscore_fix(images)
 
 	# filter input images
 	print(c["image_blacklist"])
 	images = image_filter(images,str_to_tag_list(c["image_blacklist"]),c["filter_rules"])
-
-	# load whitelist
-	whitelist = str_to_tag_list(c["whitelist"])
-	whitelist += str_to_tag_list(c["triggerword"])
-	# whitelist += str_to_tag_list(c["triggerword_extra"])
 
 	# popular-only filter
 	tag_file = os.path.join("external",f'{c["booru"]["type"]}-tags.json')
@@ -566,11 +557,66 @@ def tag_fix(save=False):
 	images = raise_tags(images,str_to_tag_list(c["triggerword_extra"]))
 	images = blacklist(images,str_to_tag_list(c["blacklist"]))
 	images = dedupe_tags(images)
+	
+	return images
 
+
+# default logic
+def tag_fix(save=False, rules_only=False):
+	global whitelist
+	global status
+	global warn
+	global c
+	status = []
+	warn = []
+	status.append("Tag fixer")
+	print(status[-1])
+
+	# reload json
+	json_data = load_dataset_json()
+	if not json_data:
+		warn.append("Missing 'dataset.json' config")
+		print(warn[-1])
+		return
+
+	# separate rules
+	if "tags" in json_data.keys() and "rules" in json_data["tags"].keys():
+		c = json_data["tags"]["rules"]
+	else:
+		warn.append("no tags or rules")
+		print(warn[-1])
+		c = default_tag_rules
+
+	# load images
+	images = get_step_images(step_list[2],step_list[3])
+	if len(images) == 0:
+		warn.append("no tags")
+		print(warn[-1])
+		return
+		
+	# initial stats
+	img_status(images,True)
+
+	# load whitelist
+	whitelist = str_to_tag_list(c["whitelist"])
+	whitelist += str_to_tag_list(c["triggerword"])
+	# whitelist += str_to_tag_list(c["triggerword_extra"])
+
+	# apply actual rules
+	images = apply_tag_rules(images, c)
+
+	# apply single-image overrides
+	if "images" in json_data["tags"].keys() and not rules_only:
+		images = single_img_overrides(images,json_data["tags"]["images"])
+
+	# final stats
 	status.append("\nFinal:")
 	print(status[-1])
 	img_status(images,True)
-	
+
+	if rules_only: # pass to other function
+		return images
+
 	if save:
 		write_tags(images,step_list[4])
 	
