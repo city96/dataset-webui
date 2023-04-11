@@ -2,7 +2,7 @@ import os
 import json
 import hashlib
 from category import get_sort_categories, get_sort_images
-from common import step_list, Category
+from common import step_list, Category, load_dataset_json
 from status import get_step_images
 from shutil import copyfile
 warn = []
@@ -10,16 +10,15 @@ warn = []
 def sort_info():
 	global warn
 	warn = []
-	if not os.path.isfile("dataset.json"):
+
+	json_data = load_dataset_json()
+	if not json_data:
 		data = {
 			"sort" : {
 				"warn" : ["No images"]
 			}
 		}
 		return data
-	
-	with open("dataset.json") as f:
-		json_data = json.load(f)
 
 	data = {}
 	data["categories"] = {}
@@ -137,8 +136,7 @@ def sort_write():
 	build_hashdb((source + dest),force=True)
 	check_orphans(dest,step_list[1],step_list[2])
 
-	with open("dataset.json") as f:
-		json_data = json.load(f)
+	json_data = load_dataset_json()
 	name_db = get_new_names(dest, json_data)
 	print(json.dumps(name_db,indent=2))
 	for i in name_db:

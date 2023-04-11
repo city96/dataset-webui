@@ -2,7 +2,7 @@
 # script to save/load dataset folders
 import os
 import json
-from common import verify_input
+from common import version
 from common import step_list as folder_list
 from status import get_step_stats
 
@@ -15,6 +15,7 @@ class Dataset:
 	name = None
 	description = None
 	save_path = None
+	version = 1.0 # default to 1.0 (eg. missing)
 	size = 0
 
 	def __str__(self):
@@ -121,7 +122,7 @@ def get_folder_dataset(path):
 		return
 
 	with open(json_path) as f:
-		config = json.load(f)
+		config = json.load(f) # do not upgrade here, not used elsewhere
 	dataset.name = config["meta"]["name"].strip()
 	dataset.description = config["meta"]["description"]
 
@@ -129,7 +130,10 @@ def get_folder_dataset(path):
 		warn.append(f"dataset in {path} has no name/empty json")
 		print(warn[-1])
 		dataset.name = "Untitled"
-		# return
+		# return 
+	
+	if "version" in config["meta"] and confit["meta"]["version"]:
+		dataset.version = confit["meta"]["version"]
 
 	# progress aware folder count
 	for step in reversed(folder_list):

@@ -1,6 +1,6 @@
 import os
 import json
-from common import step_list, Category
+from common import step_list, Category, load_dataset_json
 from status import get_step_images, str_to_tag_list
 warn = []
 
@@ -93,16 +93,15 @@ def category_info(disk_only=False):
 	global warn
 	warn = []
 	folder = step_list[2] if disk_only else step_list[1]
-	if not os.path.isfile("dataset.json"):
+
+	json_data = load_dataset_json()
+	if not json_data:
 		data = {
 			"sort" : {
 				"warn" : ["No images"]
 			}
 		}
 		return data
-	
-	with open("dataset.json") as f:
-		json_data = json.load(f)
 
 	data = {}
 	data["categories"] = []

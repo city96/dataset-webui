@@ -3,7 +3,7 @@
 import os
 import json
 import random
-from common import step_list, rating_list
+from common import step_list, rating_list, load_dataset_json
 from status import get_step_images, str_to_tag_list
 
 debug = False
@@ -504,18 +504,18 @@ def tag_fix(save=False):
 	print(status[-1])
 
 	# reload json
-	if os.path.isfile("dataset.json"):
-		with open("dataset.json") as f:
-			data = json.load(f)
-			if "tags" not in data.keys():
-				# warn.append("no tags or rules")
-				# print(warn[-1])
-				data["tags"] = default_tag_rules
-			c = data["tags"]
-	else:
+	json_data = load_dataset_json()
+	if not json_data:
 		warn.append("Missing 'dataset.json' config")
 		print(warn[-1])
 		return
+
+	if "tags" in json_data.keys() and "rules" in json_data["tags"].keys():
+		c = json_data["tags"]["rules"]
+	else:
+		warn.append("no tags or rules")
+		print(warn[-1])
+		c = default_tag_rules
 
 	# load images
 	images = get_step_images(step_list[2],step_list[3])
@@ -575,6 +575,8 @@ def tag_fix(save=False):
 		write_tags(images,step_list[4])
 	
 	# return data
+	data = {"tags" : {}}
+	data["tags"]["rules"] = c
 	data["tags"]["categories"] = list(set([str(x.category) for x in images]))
 	data["tags"]["popular"] = popular_tags(images)
 	data["tags"]["status"] = "\n".join(status)

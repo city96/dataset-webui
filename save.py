@@ -1,10 +1,10 @@
 import json
+from common import load_dataset_json, version
 
 def save_json(new):
 	"""Load current dataset.json and replace relevant sections"""
 	print("Updating dataset.json")
-	with open("dataset.json") as f:
-		data = json.load(f)
+	data = load_dataset_json()
 
 	if "meta" in new.keys() and new["meta"]:
 		print(" meta")
@@ -29,12 +29,21 @@ def save_json(new):
 
 	if "tags" in new.keys() and new["tags"]:
 		print(" tags")
-		data["tags"] = new["tags"]
+		if "tags" not in data.keys():
+			data["tags"] = {}
+		if "rules" in new["tags"].keys() and new["tags"]["rules"]:
+			print("  rules")
+			data["tags"]["rules"] = new["tags"]["rules"]
+		if "images" in new["tags"].keys() and new["tags"]["images"]:
+			print("  img")
+			data["tags"]["images"] = new["tags"]["images"]
 
 	for key in new.keys():
 		if key not in data.keys():
 			print(f" add '{key}'")
 			data[key] = new[key]
+
+	data["meta"]["version"] = version # upgrade
 
 	with open("dataset.json", "w") as f:
 		strdata = json.dumps(data, indent=2)

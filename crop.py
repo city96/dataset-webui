@@ -1,5 +1,5 @@
 import os
-from common import Image, Tag, step_list
+from common import Image, Tag, step_list, load_dataset_json
 from status import get_step_images
 from category import mesh_image_list
 import json
@@ -11,16 +11,15 @@ warn = []
 def crop_info():
 	global warn
 	warn = []
-	if not os.path.isfile("dataset.json"):
+
+	data = load_dataset_json()
+	if not data:
 		data = {
 			"crop" : {
 				"warn" : ["No active dataset"]
 			}
 		}
 		return data
-	
-	with open("dataset.json") as f:
-		data = json.load(f)
 
 	if "crop" not in data.keys():
 		data["crop"] = {}

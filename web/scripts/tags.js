@@ -385,7 +385,7 @@ async function tag_update() {
 	}
 	console.log(data)
 	tag_categories = data["tags"]["categories"]
-	tag_json_load(data["tags"])
+	tag_json_load(data["tags"]["rules"])
 	unlock()
 	test_tags()
 }
@@ -394,8 +394,10 @@ async function save_tag_json() {
 	console.log("Save tag/json")
 	save_lock()
 
-	let data = {}
-	data["tags"] = tag_json_get()
+	let data = {
+		"tags" : {},
+	}
+	data["tags"]["rules"] = tag_json_get()
 
 	await fetch('/api/json/save', {
 		method: 'POST',

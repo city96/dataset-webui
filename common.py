@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # random functions that are used in multiple scripts
 import os
+import json
 
 step_list = [
 	"0 - raw",
@@ -17,6 +18,8 @@ rating_list = [
 	"questionable",
 	"explicit",
 ]
+
+version = 1.1 # current dataset version
 
 class Image:
 	"""class to store image attributes"""
@@ -127,3 +130,31 @@ def verify_input(text,true,false,default=None):
 			return default
 		else:
 			print(f"Invalid input '{i}'\n")
+
+def load_dataset_json():
+	"""load the current dataset json, apply fallback fixes [fast forward to current version]"""
+	if not os.path.isfile("dataset.json"):
+		return {}
+
+	with open("dataset.json") as f:
+		data = json.load(f)
+
+	v = data["meta"]["version"] if "version" in data["meta"].keys() else 1.0
+
+	# [1.0 => 1.1] - move tag rules under dict key
+	if v == 1.0:
+		if "tags" in data.keys():
+			if len(data["tags"].keys()) > 0:
+				rules = data["tags"]
+				data["tags"] = {
+					"rules" : rules,
+					"images" : [],
+				}
+		v = 1.1
+
+	# [dsv <=> current] - fallback failed
+	if v != version:
+		print("UNKNOWN DATASET VERSION // Fast Forward Failed!")
+		return {}
+
+	return data
