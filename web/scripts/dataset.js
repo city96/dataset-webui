@@ -17,10 +17,12 @@ function dataset_updateTable(datasets){
 		r = table.insertRow();
 		var c = r.insertCell(0)
 		c.innerHTML = dataset["name"]
+		c.title = dataset["description"]
 		
 		// Folder
 		var cs = r.insertCell(1)
 		cs.innerHTML = dataset["save_path"]
+	cs.title = `JSON version ${dataset["version"]}`
 		
 		// Images
 		var c = r.insertCell(2)

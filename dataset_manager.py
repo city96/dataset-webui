@@ -132,8 +132,8 @@ def get_folder_dataset(path):
 		dataset.name = "Untitled"
 		# return 
 	
-	if "version" in config["meta"] and confit["meta"]["version"]:
-		dataset.version = confit["meta"]["version"]
+	if "version" in config["meta"] and config["meta"]["version"]:
+		dataset.version = config["meta"]["version"]
 
 	# progress aware folder count
 	for step in reversed(folder_list):
@@ -156,6 +156,7 @@ def dataset_status(command=None,path=None):
 			"description": active.description,
 			"save_path": "./",
 			"image_count": active.size,
+			"version": active.version,
 			"active": True
 		})
 	for dataset in get_all_datasets():
@@ -164,6 +165,7 @@ def dataset_status(command=None,path=None):
 			"description": dataset.description,
 			"save_path": dataset.save_path,
 			"image_count": dataset.size,
+			"version": dataset.version,
 			"active": False
 		})
 	data["warn"] = warn
