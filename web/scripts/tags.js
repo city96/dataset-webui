@@ -379,9 +379,12 @@ async function tag_update() {
 	
 	if (!data || !data.tags) {
 		disable_module("tag-div", "Nothing to load from disk")
+		disable_module("tag-write", "Nothing to load from disk")
 		return
 	} else {
 		enable_module("tag-div")
+		enable_module("tag-write")
+		document.getElementById("t_run").disabled = false
 	}
 	console.log(data)
 	tag_categories = data["tags"]["categories"]

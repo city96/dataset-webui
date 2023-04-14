@@ -34,6 +34,8 @@ def imgtag_info():
 	if "tags" in json_data.keys() and "images" in json_data["tags"].keys():
 		missing = json_data["tags"]["missing"] if "missing" in json_data["tags"].keys() else []
 		images = json_data["tags"]["images"] + missing
+		if not valid:
+			return {"images" : [], "missing" : missing+images}
 	else:
 		images = []
 

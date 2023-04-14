@@ -14,7 +14,7 @@ async function tag_img_update() {
 	
 	if (!data || !data.images || data.images.length == 0) {
 		document.getElementById("ti-table").innerHTML = ""
-		document.getElementById("sort-img-grid").innerHTML = ""
+		document.getElementById("ti_img").src = "/assets/placeholder.png"
 		disable_module("tag-image-div", "Nothing to load from disk")
 		return
 	} else {

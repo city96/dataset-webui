@@ -60,6 +60,16 @@
 <!-- Tags -->
 <div class="category">
 <h1> Tags </h1>
+	<!-- Tag writer -->
+	<div id="tag-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="crop-write-float-warn"></p>
+		<button id="t_run" onclick="fix_tags()" disabled> Apply rules </button>
+
+		<p class="tip"> This will write all modified tags to the "4 - fixed" folder </p>
+		<p class="tip"> It is the same as the "Apply rules" button below </p>
+	</div>
+
 	<!-- Auto tag -->
 	<div id="tag-auto-div" class="module" style="min-width:800px">
 		<h2>Generate tags / autotagger:</h2>
@@ -107,8 +117,8 @@
 		<h2>Tag filters:</h2>
 		<button id="t_save" class="save unlock" onclick="save_tag_json()" disabled> Save changes </button>
 		<button id="t_load" class="save unlock" onclick="tag_update()" disabled> Discard changes </button>
-		<button id="t_fix" class="save req-save" onclick="test_tags()"> Test rules </button>
-		<button id="t_run" class="save req-save" onclick="fix_tags()"> Apply rules </button>
+		<button id="t_test" class="save req-save" onclick="test_tags()"> Test rules </button>
+		<button id="t_fix" class="save req-save" onclick="fix_tags()"> Apply rules </button>
 		
 		<br>
 		<p> Script output will appear here: </p>
