@@ -3,18 +3,24 @@
 import argparse
 import asyncio
 from aiohttp import web
+from base64 import b64encode
 import aiohttp
 import json
 import os
-from status import get_status
+
+from status import get_status, get_step_images
 from save import save_json
-from crop import crop_info
+from crop import crop_info, crop_image
 from category import category_info
 from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
-from common import step_list
+from common import step_list, Image
 from tags import tag_fix
 from imgtags import imgtag_info, imgtag_all_tags
+from out import finalize_image
+
+from inference.check import onnx_enabled
+from inference.connector import get_image_tags, Autotagger, Autocrop
 
 app = web.Application()
 
@@ -59,108 +65,66 @@ async def api_json_save(request):
 		print("no data")
 	return web.json_response({})
 
-autotag_status = {"run":False}
-def sd_tag_image(image, overwrite=False, confidence=0.35):
-	"""obsolete but needed since the webui was written for the http tagger api"""
-	from tagger import get_image_tags
-	from base64 import b64encode
-
-	if not os.path.isdir(step_list[2]):
-		os.mkdir(step_list[2])
-	
-	dst = image.get_step_path(3)
-	cat = os.path.split(dst)[0]
-	if not os.path.isdir(cat):
-		os.mkdir(cat)
-	
-	# this is only required for the webui, remove later
-	with open(image.path, mode='rb') as f:
-		base64 = b64encode(f.read()).decode("utf-8") 
-	
-	name, ext = os.path.splitext(image.get_id())
-	b64image = f"data:image/{ext[1:]};base64,{base64}"
-	
-	json_file = os.path.join(step_list[3],name+".json")
-	if os.path.isfile(json_file) and not overwrite:
-		print(" already tagged")
-		with open(json_file) as f:
-			data = json.load(f)
-		if "caption" not in data.keys():
-			return( {"caption" : {"Empty captio",1.0}, "image": image} )
-		data["caption"]["Already tagged"] = 1.0
-		data["image"] = b64image
-		data["caption"] = dict(sorted(data["caption"].items(), key=lambda item: item[1], reverse=True))
-		return(data)
-
-	data_json = {}
-	data_json["caption"] = get_image_tags(image.path,confidence)
-	data_json["caption"] = dict(sorted(data_json["caption"].items(), key=lambda item: item[1], reverse=True))
-	with open(json_file, "w") as f:
-		strdata = json.dumps(data_json, indent=2)
-		f.write(strdata)
-	data_json["image"] = b64image
-	return data_json
-
-async def api_tagger_auto_run(overwrite,confidence):
-	"""Autotagger [handled by tagger.py]"""
-	global autotag_status
-	from status import get_step_images
-
-	autotag_status = {"run":True}
-	valid = get_step_images(step_list[2])
-	autotag_status["current"] = 0
-	autotag_status["max"] = len(valid)
-	for i in valid:
-		await asyncio.sleep(0.001) # Context switch, don't remove
-		data = sd_tag_image(i,overwrite,confidence)
-		autotag_status["current"] += 1
-		autotag_status["url"] = "/img/" + i.path.replace(os.sep,"/")
-		if "caption" not in data.keys():
-			continue
-		autotag_status["caption"] = data["caption"]
-		autotag_status["image"] = data["image"]
-	autotag_status = {"run":False}
-
-async def api_tagger(request):
-	"""Image tagging [handled by tagger.py]"""
-	data = {}
-	from tagger import tagger_enabled
-	if not tagger_enabled:
-		return web.json_response({"tagger":{"enabled":False}})
-
-	confidence = 0.35
-	if "confidence" in request.rel_url.query.keys():
-		try:
-			confidence = request.rel_url.query['confidence']
-			confidence = float(confidence)
-		except:
-			confidence = 0.35
-
-	global autotag_status
-	if request.match_info['command'] == "run":
-		overwrite = False
-		if "overwrite" in request.rel_url.query.keys():
-			overwrite = request.rel_url.query['overwrite'].lower() == "true"
-		if not autotag_status["run"]:
-			print("Start task")
-			asyncio.create_task(api_tagger_auto_run(overwrite,confidence))
-			autotag_status = {"run":True}
-			return web.json_response(autotag_status)
-	elif request.match_info['command'] == "run_poll":
-		return web.json_response(autotag_status)
-	elif request.match_info['command'] == "single":
-		from tagger import get_image_tags
-		if "path" in request.rel_url.query.keys():
-			path = request.rel_url.query['path']
-			if os.path.isfile(path):
-				data = get_image_tags(path,confidence)
-		return web.json_response(data)
-	elif request.match_info['command'] == "status":
-		if not os.path.isfile("dataset.json"):
-			return web.json_response({"tagger_enabled":False})
-		return web.json_response({"tagger_enabled":tagger_enabled})
-
+async def inference_check(request):
+	data = {
+		"onnx" : onnx_enabled
+	}
 	return web.json_response(data)
+
+autotagger = None
+async def api_autotag(request):
+	"""Autotagger [handled by local+inference.*]"""
+	if not onnx_enabled: return web.Response(status=503,text="onnx runtime missing")
+	global autotagger
+
+	confidence = float(request.rel_url.query.get('confidence', 0.35))
+
+	if request.match_info['command'] == "run":
+		overwrite = request.rel_url.query.get('overwrite').lower() == "true"
+		if not autotagger or not autotagger.is_alive():
+			print("Start task")
+			autotagger = Autotagger(get_step_images(step_list[2]), overwrite, confidence)
+			autotagger.start()
+			return web.json_response(autotagger.get_status())
+	elif request.match_info['command'] == "run_poll":
+		status = autotagger.get_status() if autotagger and autotagger.is_alive() else {"run" : False}
+		return web.json_response(status)
+	elif request.match_info['command'] == "single":
+		path = request.rel_url.query.get('path')
+		if path and os.path.isfile(path):
+			data = get_image_tags(path,confidence)
+			return web.json_response(data)
+	return web.json_response({})
+
+autocrop = None
+async def api_autocrop(request):
+	"""Image autocropping [handled by local+inference.*]"""
+	global autocrop
+	if not onnx_enabled: return web.Response(status=503,text="onnx runtime missing")
+	
+	threshold = float(request.rel_url.query.get('threshold', 0.05))
+	min_size = float(request.rel_url.query.get('min_size', 0.25))
+	scale = int(request.rel_url.query.get('scale', 1))
+
+	if request.match_info['command'] == "run":
+		if not request.body_exists:
+			return web.json_response({})
+		if not autocrop or not autocrop.is_alive():
+			print("Start task")
+			data = await request.read()
+			data = json.loads(data)
+			autocrop = Autocrop(data.get("images"), threshold, min_size, scale)
+			autocrop.start()
+			return web.json_response(autocrop.get_status())
+	elif request.match_info['command'] == "run_poll":
+		if autocrop:
+			status = autocrop.get_status() 
+			if not autocrop.is_alive():
+				status["images"] = autocrop.image_data
+				autocrop = None # final
+		else: status = {"run" : False}
+		return web.json_response(status)
+	return web.json_response({})
 
 async def api_dataset(request):
 	"""Dataset operations [handled by dataset_manager.py]"""
@@ -209,8 +173,6 @@ crop_status = {"run":False}
 async def api_crop_run():
 	"""Apply crop. run this with async!! [handled by crop.py]"""
 	global crop_status
-	from crop import crop_image
-	from status import get_step_images
 
 	with open("dataset.json") as f:
 		data = json.load(f)
@@ -284,8 +246,6 @@ out_status = {"run":False}
 async def api_out_run(extension,overwrite,resolution):
 	"""Process all output images"""
 	global out_status
-	from out import finalize_image
-	from status import get_step_images
 
 	images = get_step_images(step_list[2],step_list[4])
 	out_status = {"run":True,"max":len(images)}
@@ -328,7 +288,10 @@ app.add_routes([web.get('/', index),
 				web.get('/assets/{name}', handle),
 				web.get('/scripts/{name}', handle),
 				web.get('/img/{name:.*}', handle_image),
-				web.get('/api/tagger/{command}', api_tagger),
+				web.get('/api/inference_check/', inference_check),
+				web.get('/api/atag/{command}', api_autotag),
+				web.get('/api/acrop/{command}', api_autocrop),
+				web.post('/api/acrop/{command}', api_autocrop),
 				web.get('/api/dataset/{command}', api_dataset),
 				web.post('/api/dataset/{command}', api_dataset),
 				web.get('/api/status', api_status),

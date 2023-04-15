@@ -76,6 +76,37 @@
 		
 	</div>
 
+	<!-- Auto crop -->
+	<div id="crop-auto-div" class="module">
+		<h2>Autocrop:</h2>
+		<p class="warn float-warn" id="crop-auto-float-warn"></p>
+		<button id="ca_run" class="save" onclick="crop_auto_run()"> Run </button>
+		<button id="ca_stop" class="save" onclick="crop_auto_stop()" disabled> Stop </button><br>
+		<p class="tip"> No manually cropped images will be overwritten. </p>
+		
+		<div class="tt">
+			<span><a>Area threshold: </a><input id="ca_cth" type="number" min=0 max=1 step=0.05 value=0.05 ></input></span>
+			<p class="tip tt-text"> Use 0.05 for single characters and 0.4-0.6 for multiple </p>
+		</div>
+		<div class="tt">
+			<span><a>Area minimum: </a><input id="ca_cam" type="number" min=0 max=1 step=0.05 value=0.15 ></input></span>
+			<p class="tip tt-text"> Minimum size required for detection, % of image size </p>
+		</div>
+		<div class="tt">
+			<span><a>Downscale img: </a><input id="ca_cdi" type="number" min=1 max=8 step=1 value=2 ></input></span>
+			<p class="tip tt-text"> Reduce compute time at the cost of accuracy </p>
+		</div>
+		
+		<div>
+			<label for="ta_perc">Autocrop progress:</label>
+			<progress style="width:80%" id="ca_perc" value="0" max="0"></progress>
+		</div>
+		
+		<img id="ca_img" style="display:none;max-width: 500px" src="/assets/placeholder.png"></img>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/acrop.js"></script>
+
 	<!-- web cropping -->
 	<div id="crop-div" class="module">
 		<h2>Cropping:</h2>
@@ -96,7 +127,8 @@
 		<input type="checkbox" id="c_copy"> <a title="Set the initial crop select window to the previous valid selection">Auto copy mask</a><br>
 		<hr>
 		<button id="c_save" class="save unlock" onclick="crop_json_save()" title="Save information to dataset.json without exporting images" disabled> Save </button>
-		<button id="c_revert" class="revert unlock" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert Changes </button>
+		<button id="c_revert" class="revert unlock" onclick="crop_revert()" title="Reset changes made (cropping, setting images as ignored)" disabled> Revert </button>
+		<button id="c_clear" class="revert" style="color:#500" onclick="crop_clear()" title="Set all images to 'uncropped'"> Clear all </button>
 		<br><br>
 		<table>
 			<thead>

@@ -53,7 +53,7 @@ def crop_info():
 		n["filename"] = i["filename"]
 
 		if "crop_data" in i.keys():
-			n["status"] = "crop"
+			n["status"] = "auto" if i.get("auto") else "crop"
 			n["crop_data"] = i["crop_data"]
 		else:
 			n["status"] = "raw"

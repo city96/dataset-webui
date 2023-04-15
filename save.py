@@ -14,6 +14,8 @@ def save_json(new):
 		print(" crop")
 		new["crop"].pop('disk', None)
 		new["crop"].pop('warn', None)
+		new["crop"]["images"] = [{k:v for k,v in i.items() if k not in ["on_disk","status"]} for i in new["crop"]["images"]]
+		new["crop"]["images"] = [x for x in new["crop"]["images"] if len(x.keys()) > 1]
 		data["crop"] = new["crop"]
 
 	if "sort" in new.keys() and new["sort"]:

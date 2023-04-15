@@ -177,6 +177,7 @@ async function page_update(update=true) {
 		navbar_set("nb-crop-div",false,"Active tab","green")
 		if (update) {
 			crop_init()
+			crop_auto_check()
 		}
 	} else {
 		navbar_set("nb-crop-div",true)

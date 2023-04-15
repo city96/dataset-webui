@@ -6,9 +6,6 @@ function crop_reset() {
 	crop_data = null
 	crop_disable_shortcuts()
 	document.getElementById("crop-img-div").innerHTML = ""
-	
-	let div = document.getElementById("crop-div")
-	div.classList.add("locked");
 
 	document.getElementById("c_warn").innerHTML = ""
 	document.getElementById("c_status").innerHTML = ""
@@ -172,12 +169,15 @@ function crop_update_status_text(target,data) {
 	if (data["crop_data"] === undefined && !data["ignored"] && !data["on_disk"]) {
 		target.innerHTML = "Unknown/Not cropped"
 		target.style.color = "gray"
-	} else if (!(data["crop_data"] === undefined) && !data["ignored"]) {
+	} else if (!(data["crop_data"] === undefined) && !data["ignored"] && !data["auto"]) {
 		target.innerHTML = "Cropped"
 		target.style.color = "green"
 	} else if (data["ignored"] == true) {
 		target.innerHTML = "Ignored"
 		target.style.color = "red"
+	} else if (data["auto"] == true) {
+		target.innerHTML = "Auto"
+		target.style.color = "aqua"
 	} else if (data["on_disk"]) {
 		target.innerHTML = "On-disk/Cropped externally"
 		target.style.color = "blue"
@@ -300,6 +300,7 @@ function crop_next_image(set_crop=false, set_ignore=false) {
 	if (set_crop) {
 		crop_data["images"][crop_data["current"]]["crop_data"] = crop.getData(true)
 		crop_data["images"][crop_data["current"]]["ignored"] = false
+		crop_data["images"][crop_data["current"]]["auto"] = false
 	}
 	if (set_ignore) {
 		crop_data["images"][crop_data["current"]]["ignored"] = true
@@ -456,6 +457,19 @@ async function crop_apply() {
 function crop_revert() {
 	let c = confirm("Are you sure you want to revert all changes?");
 	if (!c) { return };
+	crop_reset()
+	crop_init()
+}
+
+async function crop_clear() {
+	let c = confirm("Are you sure you want to clear all crop data? This is irreversible and will set all images to 'uncropped'");
+	if (!c) { return };
+	crop_data = {
+		images : [],
+		missing : [],
+	}
+	crop_json_save()
+	await new Promise(r => setTimeout(r, 500));
 	crop_reset()
 	crop_init()
 }
