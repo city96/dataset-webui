@@ -475,13 +475,23 @@ def write_tags(images, folder):
 		write_tag_txt(i.tags, dst)
 
 # write list of tags to path, replacing extension
-def write_tag_txt(tags, path):
+def write_tag_txt(tags, path, use_weight=False, auto_weight=False):
 	if len(tags) == 0:
 		print(f"target '{path}' has no tags!")
 		return
+	str_tags = []
+	for t in sorted(tags):
+		name = str(t)
+		if auto_weight and t.weight == 1.0:
+			t.weight = max(round(t.confidence,2),0.5)
+			t.weight = 1.0 if t.weight >= 0.9 else t.weight
+		if use_weight and t.weight != 1.0:
+			name = name.replace('(','\\(').replace(')','\\)')
+			name = f"({name}:{t.weight})"
+		str_tags.append(name)
 	txt = os.path.splitext(path)[0]+".txt"
 	with open(txt,"w") as f:
-		f.write(", ".join([str(x) for x in sorted(tags)]))
+		f.write(", ".join(str_tags))
 
 # read only status of tag count
 def img_status(images,verbose=False):

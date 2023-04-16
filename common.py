@@ -66,6 +66,7 @@ class Image:
 class Tag:
 	"""class to store tag attributes"""
 	name = None
+	weight = 1.0
 	position = 10
 	confidence = 1.0
 	def __str__(self):

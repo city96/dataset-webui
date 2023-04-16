@@ -16,6 +16,14 @@ def str_to_tag_list(string):
 		if raw_tags[i]:
 			t = Tag()
 			t.name = raw_tags[i]
+			if ':' in t.name and t.name.startswith('(') and t.name.endswith(')'):
+				try:
+					name,weight = t.rsplit(':',1)
+					t.weight = float(weight.rstrip(')'))
+					t.name = name.lstrip('(')
+				except: # reset
+					t.weight = 1.0
+					t.name = raw_tags[i]
 			t.position = i+5
 			tags.append(t)
 	return tags
