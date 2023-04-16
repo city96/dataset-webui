@@ -3,7 +3,7 @@ import os
 from PIL import Image as pImage
 from common import step_list
 from status import get_step_images, str_to_tag_list
-from tags import write_tag_txt, popular_tags
+from tags import write_tag_txt
 
 def scale(src,dst,width=768, height=768):
 	img = pImage.open(src)
@@ -31,14 +31,6 @@ def scale_folder(src_dir):
 			dst = os.path.join(step_list[5],name+".png")
 			scale(src, dst)
 
-def create_sample_prompt(max_tags=12):
-		pop = popular_tags(get_step_images(step_list[5]))
-		tags = list(pop.keys())[:max_tags]
-		tag_str = ", ".join(tags)
-		tf = os.path.join(step_list[5],"sample_prompt.txt")
-		with open(tf, "w") as f:
-				f.write(tag_str)
-
 def finalize_image(img, ext=".png", resolution=768, overwrite=False):
 	src = img.path
 	dst = img.get_step_path(5)
@@ -60,8 +52,6 @@ def finalize_output(): # for testing
 	images = get_step_images(step_list[2],step_list[4])
 	for i in images:
 		finalize_image(i)
-	create_sample_prompt()
 
 if __name__ == "__main__":
 	finalize_output()
-	create_sample_prompt()
