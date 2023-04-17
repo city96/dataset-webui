@@ -1,9 +1,9 @@
 import os
-from common import Image, Tag, step_list, load_dataset_json
-from status import get_step_images
-from category import mesh_image_list
 import json
 from PIL import Image as pImage
+from .common import Image, Tag, step_list
+from .loader import load_dataset_json, get_step_images
+from .category import mesh_image_list
 
 # global list of warnings
 warn = []

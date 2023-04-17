@@ -11,8 +11,8 @@ from .labeling import label_image
 from .segmentation import segment_image
 from .region_detection import get_image_regions
 
-from status import get_status
-from common import step_list
+from scripts.status import get_status
+from scripts.common import step_list
 
 def img_to_base64(img,scale=1):
 	buffer = BytesIO()

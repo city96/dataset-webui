@@ -1,11 +1,34 @@
-#!/usr/bin/python3
-# Return current dataset status + info from json
 import os
 import json
-from common import Image, Tag, Category, step_list, rating_list
+from .common import Image, Tag, Category, step_list, rating_list, version
 
-# global list of warnings
-warn = []
+def load_dataset_json():
+	"""load the current dataset json, apply fallback fixes [fast forward to current version]"""
+	if not os.path.isfile("dataset.json"):
+		return {}
+
+	with open("dataset.json") as f:
+		data = json.load(f)
+
+	v = data["meta"]["version"] if "version" in data["meta"].keys() else 1.0
+
+	# [1.0 => 1.1] - move tag rules under dict key
+	if v == 1.0:
+		if "tags" in data.keys():
+			if len(data["tags"].keys()) > 0:
+				rules = data["tags"]
+				data["tags"] = {
+					"rules" : rules,
+					"images" : [],
+				}
+		v = 1.1
+
+	# [dsv <=> current] - fallback failed
+	if v != version:
+		print("UNKNOWN DATASET VERSION // Fast Forward Failed!")
+		return {}
+
+	return data
 
 def str_to_tag_list(string):
 	"""comma separated string to tag list"""
@@ -132,55 +155,3 @@ def get_step_images(folder,tag_folder=None):
 			tag_path = os.path.join(tag_folder,category) if tag_folder else None
 			images += get_folder_images(os.path.join(folder,category),cat,tag_path)
 	return images
-
-def get_step_stats(folder):
-	"""return stats about images/tags from folder name"""
-	data = {
-		"image_count" : {},
-		"tag_count" : {},
-	}
-	if folder in step_list[3:5]:
-		images = get_step_images(step_list[2],folder)
-	else:
-		images = get_step_images(folder)
-	data["image_count"]["total"] = len(images)
-	data["image_count"]["uncategorized"] = sum([x.category == None for x in images])
-	tags = []
-	for i in images:
-		tags += [x.name for x in i.tags]
-	data["tag_count"]["total"] = sum([len(x.tags) for x in images])
-	data["tag_count"]["unique"] = len(set(tags))
-	return data
-
-def get_status():
-	"""returns dict with status merged into dataset.json"""
-	warn = [] # reset warnings
-	if not os.path.isfile("dataset.json"):
-		data = {
-			"status" : {
-				"steps" : [],
-				"active" : False,
-				"warn": ["No active dataset"],
-			}
-		}
-		return data
-
-	# with open("dataset.json") as f:
-		# data = json.load(f)
-		# data["status"] = {}
-
-	data = {}
-	data["status"] = {}
-	data["status"]["steps"] = {}
-	for folder in step_list:
-		if not os.path.isdir(folder):
-			warn.append(f"folder for step {folder} missing!")
-		data["status"]["steps"][folder] = get_step_stats(folder)
-
-	data["status"]["warn"] = warn
-	data["status"]["active"] = True
-	return data
-
-if __name__ == "__main__":
-	print(json.dumps(get_status(),indent=2))
-	# json.dumps(get_status(),indent=2)

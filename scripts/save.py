@@ -1,5 +1,6 @@
 import json
-from common import load_dataset_json, version
+from .common import version
+from .loader import load_dataset_json
 
 def save_json(new):
 	"""Load current dataset.json and replace relevant sections"""

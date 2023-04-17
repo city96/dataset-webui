@@ -1,14 +1,10 @@
-#!/usr/bin/python3
-# script to save/load dataset folders
 import os
 import json
-from common import version
-from common import step_list as folder_list
-from status import get_step_stats
+from .common import version, step_list, dataset_folder
+from .status import get_step_stats
 
 # global list of warnings
 warn = []
-dataset_folder = "datasets"
 
 # store dataset
 class Dataset:
@@ -44,7 +40,7 @@ def save_dataset(dataset):
 		exit(1)
 
 	# check if all empty, reuse status (regex?)
-	for folder in folder_list:
+	for folder in step_list:
 		old_path = os.path.join(dataset.save_path,folder)
 		os.rename(folder,old_path)
 	os.rename("dataset.json",os.path.join(dataset.save_path,"dataset.json"))
@@ -58,12 +54,12 @@ def load_dataset(dataset):
 		print(warn[-1])
 		return
 	# sanity check, don't collide
-	if any([os.path.isdir(x) for x in folder_list]) or os.path.isfile("dataset.json"):
+	if any([os.path.isdir(x) for x in step_list]) or os.path.isfile("dataset.json"):
 		warn.append(f"target folder not empty!")
 		print(warn[-1])
 		return
 
-	for folder in folder_list:
+	for folder in step_list:
 		new_path = os.path.join(dataset.save_path,folder)
 		os.rename(new_path,folder)
 	os.rename(os.path.join(dataset.save_path,"dataset.json"),"dataset.json")
@@ -77,14 +73,14 @@ def load_dataset(dataset):
 def create_dataset(data):
 	"""initialize new dataset from json"""
 	# sanity check, don't collide
-	if any([os.path.isdir(x) for x in folder_list]) or os.path.isfile("dataset.json"):
+	if any([os.path.isdir(x) for x in step_list]) or os.path.isfile("dataset.json"):
 		print("target folder not empty!")
 		return
 	d = Dataset()
 	d.name = data["meta"]["name"].strip()
 	d.description = data["meta"]["description"].strip()
 	# folders
-	for folder in folder_list:
+	for folder in step_list:
 		if os.path.isdir(folder):
 			print("a")
 		else:
@@ -136,7 +132,7 @@ def get_folder_dataset(path):
 		dataset.version = config["meta"]["version"]
 
 	# progress aware folder count
-	for step in reversed(folder_list):
+	for step in reversed(step_list):
 		step = os.path.join(path,step)
 		size = get_step_stats(step)["image_count"]["total"]
 		if size > 0:

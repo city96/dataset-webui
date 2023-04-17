@@ -1,9 +1,8 @@
-#!/usr/bin/python3
 import os
 from PIL import Image as pImage
-from common import step_list
-from status import get_step_images, str_to_tag_list
-from tags import write_tag_txt
+from .common import step_list
+from .loader import get_step_images, str_to_tag_list
+from .tags import write_tag_txt
 
 def scale(src,dst,width=768, height=768):
 	img = pImage.open(src)
@@ -48,10 +47,7 @@ def finalize_image(img, ext=".png", resolution=768, overwrite=False, use_weights
 		print(f"processing '{img}'")
 	scale(src,dst,width=resolution,height=resolution)
 
-def finalize_output(): # for testing
+if __name__ == "__main__":
 	images = get_step_images(step_list[2],step_list[4])
 	for i in images:
 		finalize_image(i)
-
-if __name__ == "__main__":
-	finalize_output()

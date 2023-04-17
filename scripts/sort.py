@@ -1,12 +1,12 @@
 import os
 import json
 import hashlib
-from category import get_sort_categories, get_sort_images
-from common import step_list, Category, load_dataset_json
-from status import get_step_images
 from shutil import copyfile
-warn = []
+from .category import get_sort_categories, get_sort_images
+from .common import step_list, Category
+from .loader import load_dataset_json, get_step_images
 
+warn = []
 def sort_info():
 	global warn
 	warn = []

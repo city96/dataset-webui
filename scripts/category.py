@@ -1,8 +1,7 @@
 import os
 import json
-from common import step_list, Category, load_dataset_json
-from status import get_step_images, str_to_tag_list
-warn = []
+from .common import step_list, Category
+from .loader import load_dataset_json, get_step_images, str_to_tag_list
 
 def get_original_filename(fname, folder):
 	"""try to find the original filename"""
@@ -90,8 +89,6 @@ def get_sort_categories(path,data):
 	return categories
 
 def category_info(disk_only=False):
-	global warn
-	warn = []
 	folder = step_list[2] if disk_only else step_list[1]
 
 	json_data = load_dataset_json()
@@ -142,3 +139,4 @@ def category_info(disk_only=False):
 			data["images"][i]["filename"] = get_original_filename(data["images"][i]["filename"],step_list[1])
 
 	return {"sort": data}
+

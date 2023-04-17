@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# web based UI
 import argparse
 import asyncio
 from aiohttp import web
@@ -8,16 +7,16 @@ import aiohttp
 import json
 import os
 
-from status import get_status, get_step_images
-from save import save_json
-from crop import crop_info, crop_image
-from category import category_info
-from sort import sort_info, sort_write
-from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
-from common import step_list, Image, load_dataset_json
-from tags import tag_fix
-from imgtags import imgtag_info, imgtag_all_tags
-from out import finalize_image
+from scripts.dataset import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
+from scripts.common import step_list, Image
+from scripts.loader import load_dataset_json, get_step_images
+from scripts.save import save_json
+from scripts.status import get_status
+from scripts.crop import crop_info, crop_image
+from scripts.category import category_info
+from scripts.sort import sort_info, sort_write
+from scripts.tags import tag_fix, imgtag_info, imgtag_all_tags
+from scripts.out import finalize_image
 
 from inference.check import onnx_enabled
 from inference.connector import get_image_tags, Autotagger, Autocrop
@@ -237,7 +236,7 @@ async def api_tags(request):
 		data = imgtag_all_tags()
 	elif request.match_info['command'] == "seq":
 		tr = load_dataset_json().get("tags")
-		data = tr.get("sequences")
+		data = tr.get("sequences") if tr else []
 	else:
 		data = tag_fix()
 	return web.json_response(data)

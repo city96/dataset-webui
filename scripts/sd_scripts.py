@@ -1,9 +1,9 @@
 import os
 import argparse
 from PIL import Image
-from common import step_list, load_dataset_json
-from status import str_to_tag_list, get_step_images
-from tags import popular_tags
+from .common import step_list
+from .loader import load_dataset_json, str_to_tag_list, get_step_images
+from .tags import popular_tags
 
 TRAIN_EPOCHS = 15
 TRAIN_BATCH = 2
