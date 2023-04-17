@@ -9,20 +9,22 @@ var tag_img_missing
 var tag_img_current = 0
 var tag_img_all_tags = []
 async function tag_img_update() {
-	let data = await fetch("/api/imgtags/info")
+	let data = await fetch("/api/tags/img")
 	data = await data.json()
 	
 	if (!data || !data.images || data.images.length == 0) {
 		document.getElementById("ti-table").innerHTML = ""
 		document.getElementById("ti_img").src = "/assets/placeholder.png"
 		disable_module("tag-image-div", "Nothing to load from disk")
+		disable_module("tag-seq-div", "Nothing to load from disk")
 		return
 	} else {
 		enable_module("tag-image-div")
+		enable_module("tag-seq-div")
 	}
 	
 	if (!tag_img_all_tags || tag_img_all_tags.length == 0) {
-		let tags = await fetch("/api/imgtags/all_tags")
+		let tags = await fetch("/api/tags/all")
 		tag_img_all_tags = await tags.json()
 	}
 	
@@ -31,6 +33,8 @@ async function tag_img_update() {
 	// console.log(tag_img_data[tag_img_current])
 	tag_img_table_update()
 	unlock()
+	// sideload this here, who cares
+	tag_seq_update()
 }
 
 function tag_img_update_display() {

@@ -414,3 +414,12 @@ img {
 #ti-table {
 	table-layout: fixed;
 }
+
+#ts-img img {
+	display: inline;
+	max-width: 350px;
+}
+
+#ts_img_start_id, #ts_img_end_id {
+	width: 100%;
+}

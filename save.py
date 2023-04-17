@@ -41,6 +41,9 @@ def save_json(new):
 			data["tags"]["images"] = new["tags"]["images"]
 			if "missing" in new["tags"].keys():
 				data["tags"]["missing"] = new["tags"]["missing"]
+		if "sequences" in new["tags"].keys() and new["tags"]["sequences"]:
+			print("  seq")
+			data["tags"]["sequences"] = new["tags"]["sequences"]
 
 	for key in new.keys():
 		if key not in data.keys():

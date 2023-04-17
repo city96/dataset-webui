@@ -95,12 +95,24 @@ def counts():
 		f"--dataset_repeats 1",
 	]
 
+def caption_weights():
+	weight = False
+	for i in get_step_images(step_list[5]):
+		if any([x.weight != 1.0 for x in i.tags]):
+			weight = True
+			break
+	if weight:
+		return ['--weighted_captions']
+	else:
+		return []
+
 def get_sd_scripts_command(args):
 	args += meta()
 	args += counts()
 	args += save_dir()
 	args += resolution()
 	args += sample_prompt()
+	args += caption_weights()
 	return f"accelerate launch train_network.py {' '.join(args)}"
 
 def create_sample_prompt(max_tags=12):

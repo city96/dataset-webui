@@ -423,6 +423,39 @@ def dedupe_tags(images):
 		print(status[-1])
 	return images
 
+# sequencer
+def sequencer(images, sequences):
+	if not sequences:
+		return images
+	status.append("\nrunning tag sequencer")
+	print(status[-1])
+	for rule in sequences:
+		rule_tags = str_to_tag_list(rule["tags"])
+		start_index = [x for x in range(len(images)) if images[x].get_id() == rule["start"]]
+		start_index = start_index[0] if len(start_index) > 0 else -1
+		end_index = [x for x in range(len(images)) if images[x].get_id() == rule["end"]]
+		end_index = end_index[0] if len(end_index) > 0 else -1
+		index_length = (end_index-start_index)
+		status.append(f" sequencing {rule_tags} (id{start_index+1}=>id{end_index+1}|:{rule['from']}=>:{rule['to']})")
+		print(status[-1])
+		for i in range(start_index,end_index+1):
+			perc = (i-start_index)/index_length
+			if rule["from"] > rule["to"]:
+				weight = rule["to"] + (1-perc)*(rule["from"]-rule["to"])
+			else:
+				weight = rule["from"] + perc*(rule["to"]-rule["from"])
+			new = []
+			for t in images[i].tags:
+				if t.name not in [x.name for x in rule_tags]:
+					new.append(t)
+			for t in rule_tags:
+				tag = Tag()
+				tag.name = t.name
+				tag.weight = round(weight,2)
+				new.append(tag)
+			images[i].tags = new
+	return images
+
 # single img overrides
 def single_img_overrides(images, rules):
 	if not rules:
@@ -472,20 +505,20 @@ def write_tags(images, folder):
 		cat = os.path.split(dst)[0]
 		if not os.path.isdir(cat):
 			os.mkdir(cat)
-		write_tag_txt(i.tags, dst)
+		write_tag_txt(i.tags, dst, use_weights=True)
 
 # write list of tags to path, replacing extension
-def write_tag_txt(tags, path, use_weight=False, auto_weight=False):
+def write_tag_txt(tags, path, use_weights=False, auto_weights=False):
 	if len(tags) == 0:
 		print(f"target '{path}' has no tags!")
 		return
 	str_tags = []
 	for t in sorted(tags):
 		name = str(t)
-		if auto_weight and t.weight == 1.0:
+		if auto_weights and t.weight == 1.0:
 			t.weight = max(round(t.confidence,2),0.5)
 			t.weight = 1.0 if t.weight >= 0.9 else t.weight
-		if use_weight and t.weight != 1.0:
+		if use_weights and t.weight != 1.0:
 			name = name.replace('(','\\(').replace(')','\\)')
 			name = f"({name}:{t.weight})"
 		str_tags.append(name)
@@ -614,6 +647,9 @@ def tag_fix(save=False, rules_only=False):
 
 	# apply actual rules
 	images = apply_tag_rules(images, c)
+
+	# apply sequencer
+	images = sequencer(images, json_data["tags"].get("sequences"))
 
 	# apply single-image overrides
 	if "images" in json_data["tags"].keys() and not rules_only:

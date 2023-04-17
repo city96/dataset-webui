@@ -31,7 +31,7 @@ def scale_folder(src_dir):
 			dst = os.path.join(step_list[5],name+".png")
 			scale(src, dst)
 
-def finalize_image(img, ext=".png", resolution=768, overwrite=False):
+def finalize_image(img, ext=".png", resolution=768, overwrite=False, use_weights=False):
 	src = img.path
 	dst = img.get_step_path(5)
 	cat = os.path.split(dst)[0]
@@ -40,7 +40,7 @@ def finalize_image(img, ext=".png", resolution=768, overwrite=False):
 
 	if ext: dst = os.path.splitext(dst)[0] + ext
 
-	write_tag_txt(img.tags,dst)
+	write_tag_txt(img.tags,dst,use_weights)
 	if os.path.isfile(dst) and not overwrite:
 		print(f"image '{img}' already copied")
 		return

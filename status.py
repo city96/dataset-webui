@@ -18,12 +18,13 @@ def str_to_tag_list(string):
 			t.name = raw_tags[i]
 			if ':' in t.name and t.name.startswith('(') and t.name.endswith(')'):
 				try:
-					name,weight = t.rsplit(':',1)
+					name,weight = t.name.rsplit(':',1)
 					t.weight = float(weight.rstrip(')'))
 					t.name = name.lstrip('(')
 				except: # reset
 					t.weight = 1.0
 					t.name = raw_tags[i]
+					print(f"failed to parse {t.name}")
 			t.position = i+5
 			tags.append(t)
 	return tags

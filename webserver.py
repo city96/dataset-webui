@@ -14,7 +14,7 @@ from crop import crop_info, crop_image
 from category import category_info
 from sort import sort_info, sort_write
 from dataset_manager import create_dataset, save_dataset, load_dataset, get_folder_dataset, dataset_status
-from common import step_list, Image
+from common import step_list, Image, load_dataset_json
 from tags import tag_fix
 from imgtags import imgtag_info, imgtag_all_tags
 from out import finalize_image
@@ -228,22 +228,22 @@ async def api_sort(request):
 	return web.json_response(data)
 
 async def api_tags(request):
-	"""Image tag pruning - tags [handled by tag.py]"""
+	"""Image tag pruning - tags [handled by tag.py+imgtags.py]"""
 	if request.match_info['command'] == "run":
 		data = tag_fix(True)
+	elif request.match_info['command'] == "img":
+		data = imgtag_info()
+	elif request.match_info['command'] == "all":
+		data = imgtag_all_tags()
+	elif request.match_info['command'] == "seq":
+		tr = load_dataset_json().get("tags")
+		data = tr.get("sequences")
 	else:
 		data = tag_fix()
 	return web.json_response(data)
 
-async def api_imgtags(request):
-	"""Individual tag editing - [handled by imgtags.py]"""
-	if request.match_info['command'] == "info":
-		return web.json_response(imgtag_info())
-	if request.match_info['command'] == "all_tags":
-		return web.json_response(imgtag_all_tags())
-
 out_status = {"run":False}
-async def api_out_run(extension,overwrite,resolution):
+async def api_out_run(extension,overwrite,resolution,use_weights):
 	"""Process all output images"""
 	global out_status
 
@@ -252,7 +252,7 @@ async def api_out_run(extension,overwrite,resolution):
 
 	out_status["current"] = 0
 	for i in images:
-		finalize_image(i, extension, resolution, overwrite)
+		finalize_image(i, extension, resolution, overwrite, use_weights)
 		await asyncio.sleep(0.001)
 		out_status["current"] += 1
 	out_status = {"run":False}
@@ -268,6 +268,9 @@ async def api_out(request):
 		overwrite = False
 		if "overwrite" in request.rel_url.query.keys():
 			overwrite = request.rel_url.query['overwrite'].lower() == "true"
+		use_weights = False
+		if "weights" in request.rel_url.query.keys():
+			use_weights = request.rel_url.query['weights'].lower() == "true"
 		resolution = 768
 		if "resolution" in request.rel_url.query.keys():
 			try:
@@ -277,7 +280,7 @@ async def api_out(request):
 
 		if not out_status["run"]:
 			out_status = {"run":True}
-			asyncio.create_task(api_out_run(extension,overwrite,resolution))
+			asyncio.create_task(api_out_run(extension,overwrite,resolution,use_weights))
 		return web.json_response(out_status)
 	elif request.match_info['command'] == "run_poll":
 		return web.json_response(out_status)
@@ -300,7 +303,6 @@ app.add_routes([web.get('/', index),
 				web.get('/api/sort/{command}', api_sort),
 				web.post('/api/json/save', api_json_save),
 				web.get('/api/tags/{command}', api_tags),
-				web.get('/api/imgtags/{command}', api_imgtags),
 				web.get('/api/out/{command}', api_out),
 				])
 

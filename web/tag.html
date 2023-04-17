@@ -409,6 +409,48 @@
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/tags.js"></script>
 
+	<!-- Sequencer -->
+	<div id="tag-seq-div" class="module">
+		<h2>Tag Sequencer:</h2>
+		<p class="warn float-warn" id="tag-seq-float-warn"></p>
+		<button id="ts_save" class="save unlock" onclick="tag_seq_save()" disabled> Save </button>
+		<button id="ts_revert" class="revert unlock" onclick="tag_seq_update()" disabled> Revert Changes </button>
+		<br>
+		<br>
+		
+		<div id="ts-img">
+			<img id="ts_img_start" src="/assets/placeholder.png"></img>
+			<img id="ts_img_end" src="/assets/placeholder.png"></img>
+		</div>
+		<span><a>Start img: </a><input type="range" min=0 max=0 value=0 class="slider" id="ts_img_start_id" onchange="tag_seq_img_start_update()"></input></span><br>
+		<span><a>End img: </a><input type="range" min=0 max=0 value=0 class="slider" id="ts_img_end_id" onchange="tag_seq_img_end_update()"></input></span>
+		<hr>
+		<span><a>Tags: </a><input id="ts_tag" type="text" placeholder="fire, smoke"></input></span><br>
+		<span><a>Start weight (from): </a><input id="ts_from" type="number" min=0 max=1 step=0.05 value=1.00 ></input></span><br>
+		<span><a>End weight (to): </a><input id="ts_to" type="number" min=0 max=1 step=0.05 value=1.00 ></input></span>
+		<hr>
+		<button onclick="tag_seq_add_seq()"> Add rule </button>
+		
+		<p> Tag Sequences = </p>
+		<table>
+			<thead>
+				<tr>
+					<td> Tags </td>
+					<td> Start Frame </td>
+					<td> End Frame </td>
+					<td> Start weight </td>
+					<td> End weight </td>
+					<td> Delete </td>
+				</tr>
+			</thead>
+			<tbody id="ts_seq_table">
+			</tbody>
+		</table>
+		
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/sequencer.js"></script>
+	
 	<!-- Single image tags -->
 	<div id="tag-image-div" class="module" style="min-width:1200px">
 		<h2>Tag Individual Images:</h2>

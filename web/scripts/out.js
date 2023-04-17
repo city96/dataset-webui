@@ -6,9 +6,10 @@ async function out_write_run() {
 	
 	let perc = document.getElementById("ow_perc")
 	let ow = document.getElementById("ow_ow").checked
+	let uw = document.getElementById("ow_uw").checked
 	let res = document.getElementById("ow_res").value
 	let ext = document.getElementById("ow_ext").value
-	let data = await fetch("/api/out/run?overwrite="+ow+"&resolution="+res+"&extension="+ext);
+	let data = await fetch("/api/out/run?overwrite="+ow+"&resolution="+res+"&extension="+ext+"&weights="+uw);
 	document.getElementById("ow_run").disabled = true
 	data = await data.json()
 	while (data["run"]) {
