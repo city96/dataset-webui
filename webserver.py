@@ -264,7 +264,7 @@ async def api_out(request):
 				resolution = 768
 		if not outwriter or not outwriter.is_alive():
 			print("Start output writer thread")
-			outwriter = OutputWriter(extension,resolution,overwrite,use_weights)
+			outwriter = OutputWriter(extension,resolution,overwrite,use_weights,args.n_threads)
 			outwriter.start()
 			return web.json_response(outwriter.get_status())
 	elif request.match_info['command'] == "run_poll":
@@ -295,6 +295,7 @@ app.add_routes([web.get('/', index),
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Run webui')
 	parser.add_argument('-p', '--port', type=int, dest="port", default=8080, help='Port to host webui on')
+	parser.add_argument('--threads', type=int, dest="n_threads", choices=range(1,128), metavar="[1-128]", help='Force multithreading for some operations')
 	parser.add_argument('--autolaunch', action=argparse.BooleanOptionalAction, help='Open webui in default browser')
 	parser.add_argument('--listen', action=argparse.BooleanOptionalAction, help='Allow access from LAN (NOT RECOMMENDED)')
 
