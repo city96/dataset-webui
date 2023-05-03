@@ -16,7 +16,7 @@ from scripts.crop import crop_info, crop_image
 from scripts.category import category_info
 from scripts.sort import sort_info, sort_write
 from scripts.tags import tag_fix, imgtag_info, imgtag_all_tags
-from scripts.out import finalize_image
+from scripts.out import OutputWriter
 
 from inference.check import onnx_enabled
 from inference.connector import get_image_tags, Autotagger, Autocrop
@@ -241,24 +241,10 @@ async def api_tags(request):
 		data = tag_fix()
 	return web.json_response(data)
 
-out_status = {"run":False}
-async def api_out_run(extension,overwrite,resolution,use_weights):
-	"""Process all output images"""
-	global out_status
-
-	images = get_step_images(step_list[2],step_list[4])
-	out_status = {"run":True,"max":len(images)}
-
-	out_status["current"] = 0
-	for i in images:
-		finalize_image(i, extension, resolution, overwrite, use_weights)
-		await asyncio.sleep(0.001)
-		out_status["current"] += 1
-	out_status = {"run":False}
-
+outwriter = None
 async def api_out(request):
 	"""write all output images to disk"""
-	global out_status
+	global outwriter
 	if request.match_info['command'] == "run":
 		extension = ".png"
 		if "extension" in request.rel_url.query.keys():
@@ -276,13 +262,14 @@ async def api_out(request):
 				resolution = int(request.rel_url.query['resolution'])
 			except:
 				resolution = 768
-
-		if not out_status["run"]:
-			out_status = {"run":True}
-			asyncio.create_task(api_out_run(extension,overwrite,resolution,use_weights))
-		return web.json_response(out_status)
+		if not outwriter or not outwriter.is_alive():
+			print("Start output writer thread")
+			outwriter = OutputWriter(extension,resolution,overwrite,use_weights)
+			outwriter.start()
+			return web.json_response(outwriter.get_status())
 	elif request.match_info['command'] == "run_poll":
-		return web.json_response(out_status)
+		return web.json_response(outwriter.get_status())
+	return web.json_response({})
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),

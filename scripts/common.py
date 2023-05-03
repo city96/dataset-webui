@@ -41,7 +41,7 @@ class Image:
 				uid = uid.lstrip(os.path.sep) # \\
 				break
 		return uid
-	def get_step_path(self, step):
+	def get_step_path(self, step, ext=None):
 		if step in step_list:
 			folder = step
 		elif type(step) == int and step < len(step_list):
@@ -58,6 +58,7 @@ class Image:
 				new = new.lstrip(os.path.sep) # \\
 				break
 		if not new: return None
+		new = os.path.splitext(new)[0] + ext if ext else new
 		path = os.path.join(folder,new)
 		return path
 

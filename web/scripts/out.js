@@ -23,7 +23,7 @@ async function out_write_run() {
 			perc.max = 1
 			perc.value = 1
 		}
-		await new Promise(r => setTimeout(r, 500));
+		await new Promise(r => setTimeout(r, 200));
 	}
 	perc.max = 1
 	perc.value = 0

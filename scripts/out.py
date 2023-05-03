@@ -1,5 +1,8 @@
 import os
 from PIL import Image as pImage
+from tqdm import tqdm
+from threading import Thread
+
 from .common import step_list
 from .loader import get_step_images, str_to_tag_list
 from .tags import write_tag_txt
@@ -9,45 +12,34 @@ def scale(src,dst,width=768, height=768):
 	wpercent = (width/float(img.size[0]))
 	hsize = int((float(img.size[1])*float(wpercent)))
 	if hsize != height:
-		print("res mismatch", dst)
+		# print("res mismatch", dst)
 		hsize = height
 	img = img.resize((width,hsize), pImage.ANTIALIAS)
 	img.save(dst)
 
-def scale_folder(src_dir):
-	for img in os.listdir(src_dir):
-		src = os.path.join(src_dir,img)
-		if os.path.isdir(src):
-			for cat in os.listdir(src):
-				sc = os.path.join(src,cat)
-				if not os.path.isfile(sc):
-					continue
-				name, ext = os.path.splitext(cat)
-				dst = os.path.join(os.path.join(step_list[5],img),name+".png")
-				scale(sc,dst)
-		else:
-			name, ext = os.path.splitext(img)
-			dst = os.path.join(step_list[5],name+".png")
-			scale(src, dst)
+class OutputWriter(Thread):
+	def __init__(self, extension, resolution, overwrite=False, use_weights=False):
+		Thread.__init__(self)
+		self.extension = extension
+		self.resolution = resolution
+		self.use_weights = use_weights
+		images = get_step_images(step_list[2],step_list[4])
+		if not overwrite:
+			images = [x for x in images if not os.path.isfile(x.get_step_path(5,extension))]
+		self.tqdm = tqdm(images,unit="img")
+		
+	def run(self):
+		for img in self.tqdm:
+			dst = img.get_step_path(5,self.extension)
+			cat = os.path.split(dst)[0]
+			if not os.path.isdir(cat):
+				os.mkdir(cat)
+			scale(src=img.path, dst=dst, width=self.resolution, height=self.resolution)
 
-def finalize_image(img, ext=".png", resolution=768, overwrite=False, use_weights=False):
-	src = img.path
-	dst = img.get_step_path(5)
-	cat = os.path.split(dst)[0]
-	if not os.path.isdir(cat):
-		os.mkdir(cat)
-
-	if ext: dst = os.path.splitext(dst)[0] + ext
-
-	write_tag_txt(img.tags,dst,use_weights)
-	if os.path.isfile(dst) and not overwrite:
-		print(f"image '{img}' already copied")
-		return
-	else:
-		print(f"processing '{img}'")
-	scale(src,dst,width=resolution,height=resolution)
-
-if __name__ == "__main__":
-	images = get_step_images(step_list[2],step_list[4])
-	for i in images:
-		finalize_image(i)
+	def get_status(self):
+		data = {
+			"run": self.is_alive(),
+			"max": self.tqdm.total,
+			"current": self.tqdm.n,
+		}
+		return data
