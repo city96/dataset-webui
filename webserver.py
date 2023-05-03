@@ -81,7 +81,7 @@ async def api_autotag(request):
 	if request.match_info['command'] == "run":
 		overwrite = request.rel_url.query.get('overwrite').lower() == "true"
 		if not autotagger or not autotagger.is_alive():
-			print("Start task")
+			print("Start autotag thread")
 			autotagger = Autotagger(get_step_images(step_list[2]), overwrite, confidence)
 			autotagger.start()
 			return web.json_response(autotagger.get_status())
@@ -109,7 +109,7 @@ async def api_autocrop(request):
 		if not request.body_exists:
 			return web.json_response({})
 		if not autocrop or not autocrop.is_alive():
-			print("Start task")
+			print("Start autocrop thread")
 			data = await request.read()
 			data = json.loads(data)
 			autocrop = Autocrop(data.get("images"), threshold, min_size, scale)

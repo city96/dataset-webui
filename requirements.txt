@@ -2,6 +2,7 @@
 requests
 aiohttp
 Pillow
+tqdm
 # Tagger (optional)
 numpy
 onnxruntime # replace with onnxruntime-gpu if CPU tagging is taking too long
