@@ -1,8 +1,8 @@
 import os
+import queue
 from PIL import Image as pImage
 from tqdm import tqdm
 from threading import Thread
-import threading
 
 from .common import step_list
 from .loader import get_step_images, str_to_tag_list
@@ -25,37 +25,45 @@ class OutputWriter(Thread):
 		self.resolution = resolution
 		self.use_weights = use_weights
 		self.n_threads = n_threads
-		images = get_step_images(step_list[2],step_list[4])
-		if not overwrite:
-			images = [x for x in images if not os.path.isfile(x.get_step_path(5,extension))]
-		self.images = images
-		self.tqdm = tqdm(total=len(images),unit="img")
+		self.images = self.get_images(overwrite, extension)
+		self.tqdm = tqdm(total=len(self.images),unit="img")
 
-	def scale_images(self, images):
-		for img in images:
-			dst = img.get_step_path(5,self.extension)
-			cat = os.path.split(dst)[0]
-			if not os.path.isdir(cat):
+	def get_images(self, overwrite, extension):
+		images = []
+		folders = []
+		for img in get_step_images(step_list[2],step_list[4]):
+			img.dst_path = img.get_step_path(5,self.extension)
+			if os.path.isfile(img.dst_path) and not overwrite:
+				continue
+			cat = os.path.split(img.dst_path)[0]
+			if cat not in folders and not os.path.isdir(cat):
 				os.mkdir(cat)
-			scale(src=img.path, dst=dst, width=self.resolution, height=self.resolution)
+				folders.append(cat)
+			images.append(img)
+		return images
+
+	def scale_images_queue(self):
+		while not self.queue.empty():
+			img = self.queue.get()
+			scale(src=img.path, dst=img.dst_path, width=self.resolution, height=self.resolution)
+			write_tag_txt(img.tags,img.dst_path,self.use_weights)
+			self.queue.task_done()
 			self.tqdm.update()
 
 	def run(self):
 		if len(self.images) == 0:
 			self.tqdm.close()
 			return
-		
-		if self.n_threads and self.n_threads > 1:
-			threads = []
-			cs = int(len(self.images)/self.n_threads)
-			for i in range(0, len(self.images), cs):
-				chunk = self.images[i:i+cs]
-				threads.append(Thread(target=self.scale_images, args=(chunk,)))
-				threads[-1].start()
-			for t in threads:
-				t.join()
+		if self.n_threads and self.n_threads > 1 and len(self.images) > 25:
+			self.queue = queue.Queue()
+			[self.queue.put(i) for i in self.images]
+			[Thread(target=self.scale_images_queue, daemon=True).start() for _ in range(self.n_threads)]
+			self.queue.join()
 		else:
-			self.scale_images(self.images)
+			for img in self.images:
+				scale(src=img.path, dst=img.dst_path, width=self.resolution, height=self.resolution)
+				write_tag_txt(img.tags,img.dst_path,self.use_weights)
+				self.tqdm.update()
 		self.tqdm.close()
 		return
 
