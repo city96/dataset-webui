@@ -12,7 +12,7 @@ from scripts.common import step_list, Image
 from scripts.loader import load_dataset_json, get_step_images
 from scripts.save import save_json
 from scripts.status import get_status
-from scripts.crop import crop_info, crop_image
+from scripts.crop import crop_info, CropWriter
 from scripts.category import category_info
 from scripts.sort import sort_info, sort_write
 from scripts.tags import tag_fix, imgtag_info, imgtag_all_tags
@@ -168,45 +168,21 @@ async def api_status(request):
 	data = get_status()
 	return web.json_response(data)
 
-crop_status = {"run":False}
-async def api_crop_run():
-	"""Apply crop. run this with async!! [handled by crop.py]"""
-	global crop_status
-
-	with open("dataset.json") as f:
-		data = json.load(f)
-	if "crop" not in data.keys() or "images" not in data["crop"].keys():
-		return
-
-	crop_status = {"run":True,"max":len(data["crop"]["images"])}
-	valid = get_step_images(step_list[0])
-	crop_status["current"] = 0
-	history = []
-	for i in data["crop"]["images"]:
-		if i["filename"] in [x.get_id() for x in valid]:
-			await asyncio.sleep(0.001) # Context switch, don't remove
-			filename = crop_image(i, history)
-			crop_status["current"] += 1
-			if filename:
-				history.append(filename)
-	print("Crop done!")
-	crop_status = {"run":False}
-
+cropwriter = None
 async def api_crop(request):
 	"""Image cropping and cropping info [handled by crop.py]"""
-	c_warn = []
+	global cropwriter
 	if request.match_info['command'] == "run":
-		global crop_status
-		if not crop_status["run"]:
-			print("Start task")
-			crop_status = {"run":True}
-			asyncio.create_task(api_crop_run())
-		return web.json_response(crop_status)
+		if not cropwriter or not cropwriter.is_alive():
+			print("Start crop writer thread")
+			cropwriter = CropWriter(args.n_threads)
+			cropwriter.start()
+			return web.json_response(cropwriter.get_status())
 	elif request.match_info['command'] == "run_poll":
-		return web.json_response(crop_status)
-	data = crop_info()
-	data["crop"]["warn"] += c_warn
-	return web.json_response(data)
+		return web.json_response(cropwriter.get_status())
+	else:
+		data = crop_info()
+		return web.json_response(data)
 
 async def api_category(request):
 	"""Image sorting and grouping - categories [handled by category.py]"""
@@ -269,7 +245,8 @@ async def api_out(request):
 			return web.json_response(outwriter.get_status())
 	elif request.match_info['command'] == "run_poll":
 		return web.json_response(outwriter.get_status())
-	return web.json_response({})
+	else:
+		return web.json_response({})
 
 app.add_routes([web.get('/', index),
 				web.get('/favicon.ico', favicon),

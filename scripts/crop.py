@@ -1,6 +1,10 @@
 import os
 import json
 from PIL import Image as pImage
+from tqdm import tqdm
+from queue import Queue
+from threading import Thread
+
 from .common import Image, Tag, step_list
 from .loader import load_dataset_json, get_step_images
 from .category import mesh_image_list
@@ -86,41 +90,94 @@ def crop_info():
 	data["crop"]["warn"] = warn
 	return data
 
-def crop_image(data, history):
-	print("C:", data["filename"])
-	if "ignored" in data.keys() and data["ignored"]:
-		return
-	if "crop_data" not in data.keys():
-		return
-	
-	filename = data["filename"]
-	old_path = os.path.join("0 - raw",filename)
-	if filename in history:
-		# if not data["duplicate"]: # doesn't work - sort order not preserved
-			# print("file not a duplicate, but has duplicates?")
-		path, ext = os.path.splitext(data["filename"])
-		n = history.count(filename) + 1
-		new_path = os.path.join("1 - cropped",f"{path}_{n}{ext}")
-	else:
-		new_path = os.path.join("1 - cropped",filename)
-
-	if not os.path.isfile(old_path):
-		warn.append(f"missing {old_path}")
-		print(warn[-1])
-		return
-	if os.path.split(filename)[0]:
-		cat = os.path.split(new_path)[0]
-		if not os.path.isdir(cat):
-			os.mkdir(cat)
-	if os.path.isfile(new_path):
-		print(f"already exists {new_path}")
-		return filename
+def crop_image(data):
 	crop = data["crop_data"]
 	left = crop["x"]
 	top = crop["y"]
 	right = crop["x"]+crop["width"]
 	bottom = crop["y"]+crop["height"]
-	img = pImage.open(old_path)
+	img = pImage.open(data["src_path"])
 	img = img.crop((left, top, right, bottom))
-	img.save(new_path)
-	return filename
+	img.save(data["dst_path"])
+
+class CropWriter(Thread):
+	def __init__(self, n_threads=None):
+		Thread.__init__(self)
+		self.n_threads = n_threads
+		overwrite = False # toggle?
+		self.images = self.get_images(overwrite)
+		self.tqdm = tqdm(total=len(self.images),unit="img")
+
+	def get_images(self, overwrite):
+		data = load_dataset_json()
+		if not data.get("crop") or not data["crop"].get("images"):
+			return []
+		images = []
+		history = []
+		folders = []
+		valid = [x.get_id() for x in get_step_images(step_list[0])]
+		for i in data["crop"]["images"]:
+			# check ignore/no data
+			if i.get("ignored") or not i.get("crop_data"): 
+				continue
+			# check valid
+			filename = i.get("filename")
+			if filename not in valid:
+				continue
+			# check exists - old
+			src_path = os.path.join(step_list[0],filename)
+			if not os.path.isfile(src_path):
+				print(f"missing {src_path}")
+			# handle duplicates
+			if filename in history:
+				path, ext = os.path.splitext(filename)
+				n = history.count(filename) + 1
+				dst_path = os.path.join(step_list[1], f"{path}_{n}{ext}")
+			else:
+				dst_path = os.path.join(step_list[1], filename)
+			history.append(filename)
+			# check exists - new
+			if os.path.isfile(dst_path) and not overwrite:
+				# print(f"already exists {dst_path}")
+				continue
+			# handle folder
+			cat = os.path.split(dst_path)[0]
+			if cat and cat not in folders and not os.path.isdir(cat):
+				os.mkdir(cat)
+				folders.append(cat)
+			i["dst_path"] = dst_path
+			i["src_path"] = src_path
+			images.append(i)
+		return images
+
+	def crop_image_queue(self):
+		while not self.queue.empty():
+			img = self.queue.get()
+			crop_image(img)
+			self.queue.task_done()
+			self.tqdm.update()
+
+	def run(self):
+		if len(self.images) == 0:
+			self.tqdm.close()
+			return
+		if self.n_threads and self.n_threads > 1 and len(self.images) > 25:
+			self.queue = Queue()
+			[self.queue.put(i) for i in self.images]
+			[Thread(target=self.crop_image_queue, daemon=True).start() for _ in range(self.n_threads)]
+			self.queue.join()
+		else:
+			if len(self.images) > 1000: tqdm.write("Consider using '--threads 4' in your launch args!")
+			for img in self.images:
+				crop_image(img)
+				self.tqdm.update()
+		self.tqdm.close()
+		return
+
+	def get_status(self):
+		data = {
+			"run": self.is_alive(),
+			"max": self.tqdm.total,
+			"current": self.tqdm.n,
+		}
+		return data

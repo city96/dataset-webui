@@ -1,7 +1,7 @@
 import os
-import queue
 from PIL import Image as pImage
 from tqdm import tqdm
+from queue import Queue
 from threading import Thread
 
 from .common import step_list
@@ -36,13 +36,13 @@ class OutputWriter(Thread):
 			if os.path.isfile(img.dst_path) and not overwrite:
 				continue
 			cat = os.path.split(img.dst_path)[0]
-			if cat not in folders and not os.path.isdir(cat):
+			if cat and cat not in folders and not os.path.isdir(cat):
 				os.mkdir(cat)
 				folders.append(cat)
 			images.append(img)
 		return images
 
-	def scale_images_queue(self):
+	def scale_image_queue(self):
 		while not self.queue.empty():
 			img = self.queue.get()
 			scale(src=img.path, dst=img.dst_path, width=self.resolution, height=self.resolution)
@@ -55,11 +55,12 @@ class OutputWriter(Thread):
 			self.tqdm.close()
 			return
 		if self.n_threads and self.n_threads > 1 and len(self.images) > 25:
-			self.queue = queue.Queue()
+			self.queue = Queue()
 			[self.queue.put(i) for i in self.images]
-			[Thread(target=self.scale_images_queue, daemon=True).start() for _ in range(self.n_threads)]
+			[Thread(target=self.scale_image_queue, daemon=True).start() for _ in range(self.n_threads)]
 			self.queue.join()
 		else:
+			if len(self.images) > 1000: tqdm.write("Consider using '--threads 4' in your launch args!")
 			for img in self.images:
 				scale(src=img.path, dst=img.dst_path, width=self.resolution, height=self.resolution)
 				write_tag_txt(img.tags,img.dst_path,self.use_weights)
