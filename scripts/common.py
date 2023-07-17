@@ -80,6 +80,7 @@ class Category:
 	def __init__(self,name,weight=1):
 		self.name = name
 		self.weight = weight
+		self.tags = []
 	def __str__(self):
 		return f"{self.weight}_{self.name}"
 	def __repr__(self):
