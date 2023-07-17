@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-from .check import onnx_enabled
+from .check import onnx_enabled, onnx_providers
 
 if onnx_enabled:
 	import numpy as np
@@ -27,8 +27,7 @@ def column_from_csv(file,column):
 		if field: out.append(field)
 	return out
 
-def init_interrogator(repo="SmilingWolf/wd-v1-4-vit-tagger-v2"):
-	providers = ["CPUExecutionProvider"] # https://onnxruntime.ai/docs/execution-providers/
+def init_interrogator(providers, repo="SmilingWolf/wd-v1-4-vit-tagger-v2"):
 	model_path = str(hf_hub_download(repo_id=repo, filename="model.onnx"))
 	session = InferenceSession(str(model_path), providers=providers)
 	tags_path = str(hf_hub_download(repo_id=repo, filename="selected_tags.csv"))
@@ -54,10 +53,11 @@ def interrogate(session, tags, image):
 
 def label_image(image_path):
 	if not onnx_enabled: return
+	global onnx_providers
 	global interrogator_session
 	global interrogator_tags
 	if not interrogator_session:
-		interrogator_session, interrogator_tags = init_interrogator()
+		interrogator_session, interrogator_tags = init_interrogator(onnx_providers)
 	img = Image.open(image_path)
 	labels = interrogate(interrogator_session, interrogator_tags, img)
 	return labels
