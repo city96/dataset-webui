@@ -234,7 +234,7 @@ def folder_rules(images, tag_rules):
 		if rule["action"] == "add":
 			added = 0
 			for i in images:
-				if i.category == folder:
+				if str(i.category) == folder: # fix this
 					i.tags += (tags)
 					added += 1
 			if added > 0:
@@ -243,7 +243,7 @@ def folder_rules(images, tag_rules):
 		elif rule["action"] == "remove":
 			removed = []
 			for i in images:
-				if i.category == folder:
+				if str(i.category) == folder:
 					new = []
 					for t in i.tags:
 						if t.name in [x.name for x in tags]:
@@ -398,7 +398,7 @@ def raise_tags(images, to_raise):
 	for i in images:
 		for t in i.tags:
 			if t.name in [str(x) for x in to_raise]:
-				t.position = random.randint(4,8)
+				t.position = random.randint(2,4)
 				raised += 1
 	if raised > 0:
 		status.append(f"Raised {len(to_raise)} tag(s) {raised} times")
@@ -696,7 +696,7 @@ def tag_fix(save=False, rules_only=False):
 	# load whitelist
 	whitelist = str_to_tag_list(c["whitelist"])
 	whitelist += str_to_tag_list(c["triggerword"])
-	# whitelist += str_to_tag_list(c["triggerword_extra"])
+	whitelist += str_to_tag_list(c["triggerword_extra"])
 
 	# apply actual rules
 	images = apply_tag_rules(images, c)
