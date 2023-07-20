@@ -18,6 +18,27 @@ def scale(src,dst,width=768, height=768):
 	img = img.resize((width,hsize), pImage.ANTIALIAS)
 	img.save(dst)
 
+def scale_check(resolution=768):
+	"""check how many images will be up+downscaled"""
+	data = {
+		"down" : 0,
+		"keep" : 0,
+		"upsc" : 0,
+		"misc" : 0,
+	}
+	for img in get_step_images(step_list[2]):
+		i = pImage.open(img.path)
+		width, height = i.size
+		if abs(width - height) > 5:
+			data["misc"] += 1
+		elif abs(height - resolution) < 5:
+			data["keep"] += 1
+		elif height > resolution:
+			data["down"] += 1
+		elif height < resolution:
+			data["upsc"] += 1
+	return { "resolution" : resolution, "images" : data }
+
 class OutputWriter(Thread):
 	def __init__(self, extension, resolution, overwrite=False, use_weights=False, n_threads=None):
 		Thread.__init__(self)

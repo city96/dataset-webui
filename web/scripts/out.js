@@ -33,3 +33,18 @@ async function out_write_run() {
 	unlock()
 	save_lock(false)
 }
+
+async function out_scale_check() {
+	let res = document.getElementById("ow_res").value
+	let data = await fetch("/api/out/scale_check?resolution="+res)
+	data = await data.json()
+	if (!data || !data.resolution || data.resolution != res) {
+		for (const i of ["ow_upsc","ow_keep","ow_down","ow_misc"]) {
+			document.getElementById(i).innerHTML = "-"
+		}
+		return
+	}
+	for (const i in data.images) {
+		document.getElementById(`ow_${i}`).innerHTML = data.images[i]
+	}
+}
