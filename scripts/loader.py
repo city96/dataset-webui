@@ -2,12 +2,12 @@ import os
 import json
 from .common import Image, Tag, Category, step_list, rating_list, version
 
-def load_dataset_json():
-	"""load the current dataset json, apply fallback fixes [fast forward to current version]"""
-	if not os.path.isfile("dataset.json"):
+def load_dataset_json(json_path="dataset.json"):
+	"""load the current (default) dataset json, apply fallback fixes [fast forward to current version]"""
+	if not os.path.isfile(json_path):
 		return {}
 
-	with open("dataset.json") as f:
+	with open(json_path) as f:
 		data = json.load(f)
 
 	v = data["meta"]["version"] if "version" in data["meta"].keys() else 1.0

@@ -2,6 +2,7 @@ import os
 import json
 from .common import version, step_list, dataset_folder
 from .status import get_step_stats
+from .loader import load_dataset_json
 
 # global list of warnings
 warn = []
@@ -131,13 +132,21 @@ def get_folder_dataset(path):
 	if "version" in config["meta"] and config["meta"]["version"]:
 		dataset.version = config["meta"]["version"]
 
-	# progress aware folder count
-	for step in reversed(step_list):
-		step = os.path.join(path,step)
-		size = get_step_stats(step)["image_count"]["total"]
-		if size > 0:
-			dataset.size = size
-			break
+	# rough count estimate
+	json_data = load_dataset_json(json_path)
+	dataset.size = max(
+		len(json_data.get("crop",{}).get("images",[])),
+		len(json_data.get("sort",{}).get("images",[]))
+	)
+
+	# progress aware folder count - fallback
+	if dataset.size == 0:
+		for step in reversed(step_list):
+			step = os.path.join(path,step)
+			size = get_step_stats(step)["image_count"]["total"]
+			if size > 0:
+				dataset.size = size
+				break
 	return dataset
 
 def dataset_status(command=None,path=None):
