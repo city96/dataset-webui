@@ -247,6 +247,10 @@ img {
 	max-width: 700px;
 }
 
+#crop-div {
+	margin-bottom: 400px;
+}
+
 .cat_slider {
 	width: 80%;
 }
