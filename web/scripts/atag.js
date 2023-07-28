@@ -21,11 +21,22 @@ async function tag_auto_run() {
 	// global lock
 	lock('tag-auto-div');
 	save_lock()
-	
+
+	// parse params
+	let params = {
+		overwrite: document.getElementById("ta_ow").checked,
+		confidence: document.getElementById("ta_conf").value,
+		multi_conf: document.getElementById("ta_multi_conf").value,
+		multi_mode: document.getElementById("ta_multi_mode").value,
+	}
+	let url_params = new URLSearchParams(params);
+	for (const t of document.getElementsByClassName("ta_tagger")) {
+		if (t.checked) url_params.append("tagger", t.value)
+	}
+
+	// run
+	let data = await fetch("/api/atag/run?" + url_params.toString());
 	let perc = document.getElementById("ta_perc")
-	let ow = document.getElementById("ta_ow").checked
-	let conf = document.getElementById("ta_conf").value
-	let data = await fetch("/api/atag/run?overwrite="+ow+"&confidence="+conf);
 	document.getElementById("ta_run").disabled = true
 	data = await data.json()
 	let current = -1

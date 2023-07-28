@@ -16,7 +16,7 @@ from scripts.crop import crop_info, CropWriter
 from scripts.category import category_info
 from scripts.sort import sort_info, sort_write
 from scripts.tags import tag_fix, imgtag_info, imgtag_all_tags
-from scripts.out import OutputWriter
+from scripts.out import OutputWriter, scale_check
 
 from inference.check import onnx_enabled
 from inference.connector import get_image_tags, Autotagger, Autocrop
@@ -77,12 +77,15 @@ async def api_autotag(request):
 	global autotagger
 
 	confidence = float(request.rel_url.query.get('confidence', 0.35))
+	tagger = request.rel_url.query.getall('tagger', None)
+	multi_conf = request.rel_url.query.get('multi_conf', "avg")
+	multi_mode = request.rel_url.query.get('multi_mode', "intersect")
 
 	if request.match_info['command'] == "run":
 		overwrite = request.rel_url.query.get('overwrite').lower() == "true"
 		if not autotagger or not autotagger.is_alive():
 			print("Start autotag thread")
-			autotagger = Autotagger(get_step_images(step_list[2]), overwrite, confidence)
+			autotagger = Autotagger(get_step_images(step_list[2]), overwrite, confidence, tagger, multi_conf, multi_mode)
 			autotagger.start()
 			return web.json_response(autotagger.get_status())
 	elif request.match_info['command'] == "run_poll":
@@ -91,7 +94,7 @@ async def api_autotag(request):
 	elif request.match_info['command'] == "single":
 		path = request.rel_url.query.get('path')
 		if path and os.path.isfile(path):
-			data = get_image_tags(path,confidence)
+			data = get_image_tags("wd-v1-4-vit-tagger-v2", path, confidence)
 			return web.json_response(data)
 	return web.json_response({})
 
@@ -223,21 +226,11 @@ async def api_out(request):
 	global outwriter
 	if request.match_info['command'] == "run":
 		extension = ".png"
-		if "extension" in request.rel_url.query.keys():
-			ext = request.rel_url.query['extension']
-			extension = ext if ext in [".png",".jpg"] else ".png"
-		overwrite = False
-		if "overwrite" in request.rel_url.query.keys():
-			overwrite = request.rel_url.query['overwrite'].lower() == "true"
-		use_weights = False
-		if "weights" in request.rel_url.query.keys():
-			use_weights = request.rel_url.query['weights'].lower() == "true"
-		resolution = 768
-		if "resolution" in request.rel_url.query.keys():
-			try:
-				resolution = int(request.rel_url.query['resolution'])
-			except:
-				resolution = 768
+		ext = request.rel_url.query.get("extension") if ext in [".png",".jpg"] else ".png"
+		overwrite = request.rel_url.query.get("overwrite").lower() == "true"
+		use_weights = request.rel_url.query.get("weights").lower() == "true"
+		try: resolution = int(request.rel_url.query.get("resolution", 768))
+		except: resolution = 768
 		if not outwriter or not outwriter.is_alive():
 			print("Start output writer thread")
 			outwriter = OutputWriter(extension,resolution,overwrite,use_weights,args.n_threads)
@@ -245,6 +238,10 @@ async def api_out(request):
 			return web.json_response(outwriter.get_status())
 	elif request.match_info['command'] == "run_poll":
 		return web.json_response(outwriter.get_status())
+	elif request.match_info['command'] == "scale_check":
+		try: resolution = int(request.rel_url.query.get("resolution", 768))
+		except: resolution = 768
+		return web.json_response(scale_check(resolution))
 	else:
 		return web.json_response({})
 

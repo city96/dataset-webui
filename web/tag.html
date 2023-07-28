@@ -88,6 +88,36 @@
 		<a>Overwrite: </a><input id="ta_ow" type="checkbox"></input>
 		
 		<hr>
+		<div class="tt">
+			<input class="ta_tagger" type="checkbox" checked value="wd-v1-4-vit-tagger-v2"></input><a>wd-v1-4-vit-tagger-v2</a><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-moat-tagger-v2"></input><a>wd-v1-4-moat-tagger-v2</a><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-swinv2-tagger-v2"><a>wd-v1-4-swinv2-tagger-v2</a></input><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-convnext-tagger-v2"><a>wd-v1-4-convnext-tagger-v2</a></input><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-convnextv2-tagger-v2"><a>wd-v1-4-convnextv2-tagger-v2</a></input><br>
+			<p class="tip tt-text">
+			Only select one, the default is "wd-v1-4-vit-tagger-v2".<br>
+			Selecting multiple might result in better tags, since the chance of two taggers returning an incorrect tag is smaller.<br>
+			It might also be worse, I was asked to implement this, I haven't actually tested if it's better..
+			</p>
+		</div>
+		<hr>
+		<div class="tt">
+			<a> Multi-tagger mode </a>
+			<select id="ta_multi_conf">
+				<option value="avg" default>AVG</option>
+				<option value="sum">SUM</option>
+			</select>
+			<select id="ta_multi_mode">
+				<option value="intersect" default>Intersect</option>
+				<option value="union">Union</option>
+			</select>
+			<p class="tip tt-text">
+			These options are only active when selecting more than one tagger.<br>
+			AVG (recommended) will average all the confidence scores, while SUM will add them up.<br>
+			Intersect requires all taggers to return a certain tag for it to appear, resulting in less but higher confidence tags. Union will return any tag from any tagger.
+			</p>
+		</div>
+		<hr>
 		<img id="ta_img" src="/assets/placeholder.png"></img>
 		<div id="ta_tags">
 			<div>

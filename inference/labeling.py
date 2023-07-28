@@ -8,7 +8,16 @@ if onnx_enabled:
 	from onnxruntime import InferenceSession
 
 interrogator_session = None
+interrogator_name = None
 interrogator_tags = None
+
+interrogator_repo_names = {
+	"wd-v1-4-vit-tagger-v2" : "SmilingWolf/wd-v1-4-vit-tagger-v2",
+	"wd-v1-4-moat-tagger-v2" : "SmilingWolf/wd-v1-4-moat-tagger-v2",
+	"wd-v1-4-swinv2-tagger-v2" : "SmilingWolf/wd-v1-4-swinv2-tagger-v2",
+	"wd-v1-4-convnext-tagger-v2" : "SmilingWolf/wd-v1-4-convnext-tagger-v2",
+	"wd-v1-4-convnextv2-tagger-v2" : "SmilingWolf/wd-v1-4-convnextv2-tagger-v2",
+}
 
 def column_from_csv(file,column):
 	"""replaces pandas read_csv to reduce number of dependencies"""
@@ -27,7 +36,7 @@ def column_from_csv(file,column):
 		if field: out.append(field)
 	return out
 
-def init_interrogator(providers, repo="SmilingWolf/wd-v1-4-vit-tagger-v2"):
+def init_interrogator(providers, repo):
 	model_path = str(hf_hub_download(repo_id=repo, filename="model.onnx"))
 	session = InferenceSession(str(model_path), providers=providers)
 	tags_path = str(hf_hub_download(repo_id=repo, filename="selected_tags.csv"))
@@ -51,13 +60,25 @@ def interrogate(session, tags, image):
 	out = {tags[i]:conf[i] for i in range(len(tags))}
 	return out
 
-def label_image(image_path):
+def label_image(image_path, interrogator=None):
 	if not onnx_enabled: return
 	global onnx_providers
+
 	global interrogator_session
+	global interrogator_name
 	global interrogator_tags
+	global interrogator_repo_names
+
+	if not interrogator: interrogator = interrogator_repo_names[0]
+	if interrogator_name != interrogator:
+		if interrogator_session: interrogator_session = None
+		if interrogator_tags: interrogator_tags = None
 	if not interrogator_session:
-		interrogator_session, interrogator_tags = init_interrogator(onnx_providers)
+		repo = interrogator_repo_names.get(interrogator)
+		if not repo: return
+		interrogator_name = interrogator
+		interrogator_session, interrogator_tags = init_interrogator(onnx_providers, repo)
+
 	img = Image.open(image_path)
 	labels = interrogate(interrogator_session, interrogator_tags, img)
 	return labels
