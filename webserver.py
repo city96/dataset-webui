@@ -225,8 +225,8 @@ async def api_out(request):
 	"""write all output images to disk"""
 	global outwriter
 	if request.match_info['command'] == "run":
-		extension = ".png"
-		ext = request.rel_url.query.get("extension") if ext in [".png",".jpg"] else ".png"
+		ext = request.rel_url.query.get("extension")
+		extension = ext if ext in [".png",".jpg"] else ".png"
 		overwrite = request.rel_url.query.get("overwrite").lower() == "true"
 		use_weights = request.rel_url.query.get("weights").lower() == "true"
 		try: resolution = int(request.rel_url.query.get("resolution", 768))
