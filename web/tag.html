@@ -60,6 +60,16 @@
 <!-- Tags -->
 <div class="category">
 <h1> Tags </h1>
+	<!-- Tag writer -->
+	<div id="tag-write" class="module">
+		<h2>Write to disk:</h2>
+		<p class="warn float-warn" id="crop-write-float-warn"></p>
+		<button id="t_run" onclick="fix_tags()" disabled> Apply rules </button>
+
+		<p class="tip"> This will write all modified tags to the "4 - fixed" folder </p>
+		<p class="tip"> It is the same as the "Apply rules" button below </p>
+	</div>
+
 	<!-- Auto tag -->
 	<div id="tag-auto-div" class="module" style="min-width:800px">
 		<h2>Generate tags / autotagger:</h2>
@@ -77,6 +87,36 @@
 		<a>Confidence: </a><input id="ta_conf" type="number" min=0 max=1 step=0.1 value=0.35 ></input><br>
 		<a>Overwrite: </a><input id="ta_ow" type="checkbox"></input>
 		
+		<hr>
+		<div class="tt">
+			<input class="ta_tagger" type="checkbox" checked value="wd-v1-4-vit-tagger-v2"></input><a>wd-v1-4-vit-tagger-v2</a><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-moat-tagger-v2"></input><a>wd-v1-4-moat-tagger-v2</a><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-swinv2-tagger-v2"><a>wd-v1-4-swinv2-tagger-v2</a></input><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-convnext-tagger-v2"><a>wd-v1-4-convnext-tagger-v2</a></input><br>
+			<input class="ta_tagger" type="checkbox" value="wd-v1-4-convnextv2-tagger-v2"><a>wd-v1-4-convnextv2-tagger-v2</a></input><br>
+			<p class="tip tt-text">
+			Only select one, the default is "wd-v1-4-vit-tagger-v2".<br>
+			Selecting multiple might result in better tags, since the chance of two taggers returning an incorrect tag is smaller.<br>
+			It might also be worse, I was asked to implement this, I haven't actually tested if it's better..
+			</p>
+		</div>
+		<hr>
+		<div class="tt">
+			<a> Multi-tagger mode </a>
+			<select id="ta_multi_conf">
+				<option value="avg" default>AVG</option>
+				<option value="sum">SUM</option>
+			</select>
+			<select id="ta_multi_mode">
+				<option value="intersect" default>Intersect</option>
+				<option value="union">Union</option>
+			</select>
+			<p class="tip tt-text">
+			These options are only active when selecting more than one tagger.<br>
+			AVG (recommended) will average all the confidence scores, while SUM will add them up.<br>
+			Intersect requires all taggers to return a certain tag for it to appear, resulting in less but higher confidence tags. Union will return any tag from any tagger.
+			</p>
+		</div>
 		<hr>
 		<img id="ta_img" src="/assets/placeholder.png"></img>
 		<div id="ta_tags">
@@ -105,11 +145,10 @@
 
 		<!-- START TAG SETTING LIST -->
 		<h2>Tag filters:</h2>
-		<a style="color:red"> Don't refresh the page without hitting save first! You will lose your modifications </a><br>
 		<button id="t_save" class="save unlock" onclick="save_tag_json()" disabled> Save changes </button>
 		<button id="t_load" class="save unlock" onclick="tag_update()" disabled> Discard changes </button>
-		<button id="t_fix" class="save req-save" onclick="test_tags()"> Test rules </button>
-		<button id="t_run" class="save req-save" onclick="fix_tags()"> Apply rules </button>
+		<button id="t_test" class="save req-save" onclick="test_tags()"> Test rules </button>
+		<button id="t_fix" class="save req-save" onclick="fix_tags()"> Apply rules </button>
 		
 		<br>
 		<p> Script output will appear here: </p>
@@ -399,6 +438,74 @@
 		</div>
 	<!-- LOAD SCRIPT -->
 	<script src="scripts/tags.js"></script>
+
+	<!-- Sequencer -->
+	<div id="tag-seq-div" class="module">
+		<h2>Tag Sequencer:</h2>
+		<p class="warn float-warn" id="tag-seq-float-warn"></p>
+		<button id="ts_save" class="save unlock" onclick="tag_seq_save()" disabled> Save </button>
+		<button id="ts_revert" class="revert unlock" onclick="tag_seq_update()" disabled> Revert Changes </button>
+		<br>
+		<br>
+		
+		<div id="ts-img">
+			<img id="ts_img_start" src="/assets/placeholder.png"></img>
+			<img id="ts_img_end" src="/assets/placeholder.png"></img>
+		</div>
+		<span><a>Start img: </a><input type="range" min=0 max=0 value=0 class="slider" id="ts_img_start_id" onchange="tag_seq_img_start_update()"></input></span><br>
+		<span><a>End img: </a><input type="range" min=0 max=0 value=0 class="slider" id="ts_img_end_id" onchange="tag_seq_img_end_update()"></input></span>
+		<hr>
+		<span><a>Tags: </a><input id="ts_tag" type="text" placeholder="fire, smoke"></input></span><br>
+		<span><a>Start weight (from): </a><input id="ts_from" type="number" min=0 max=1 step=0.05 value=1.00 ></input></span><br>
+		<span><a>End weight (to): </a><input id="ts_to" type="number" min=0 max=1 step=0.05 value=1.00 ></input></span>
+		<hr>
+		<button onclick="tag_seq_add_seq()"> Add rule </button>
+		
+		<p> Tag Sequences = </p>
+		<table>
+			<thead>
+				<tr>
+					<td> Tags </td>
+					<td> Start Frame </td>
+					<td> End Frame </td>
+					<td> Start weight </td>
+					<td> End weight </td>
+					<td> Delete </td>
+				</tr>
+			</thead>
+			<tbody id="ts_seq_table">
+			</tbody>
+		</table>
+		
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/sequencer.js"></script>
+	
+	<!-- Single image tags -->
+	<div id="tag-image-div" class="module" style="min-width:1200px">
+		<h2>Tag Individual Images:</h2>
+		<p class="warn float-warn" id="tag-image-float-warn"></p>
+		<button id="ti_save" class="save unlock" onclick="tag_save_prev()" disabled> Save </button>
+		<button id="ti_revert" class="revert unlock" onclick="tag_img_update()" disabled> Revert Changes </button>
+		<button id="ti_run" class="save req-save" onclick="fix_tags()"> Apply rules </button>
+
+		<p class="tip"> The test/apply button on the Tag Filter module also applies the changes made here.</p>
+
+		<hr>
+		<div id="ti_ctrl"> <!--
+			--><button class="save" id="c_prev" onclick="tag_img_prev()"> Prev </button><!--
+			--><button class="save" id="c_ignore" onclick="crop_next_image(false,true)"> Clear current </button><!--
+			--><button class="save" id="c_next" onclick="tag_img_next()"> Next </button><!--
+		--></div>
+		<hr>
+		<img id="ti_img" src="/assets/placeholder.png"></img>
+		<div id="ti_tags">
+			<table id="ti-table">
+			</table>
+		</div>
+	</div>
+	<!-- LOAD SCRIPT -->
+	<script src="scripts/imgtags.js"></script>
 </div>
 
 <!-- COMMON -->

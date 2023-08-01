@@ -177,6 +177,7 @@ async function page_update(update=true) {
 		navbar_set("nb-crop-div",false,"Active tab","green")
 		if (update) {
 			crop_init()
+			crop_auto_check()
 		}
 	} else {
 		navbar_set("nb-crop-div",true)
@@ -206,6 +207,7 @@ async function page_update(update=true) {
 		navbar_set("nb-tag-div",false,"Active tab","green")
 		if (update) {
 			tag_update()
+			tag_img_update()
 			tag_auto_check()
 		}
 	} else {
@@ -219,6 +221,9 @@ async function page_update(update=true) {
 		}
 	} else if (loc == "/out.html") {
 		navbar_set("nb-out-div",false,"Active tab","green")
+		if (update) {
+			out_scale_check()
+		}
 	} else {
 		navbar_set("nb-out-div",true)
 	}

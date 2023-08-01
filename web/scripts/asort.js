@@ -32,7 +32,7 @@ function sort_auto_stop() {
 }
 
 async function sort_get_image_category(path, confidence=0.35, req_and=false) {
-	let data = await fetch("/api/tagger/single?confidence="+confidence+"&path=1%20-%20cropped/"+path);
+	let data = await fetch("/api/atag/single?confidence="+confidence+"&path=1%20-%20cropped/"+path);
 	data = await data.json()
 	if (!data ) { return "default" }
 	// console.log(data)

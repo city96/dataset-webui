@@ -1,6 +1,7 @@
 function tag_auto_poll_table(tags) {
 	var table = document.getElementById("ta_table")
 	table.innerHTML = "";
+	if (!tags) return
 	for(const key in tags) {
 		if (["general","sensitive","questionable","explicit"].includes(key)) {
 			continue
@@ -20,26 +21,35 @@ async function tag_auto_run() {
 	// global lock
 	lock('tag-auto-div');
 	save_lock()
-	
+
+	// parse params
+	let params = {
+		overwrite: document.getElementById("ta_ow").checked,
+		confidence: document.getElementById("ta_conf").value,
+		multi_conf: document.getElementById("ta_multi_conf").value,
+		multi_mode: document.getElementById("ta_multi_mode").value,
+	}
+	let url_params = new URLSearchParams(params);
+	for (const t of document.getElementsByClassName("ta_tagger")) {
+		if (t.checked) url_params.append("tagger", t.value)
+	}
+
+	// run
+	let data = await fetch("/api/atag/run?" + url_params.toString());
 	let perc = document.getElementById("ta_perc")
-	let ow = document.getElementById("ta_ow").checked
-	let conf = document.getElementById("ta_conf").value
-	let data = await fetch("/api/tagger/run?overwrite="+ow+"&confidence="+conf);
 	document.getElementById("ta_run").disabled = true
 	data = await data.json()
+	let current = -1
 	while (data["run"]) {
-		data = await fetch("/api/tagger/run_poll");
+		data = await fetch("/api/atag/run_poll");
 		data = await data.json()
-		if (data["url"]) {
-			document.getElementById("ta_img").src = data["image"]
-		} else {
-			document.getElementById("ta_img").src = "/assets/placeholder.png"
-		}
-		if (data["caption"]) {
-			tag_auto_poll_table(data["caption"])
-		} else {
-			document.getElementById("ta_table").innerHTML = "";
-		}
+
+		if (current == data["current"]) continue
+		current = data["current"]
+		
+		document.getElementById("ta_img").src = (data.preview) ? data.preview : "/assets/placeholder.png"
+		tag_auto_poll_table(data["caption"])
+
 		if (data["max"]) {
 			console.log("poll update",data["current"],data["max"])
 			perc.max = data["max"]
@@ -48,7 +58,7 @@ async function tag_auto_run() {
 			perc.max = 1
 			perc.value = 1
 		}
-		await new Promise(r => setTimeout(r, 500));
+		await new Promise(r => setTimeout(r, 200));
 	}
 	perc.max = 1
 	perc.value = 0
@@ -62,14 +72,15 @@ async function tag_auto_run() {
 	
 	// update stats
 	tag_update()
+	tag_img_update()
 	page_update(false)
 }
 
 async function tag_auto_check() {
-	let data = await fetch("/api/tagger/status");
+	let data = await fetch("/api/inference_check/");
 	data = await data.json()
-	if (!data || !data.tagger_enabled || data.tagger_enabled == false) {
-		disable_module("tag-auto-div", "Tagger disabled")
+	if (!data || !data.onnx || data.onnx == false) {
+		disable_module("tag-auto-div", "ONNX Runtime missing")
 	} else {
 		enable_module("tag-auto-div")
 	}

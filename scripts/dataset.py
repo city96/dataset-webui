@@ -1,20 +1,18 @@
-#!/usr/bin/python3
-# script to save/load dataset folders
 import os
 import json
-from common import verify_input
-from common import step_list as folder_list
-from status import get_step_stats
+from .common import version, step_list, dataset_folder
+from .status import get_step_stats
+from .loader import load_dataset_json
 
 # global list of warnings
 warn = []
-dataset_folder = "datasets"
 
 # store dataset
 class Dataset:
 	name = None
 	description = None
 	save_path = None
+	version = 1.0 # default to 1.0 (eg. missing)
 	size = 0
 
 	def __str__(self):
@@ -43,7 +41,7 @@ def save_dataset(dataset):
 		exit(1)
 
 	# check if all empty, reuse status (regex?)
-	for folder in folder_list:
+	for folder in step_list:
 		old_path = os.path.join(dataset.save_path,folder)
 		os.rename(folder,old_path)
 	os.rename("dataset.json",os.path.join(dataset.save_path,"dataset.json"))
@@ -57,12 +55,12 @@ def load_dataset(dataset):
 		print(warn[-1])
 		return
 	# sanity check, don't collide
-	if any([os.path.isdir(x) for x in folder_list]) or os.path.isfile("dataset.json"):
+	if any([os.path.isdir(x) for x in step_list]) or os.path.isfile("dataset.json"):
 		warn.append(f"target folder not empty!")
 		print(warn[-1])
 		return
 
-	for folder in folder_list:
+	for folder in step_list:
 		new_path = os.path.join(dataset.save_path,folder)
 		os.rename(new_path,folder)
 	os.rename(os.path.join(dataset.save_path,"dataset.json"),"dataset.json")
@@ -76,14 +74,14 @@ def load_dataset(dataset):
 def create_dataset(data):
 	"""initialize new dataset from json"""
 	# sanity check, don't collide
-	if any([os.path.isdir(x) for x in folder_list]) or os.path.isfile("dataset.json"):
+	if any([os.path.isdir(x) for x in step_list]) or os.path.isfile("dataset.json"):
 		print("target folder not empty!")
 		return
 	d = Dataset()
 	d.name = data["meta"]["name"].strip()
 	d.description = data["meta"]["description"].strip()
 	# folders
-	for folder in folder_list:
+	for folder in step_list:
 		if os.path.isdir(folder):
 			print("a")
 		else:
@@ -121,7 +119,7 @@ def get_folder_dataset(path):
 		return
 
 	with open(json_path) as f:
-		config = json.load(f)
+		config = json.load(f) # do not upgrade here, not used elsewhere
 	dataset.name = config["meta"]["name"].strip()
 	dataset.description = config["meta"]["description"]
 
@@ -129,15 +127,26 @@ def get_folder_dataset(path):
 		warn.append(f"dataset in {path} has no name/empty json")
 		print(warn[-1])
 		dataset.name = "Untitled"
-		# return
+		# return 
+	
+	if "version" in config["meta"] and config["meta"]["version"]:
+		dataset.version = config["meta"]["version"]
 
-	# progress aware folder count
-	for step in reversed(folder_list):
-		step = os.path.join(path,step)
-		size = get_step_stats(step)["image_count"]["total"]
-		if size > 0:
-			dataset.size = size
-			break
+	# rough count estimate
+	json_data = load_dataset_json(json_path)
+	dataset.size = max(
+		len(json_data.get("crop",{}).get("images",[])),
+		len(json_data.get("sort",{}).get("images",[]))
+	)
+
+	# progress aware folder count - fallback
+	if dataset.size == 0:
+		for step in reversed(step_list):
+			step = os.path.join(path,step)
+			size = get_step_stats(step)["image_count"]["total"]
+			if size > 0:
+				dataset.size = size
+				break
 	return dataset
 
 def dataset_status(command=None,path=None):
@@ -152,6 +161,7 @@ def dataset_status(command=None,path=None):
 			"description": active.description,
 			"save_path": "./",
 			"image_count": active.size,
+			"version": active.version,
 			"active": True
 		})
 	for dataset in get_all_datasets():
@@ -160,6 +170,7 @@ def dataset_status(command=None,path=None):
 			"description": dataset.description,
 			"save_path": dataset.save_path,
 			"image_count": dataset.size,
+			"version": dataset.version,
 			"active": False
 		})
 	data["warn"] = warn

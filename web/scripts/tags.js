@@ -379,13 +379,16 @@ async function tag_update() {
 	
 	if (!data || !data.tags) {
 		disable_module("tag-div", "Nothing to load from disk")
+		disable_module("tag-write", "Nothing to load from disk")
 		return
 	} else {
 		enable_module("tag-div")
+		enable_module("tag-write")
+		document.getElementById("t_run").disabled = false
 	}
 	console.log(data)
 	tag_categories = data["tags"]["categories"]
-	tag_json_load(data["tags"])
+	tag_json_load(data["tags"]["rules"])
 	unlock()
 	test_tags()
 }
@@ -394,8 +397,10 @@ async function save_tag_json() {
 	console.log("Save tag/json")
 	save_lock()
 
-	let data = {}
-	data["tags"] = tag_json_get()
+	let data = {
+		"tags" : {},
+	}
+	data["tags"]["rules"] = tag_json_get()
 
 	await fetch('/api/json/save', {
 		method: 'POST',
@@ -407,6 +412,7 @@ async function save_tag_json() {
 
 	save_lock(false)
 	tag_update()
+	tag_img_update() // propagate
 }
 
 async function test_tags() {

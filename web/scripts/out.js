@@ -6,9 +6,10 @@ async function out_write_run() {
 	
 	let perc = document.getElementById("ow_perc")
 	let ow = document.getElementById("ow_ow").checked
+	let uw = document.getElementById("ow_uw").checked
 	let res = document.getElementById("ow_res").value
 	let ext = document.getElementById("ow_ext").value
-	let data = await fetch("/api/out/run?overwrite="+ow+"&resolution="+res+"&extension="+ext);
+	let data = await fetch("/api/out/run?overwrite="+ow+"&resolution="+res+"&extension="+ext+"&weights="+uw);
 	document.getElementById("ow_run").disabled = true
 	data = await data.json()
 	while (data["run"]) {
@@ -22,7 +23,7 @@ async function out_write_run() {
 			perc.max = 1
 			perc.value = 1
 		}
-		await new Promise(r => setTimeout(r, 500));
+		await new Promise(r => setTimeout(r, 200));
 	}
 	perc.max = 1
 	perc.value = 0
@@ -31,4 +32,19 @@ async function out_write_run() {
 	// global lock
 	unlock()
 	save_lock(false)
+}
+
+async function out_scale_check() {
+	let res = document.getElementById("ow_res").value
+	let data = await fetch("/api/out/scale_check?resolution="+res)
+	data = await data.json()
+	if (!data || !data.resolution || data.resolution != res) {
+		for (const i of ["ow_upsc","ow_keep","ow_down","ow_misc"]) {
+			document.getElementById(i).innerHTML = "-"
+		}
+		return
+	}
+	for (const i in data.images) {
+		document.getElementById(`ow_${i}`).innerHTML = data.images[i]
+	}
 }

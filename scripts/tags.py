@@ -1,10 +1,8 @@
-#!/usr/bin/python3
-# script to fix and filter tags using the rules in 'dataset.json'
 import os
 import json
 import random
-from common import step_list, rating_list
-from status import get_step_images, str_to_tag_list
+from .common import Tag, step_list, rating_list
+from .loader import load_dataset_json, get_step_images, str_to_tag_list
 
 debug = False
 
@@ -236,7 +234,7 @@ def folder_rules(images, tag_rules):
 		if rule["action"] == "add":
 			added = 0
 			for i in images:
-				if i.category == folder:
+				if str(i.category) == folder: # fix this
 					i.tags += (tags)
 					added += 1
 			if added > 0:
@@ -245,7 +243,7 @@ def folder_rules(images, tag_rules):
 		elif rule["action"] == "remove":
 			removed = []
 			for i in images:
-				if i.category == folder:
+				if str(i.category) == folder:
 					new = []
 					for t in i.tags:
 						if t.name in [x.name for x in tags]:
@@ -400,7 +398,7 @@ def raise_tags(images, to_raise):
 	for i in images:
 		for t in i.tags:
 			if t.name in [str(x) for x in to_raise]:
-				t.position = random.randint(4,8)
+				t.position = random.randint(2,4)
 				raised += 1
 	if raised > 0:
 		status.append(f"Raised {len(to_raise)} tag(s) {raised} times")
@@ -423,6 +421,123 @@ def dedupe_tags(images):
 		print(status[-1])
 	return images
 
+# sequencer
+def sequencer(images, sequences):
+	if not sequences:
+		return images
+	status.append("\nrunning tag sequencer")
+	print(status[-1])
+	for rule in sequences:
+		rule_tags = str_to_tag_list(rule["tags"])
+		start_index = [x for x in range(len(images)) if images[x].get_id() == rule["start"]]
+		start_index = start_index[0] if len(start_index) > 0 else -1
+		end_index = [x for x in range(len(images)) if images[x].get_id() == rule["end"]]
+		end_index = end_index[0] if len(end_index) > 0 else -1
+		index_length = (end_index-start_index)
+		status.append(f" sequencing {rule_tags} (id{start_index+1}=>id{end_index+1}|:{rule['from']}=>:{rule['to']})")
+		print(status[-1])
+		for i in range(start_index,end_index+1):
+			perc = (i-start_index)/index_length
+			if rule["from"] > rule["to"]:
+				weight = rule["to"] + (1-perc)*(rule["from"]-rule["to"])
+			else:
+				weight = rule["from"] + perc*(rule["to"]-rule["from"])
+			new = []
+			for t in images[i].tags:
+				if t.name not in [x.name for x in rule_tags]:
+					new.append(t)
+			for t in rule_tags:
+				tag = Tag()
+				tag.name = t.name
+				tag.weight = round(weight,2)
+				new.append(tag)
+			images[i].tags = new
+	return images
+
+# single img overrides
+def single_img_overrides(images, rules):
+	if not rules:
+		return images
+
+	added = 0
+	removed = 0
+	for i in images:
+		rule = [x for x in rules if x["filename"] == i.get_id()]
+		if not rule:
+			continue
+		else:
+			rule = rule[0]
+
+		new_tags = [x for x in i.tags if x.name not in rule["rem"]]
+		removed += len(i.tags) - len(new_tags)
+		i.tags = new_tags
+
+		for a in rule["add"]:
+			t = Tag()
+			t.name = a
+			t.position = 10
+			i.tags.append(t)
+			added += 1
+
+	status.append(f"\nSingle image overrides (+{added} | -{removed})")
+	print(status[-1])
+	return images
+
+def imgtag_all_tags(general_only=True):
+	tags = []
+	if os.path.isfile(os.path.join("external",'danbooru-tags.json')):
+		with open(os.path.join("external",'danbooru-tags.json')) as f:
+			raw_tags = json.load(f)
+		for t in raw_tags:
+			if general_only and t["category"] != 0:
+				continue
+			tags.append(t["name"].replace("_"," "))
+	elif os.path.isfile(os.path.join("external",'gelbooru-tags.json')):
+		with open(os.path.join("external",'gelbooru-tags.json')) as f:
+			raw_tags = json.load(f)
+		for t in raw_tags:
+			if general_only and t["type"] != 0:
+				continue
+			tags.append(t["name"].replace("_"," "))
+	else:
+		tags = ["no *booru.json tag file!"]
+	return tags
+
+def imgtag_info():
+	valid = tag_fix(save=False, rules_only=True)
+	
+	json_data = load_dataset_json()
+	if "tags" in json_data.keys() and "images" in json_data["tags"].keys():
+		missing = json_data["tags"]["missing"] if "missing" in json_data["tags"].keys() else []
+		images = json_data["tags"]["images"] + missing
+		if not valid:
+			return {"images" : [], "missing" : missing+images}
+	else:
+		images = []
+
+	data = []
+	for i in valid:
+		filename = i.get_id()
+		if filename in [x["filename"] for x in images]:
+			data.append({
+				"filename" : filename,
+				"img_url" : "/img/" + i.path.replace(os.sep,'/'),
+				"tags" : [x.name for x in sorted(i.tags)],
+				"add" : [x["add"] for x in images if x["filename"] == filename][0],
+				"rem" : [x["rem"] for x in images if x["filename"] == filename][0],
+			})
+		else:
+			data.append({
+				"filename" : filename,
+				"img_url" : "/img/" + i.path.replace(os.sep,'/'),
+				"tags" : [x.name for x in sorted(i.tags)],
+				"add" : [],
+				"rem" : [],
+			})
+	
+	missing = [x for x in images if x["filename"] not in [d["filename"] for d in data]]
+	return {"images" : data, "missing" : missing}
+
 # get popular tags
 def popular_tags(images):
 	tags = {}
@@ -443,16 +558,26 @@ def write_tags(images, folder):
 		cat = os.path.split(dst)[0]
 		if not os.path.isdir(cat):
 			os.mkdir(cat)
-		write_tag_txt(i.tags, dst)
+		write_tag_txt(i.tags, dst, use_weights=True)
 
 # write list of tags to path, replacing extension
-def write_tag_txt(tags, path):
+def write_tag_txt(tags, path, use_weights=False, auto_weights=False):
 	if len(tags) == 0:
 		print(f"target '{path}' has no tags!")
 		return
+	str_tags = []
+	for t in sorted(tags):
+		name = str(t)
+		if auto_weights and t.weight == 1.0:
+			t.weight = max(round(t.confidence,2),0.5)
+			t.weight = 1.0 if t.weight >= 0.9 else t.weight
+		if use_weights and t.weight != 1.0:
+			name = name.replace('(','\\(').replace(')','\\)')
+			name = f"({name}:{t.weight})"
+		str_tags.append(name)
 	txt = os.path.splitext(path)[0]+".txt"
 	with open(txt,"w") as f:
-		f.write(", ".join([str(x) for x in sorted(tags)]))
+		f.write(", ".join(str_tags))
 
 # read only status of tag count
 def img_status(images,verbose=False):
@@ -492,52 +617,14 @@ default_tag_rules =  {
     "filter_rules": []
   }
 
-# default logic
-def tag_fix(save=False):
-	global whitelist
-	global status
-	global warn
-	global c
-	status = []
-	warn = []
-	status.append("Tag fixer")
-	print(status[-1])
-
-	# reload json
-	if os.path.isfile("dataset.json"):
-		with open("dataset.json") as f:
-			data = json.load(f)
-			if "tags" not in data.keys():
-				# warn.append("no tags or rules")
-				# print(warn[-1])
-				data["tags"] = default_tag_rules
-			c = data["tags"]
-	else:
-		warn.append("Missing 'dataset.json' config")
-		print(warn[-1])
-		return
-
-	# load images
-	images = get_step_images(step_list[2],step_list[3])
-	if len(images) == 0:
-		warn.append("no tags")
-		print(warn[-1])
-		return
-		
-	# stats
-	img_status(images,True)
-
+# apply rules only
+def apply_tag_rules(images, c):
 	if True: #c["FixUnderscores"]:
 		images = underscore_fix(images)
 
 	# filter input images
 	print(c["image_blacklist"])
 	images = image_filter(images,str_to_tag_list(c["image_blacklist"]),c["filter_rules"])
-
-	# load whitelist
-	whitelist = str_to_tag_list(c["whitelist"])
-	whitelist += str_to_tag_list(c["triggerword"])
-	# whitelist += str_to_tag_list(c["triggerword_extra"])
 
 	# popular-only filter
 	tag_file = os.path.join("external",f'{c["booru"]["type"]}-tags.json')
@@ -566,15 +653,76 @@ def tag_fix(save=False):
 	images = raise_tags(images,str_to_tag_list(c["triggerword_extra"]))
 	images = blacklist(images,str_to_tag_list(c["blacklist"]))
 	images = dedupe_tags(images)
+	
+	return images
 
+
+# default logic
+def tag_fix(save=False, rules_only=False):
+	global whitelist
+	global status
+	global warn
+	global c
+	status = []
+	warn = []
+	status.append("Tag fixer")
+	print(status[-1])
+
+	# reload json
+	json_data = load_dataset_json()
+	if not json_data:
+		warn.append("Missing 'dataset.json' config")
+		print(warn[-1])
+		return
+
+	# separate rules
+	if "tags" in json_data.keys() and "rules" in json_data["tags"].keys():
+		c = json_data["tags"]["rules"]
+	else:
+		warn.append("no tags or rules")
+		print(warn[-1])
+		c = default_tag_rules
+
+	# load images
+	images = get_step_images(step_list[2],step_list[3])
+	if len(images) == 0:
+		warn.append("no tags")
+		print(warn[-1])
+		return
+		
+	# initial stats
+	img_status(images,True)
+
+	# load whitelist
+	whitelist = str_to_tag_list(c["whitelist"])
+	whitelist += str_to_tag_list(c["triggerword"])
+	whitelist += str_to_tag_list(c["triggerword_extra"])
+
+	# apply actual rules
+	images = apply_tag_rules(images, c)
+
+	# apply sequencer
+	if not rules_only and json_data.get("tags") and json_data["tags"].get("sequences"):
+		images = sequencer(images, json_data["tags"]["sequences"])
+
+	# apply single-image overrides
+	if not rules_only and json_data.get("tags") and json_data["tags"].get("images"):
+		images = single_img_overrides(images,json_data["tags"]["images"])
+
+	# final stats
 	status.append("\nFinal:")
 	print(status[-1])
 	img_status(images,True)
-	
+
+	if rules_only: # pass to other function
+		return images
+
 	if save:
 		write_tags(images,step_list[4])
 	
 	# return data
+	data = {"tags" : {}}
+	data["tags"]["rules"] = c
 	data["tags"]["categories"] = list(set([str(x.category) for x in images]))
 	data["tags"]["popular"] = popular_tags(images)
 	data["tags"]["status"] = "\n".join(status)

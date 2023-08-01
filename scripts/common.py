@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-# random functions that are used in multiple scripts
 import os
 
 step_list = [
@@ -17,6 +15,9 @@ rating_list = [
 	"questionable",
 	"explicit",
 ]
+
+version = 1.1 # current dataset version
+dataset_folder = "datasets"
 
 class Image:
 	"""class to store image attributes"""
@@ -40,7 +41,7 @@ class Image:
 				uid = uid.lstrip(os.path.sep) # \\
 				break
 		return uid
-	def get_step_path(self, step):
+	def get_step_path(self, step, ext=None):
 		if step in step_list:
 			folder = step
 		elif type(step) == int and step < len(step_list):
@@ -57,12 +58,14 @@ class Image:
 				new = new.lstrip(os.path.sep) # \\
 				break
 		if not new: return None
+		new = os.path.splitext(new)[0] + ext if ext else new
 		path = os.path.join(folder,new)
 		return path
 
 class Tag:
 	"""class to store tag attributes"""
 	name = None
+	weight = 1.0
 	position = 10
 	confidence = 1.0
 	def __str__(self):
@@ -77,53 +80,10 @@ class Category:
 	def __init__(self,name,weight=1):
 		self.name = name
 		self.weight = weight
+		self.tags = []
 	def __str__(self):
 		return f"{self.weight}_{self.name}"
 	def __repr__(self):
 		return f"{self.weight}_{self.name}"
 	def __lt__(self, other):
          return self.weight < other.weight
-
-# api cacher, "borrowed" from unknown project.
-def api_cacher(api_base, api_url):
-	"""cache api requests in '.cache' folder"""
-	import os, json, requests, time
-	if not os.path.exists('.cache'):
-		os.makedirs('.cache')
-
-	filename = api_url.replace(api_base,'')
-	filename = filename.replace('/','_')
-	filename = filename.replace('?','_')
-	filename = filename.replace('&','_')
-	path = os.path.join('.cache',filename+'.json')
-
-	if os.path.isfile(path):
-		print('   cached', api_url)
-		with open(path, 'r') as f:
-			data_json = json.load(f)
-	else:
-		print('   request', api_url)
-		# data = requests.get(api_url)
-		# pretend to be chrome
-		user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-		data = requests.get(api_url, headers={'User-Agent': user_agent})
-
-		data.raise_for_status()
-		data_json = data.json()
-		time.sleep(1)
-		with open(path, 'wb') as f:
-			f.write(data.content)
-	return data_json
-
-# bootleg input verification
-def verify_input(text,true,false,default=None):
-	while true:
-		i = input(text).lower()
-		if i == true.lower():
-			return True
-		elif i == false.lower():
-			return False
-		elif default != None:
-			return default
-		else:
-			print(f"Invalid input '{i}'\n")

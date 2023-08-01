@@ -4,14 +4,57 @@ import requests
 import json
 import time
 import os
-from common import api_cacher, verify_input
 
 use_cache = True
+
+# bootleg input verification
+def verify_input(text,true,false,default=None):
+	while true:
+		i = input(text).lower()
+		if i == true.lower():
+			return True
+		elif i == false.lower():
+			return False
+		elif default != None:
+			return default
+		else:
+			print(f"Invalid input '{i}'\n")
+
+# api cacher, "borrowed" from unknown project.
+def api_cacher(api_base, api_url):
+	"""cache api requests in '.cache' folder"""
+	import os, json, requests, time
+	if not os.path.exists('.cache'):
+		os.makedirs('.cache')
+
+	filename = api_url.replace(api_base,'')
+	filename = filename.replace('/','_')
+	filename = filename.replace('?','_')
+	filename = filename.replace('&','_')
+	path = os.path.join('.cache',filename+'.json')
+
+	if os.path.isfile(path):
+		print('   cached', api_url)
+		with open(path, 'r') as f:
+			data_json = json.load(f)
+	else:
+		print('   request', api_url)
+		# data = requests.get(api_url)
+		# pretend to be chrome
+		user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+		data = requests.get(api_url, headers={'User-Agent': user_agent})
+
+		data.raise_for_status()
+		data_json = data.json()
+		time.sleep(1)
+		with open(path, 'wb') as f:
+			f.write(data.content)
+	return data_json
 
 # grab tags directly from danbooru api
 def download_danbooru_tags(min_count=1000, max_page=10):
 	api_base = "https://danbooru.donmai.us/"
-	page = 0
+	page = 1
 	tags = []
 	while True:
 		url = f"{api_base}tags.json?limit=1000&search[order]=count&page={page}"
@@ -30,7 +73,7 @@ def download_danbooru_tags(min_count=1000, max_page=10):
 			continue
 		break
 
-	out_file = os.path.join("other","danbooru-tags.json")
+	out_file = os.path.join("external","danbooru-tags.json")
 	print(f" writing to file {out_file}")
 	with open(out_file,"w") as f:
 		json.dump(tags, f)
@@ -59,7 +102,7 @@ def download_gelbooru_tags(min_count=1000, max_page=100, deprecated=True):
 			continue
 		break
 
-	out_file = os.path.join("other","gelbooru-tags.json")
+	out_file = os.path.join("external","gelbooru-tags.json")
 	with open(out_file,"w") as f:
 		json.dump(tags, f)
 
@@ -68,8 +111,8 @@ def download_premade_tags(args):
 	# taglist from web
 	premade = {
 		"danbooru" : {
-			"url" : "https://gist.githubusercontent.com/city96/86451816d65636103393e380400abaa3/raw/edaaa37c931240add974e006b72b63b8fc217167/danbooru-tags.json",
-			"url_alt" : "https://files.catbox.moe/w5duuj.json",
+			"url" : "https://gist.githubusercontent.com/city96/86451816d65636103393e380400abaa3/raw/499e07b37df12df5bccc2873a88a3e2cd24a5f85/danbooru-tags-new.json",
+			"url_alt" : "https://files.catbox.moe/poji8t.json",
 			"filename" : os.path.join("external","danbooru-tags.json"),
 		},
 		"gelbooru" : {

@@ -75,10 +75,10 @@
 		<hr>
 
 		<a>Resolution: </a>
-		<select id="ow_res">
+		<select id="ow_res" onchange="out_scale_check()">
 			<option value="512">512x512</option>
 			<option value="768" selected>768x768</option>
-			<option value="960">960x960</option>
+			<option value="1024">1024x1024</option>
 			<!-- <option value="original">As input</option> -->
 		</select>
 		<br>
@@ -92,6 +92,17 @@
 		<br>
 		
 		<a>Overwrite: </a><input id="ow_ow" type="checkbox" ></input>
+		<br>
+		<a>Use weights: </a><input id="ow_uw" type="checkbox" ></input>
+		<br>
+		
+		<h3>Expected actions:</h3>
+		<table>
+			<tr><td>Upscale image</td><td id="ow_upsc">-</td></tr>
+			<tr><td>Keep original</td><td id="ow_keep">-</td></tr>
+			<tr><td>Downscale image</td><td id="ow_down">-</td></tr>
+			<tr><td>Misc/wrong ratio</td><td id="ow_misc">-</td></tr>
+		</table>
 	</div>
 	</div>
 	<!-- LOAD SCRIPT -->

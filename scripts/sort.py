@@ -1,25 +1,26 @@
 import os
 import json
 import hashlib
-from category import get_sort_categories, get_sort_images
-from common import step_list, Category
-from status import get_step_images
+from tqdm import tqdm
 from shutil import copyfile
-warn = []
 
+from .category import get_sort_categories, get_sort_images
+from .common import step_list, Category
+from .loader import load_dataset_json, get_step_images
+
+warn = []
 def sort_info():
 	global warn
 	warn = []
-	if not os.path.isfile("dataset.json"):
+
+	json_data = load_dataset_json()
+	if not json_data:
 		data = {
 			"sort" : {
 				"warn" : ["No images"]
 			}
 		}
 		return data
-	
-	with open("dataset.json") as f:
-		json_data = json.load(f)
 
 	data = {}
 	data["categories"] = {}
@@ -60,12 +61,10 @@ def build_hashdb(files,force=False):
 	if not hash_db or force: hash_db = {}
 	h = 0
 	print("Building hash list")
-	for i in files:
+	for i in tqdm(files,unit="img"):
 		if i.path not in hash_db:
 			hash_db[i.path] = hashlib.md5(open(i.path,'rb').read()).hexdigest()
 			h += 1
-
-	print(f" hashed {h} images")
 
 def orphan(file, folder):
 	# fname = file.lstrip( [x for x in step_list if file.startswith(x)][0] ).lstrip(os.sep)
@@ -137,8 +136,7 @@ def sort_write():
 	build_hashdb((source + dest),force=True)
 	check_orphans(dest,step_list[1],step_list[2])
 
-	with open("dataset.json") as f:
-		json_data = json.load(f)
+	json_data = load_dataset_json()
 	name_db = get_new_names(dest, json_data)
 	print(json.dumps(name_db,indent=2))
 	for i in name_db:
