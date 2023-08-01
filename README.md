@@ -6,15 +6,14 @@ Scroll down to the bottom of the page for a feature overview.
 *Pull requests are welcome. Currently everything is just cobbled together*
 
 Roadmap:
-- Fix orphaned images
 - Refractor tag management
-- Add single-image tag overrides
+- Add single-image tag overrides [mostly done]
+- Add superresolution/upscaling for small images
 
 Known issues:
 - No files/folders are ever deleted, leading to clutter/orphaned images
-- Cropping step missing overwrite option
 - Deleting an enite folder can break the step
-- Webui scrolls by random amount on first button click
+- When an image is open and you save the dataset, it will throw an error and half of the files are left where they are.
 
 ## Getting started
 (optional) create a venv first:
@@ -35,6 +34,8 @@ python webserver.py
 (see `python webserver.py --help` for launch arguments)
 
 Access the webui on the following URL: http://127.0.0.1:8080/
+
+If tagging/cropping/etc is too slow, try run `pip install onnxruntime-gpu`, but keep in mind that this will use some of your VRAM.
 
 ### download-dependencies.py
 Running this script is recommended to get all features of the webui.
@@ -61,6 +62,9 @@ The folders created are meant to be used as follows:
 - `datasets` - all your datasets are saved here
 
 ## Features:
+Some of these images/videos might be outdated. There's also in UI tooltips.
+If something breaks just open an issue here on Github.
+
 ### Dataset manager
 - Save / load datasets you're working on
 - Avoid having to change training folder, just point your training script at the `5 - out` folder and load the right dataset
@@ -76,6 +80,13 @@ The folders created are meant to be used as follows:
 - Keyboard shortcuts
 
 https://user-images.githubusercontent.com/125218114/228365872-ec57af74-5fb1-43e8-ab0c-ebb2feb3fd00.mp4
+
+#### Auto cropping
+- This is a good "baseline" to work from
+- You can go back and quickly fix what it misses
+- It can detect multiple subjects.
+
+https://github.com/city96/dataset-webui/assets/125218114/a9e4eb9c-6fd3-406e-aee2-619a251f82f0
 
 ### Sorting
 - add categories
