@@ -15,7 +15,7 @@ def scale(src,dst,width=768, height=768):
 	if hsize != height:
 		# print("res mismatch", dst)
 		hsize = height
-	img = img.resize((width,hsize), pImage.ANTIALIAS)
+	img = img.resize((width,hsize), pImage.LANCZOS)
 	img.save(dst)
 
 def scale_check(resolution=768):
