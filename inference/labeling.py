@@ -17,6 +17,8 @@ interrogator_repo_names = {
 	"wd-v1-4-swinv2-tagger-v2" : "SmilingWolf/wd-v1-4-swinv2-tagger-v2",
 	"wd-v1-4-convnext-tagger-v2" : "SmilingWolf/wd-v1-4-convnext-tagger-v2",
 	"wd-v1-4-convnextv2-tagger-v2" : "SmilingWolf/wd-v1-4-convnextv2-tagger-v2",
+	"wd-vit-tagger-v3" : "SmilingWolf/wd-vit-tagger-v3",
+	"wd-swinv2-tagger-v3" : "SmilingWolf/wd-swinv2-tagger-v3",
 }
 
 def column_from_csv(file,column):
